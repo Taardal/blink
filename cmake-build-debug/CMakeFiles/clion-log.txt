@@ -1,0 +1,4 @@
+C:\Users\Taardal\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\202.6948.80\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - NMake Makefiles" C:\Users\Taardal\dev\blink
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/Taardal/dev/blink/cmake-build-debug

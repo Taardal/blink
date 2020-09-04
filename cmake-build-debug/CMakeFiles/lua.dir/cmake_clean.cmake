@@ -1,0 +1,43 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lapi.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lauxlib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lbaselib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lcode.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lcorolib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lctype.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/ldblib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/ldebug.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/ldo.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/ldump.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lfunc.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lgc.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/linit.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/liolib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/llex.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lmathlib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lmem.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/loadlib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lobject.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lopcodes.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/loslib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lparser.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lstate.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lstring.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lstrlib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/ltable.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/ltablib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/ltm.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lua.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/luac.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lundump.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lutf8lib.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lvm.c.obj"
+  "CMakeFiles/lua.dir/lib/lua-5.4.0/src/lzio.c.obj"
+  "lua.lib"
+  "lua.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/lua.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
