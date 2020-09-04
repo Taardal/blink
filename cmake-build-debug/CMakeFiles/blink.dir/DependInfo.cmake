@@ -4,7 +4,10 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
+  "C:/Users/Taardal/dev/blink/src/Entity.cpp" "C:/Users/Taardal/dev/blink/cmake-build-debug/CMakeFiles/blink.dir/src/Entity.cpp.obj"
+  "C:/Users/Taardal/dev/blink/src/FileSystem.cpp" "C:/Users/Taardal/dev/blink/cmake-build-debug/CMakeFiles/blink.dir/src/FileSystem.cpp.obj"
   "C:/Users/Taardal/dev/blink/src/LuaClient.cpp" "C:/Users/Taardal/dev/blink/cmake-build-debug/CMakeFiles/blink.dir/src/LuaClient.cpp.obj"
+  "C:/Users/Taardal/dev/blink/src/World.cpp" "C:/Users/Taardal/dev/blink/cmake-build-debug/CMakeFiles/blink.dir/src/World.cpp.obj"
   "C:/Users/Taardal/dev/blink/src/main.cpp" "C:/Users/Taardal/dev/blink/cmake-build-debug/CMakeFiles/blink.dir/src/main.cpp.obj"
   )
 set(CMAKE_CXX_COMPILER_ID "MSVC")

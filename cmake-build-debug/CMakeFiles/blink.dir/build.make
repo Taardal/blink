@@ -99,20 +99,83 @@ CMakeFiles\blink.dir\src\LuaClient.cpp.s: cmake_force
  /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) /FoNUL /FAs /FaCMakeFiles\blink.dir\src\LuaClient.cpp.s /c C:\Users\Taardal\dev\blink\src\LuaClient.cpp
 <<
 
+CMakeFiles\blink.dir\src\World.cpp.obj: CMakeFiles\blink.dir\flags.make
+CMakeFiles\blink.dir\src\World.cpp.obj: ..\src\World.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=C:\Users\Taardal\dev\blink\cmake-build-debug\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/blink.dir/src/World.cpp.obj"
+	C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\cl.exe @<<
+ /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) /FoCMakeFiles\blink.dir\src\World.cpp.obj /FdCMakeFiles\blink.dir\ /FS -c C:\Users\Taardal\dev\blink\src\World.cpp
+<<
+
+CMakeFiles\blink.dir\src\World.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/blink.dir/src/World.cpp.i"
+	C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\cl.exe > CMakeFiles\blink.dir\src\World.cpp.i @<<
+ /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\Taardal\dev\blink\src\World.cpp
+<<
+
+CMakeFiles\blink.dir\src\World.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/blink.dir/src/World.cpp.s"
+	C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\cl.exe @<<
+ /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) /FoNUL /FAs /FaCMakeFiles\blink.dir\src\World.cpp.s /c C:\Users\Taardal\dev\blink\src\World.cpp
+<<
+
+CMakeFiles\blink.dir\src\Entity.cpp.obj: CMakeFiles\blink.dir\flags.make
+CMakeFiles\blink.dir\src\Entity.cpp.obj: ..\src\Entity.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=C:\Users\Taardal\dev\blink\cmake-build-debug\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/blink.dir/src/Entity.cpp.obj"
+	C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\cl.exe @<<
+ /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) /FoCMakeFiles\blink.dir\src\Entity.cpp.obj /FdCMakeFiles\blink.dir\ /FS -c C:\Users\Taardal\dev\blink\src\Entity.cpp
+<<
+
+CMakeFiles\blink.dir\src\Entity.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/blink.dir/src/Entity.cpp.i"
+	C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\cl.exe > CMakeFiles\blink.dir\src\Entity.cpp.i @<<
+ /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\Taardal\dev\blink\src\Entity.cpp
+<<
+
+CMakeFiles\blink.dir\src\Entity.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/blink.dir/src/Entity.cpp.s"
+	C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\cl.exe @<<
+ /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) /FoNUL /FAs /FaCMakeFiles\blink.dir\src\Entity.cpp.s /c C:\Users\Taardal\dev\blink\src\Entity.cpp
+<<
+
+CMakeFiles\blink.dir\src\FileSystem.cpp.obj: CMakeFiles\blink.dir\flags.make
+CMakeFiles\blink.dir\src\FileSystem.cpp.obj: ..\src\FileSystem.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=C:\Users\Taardal\dev\blink\cmake-build-debug\CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/blink.dir/src/FileSystem.cpp.obj"
+	C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\cl.exe @<<
+ /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) /FoCMakeFiles\blink.dir\src\FileSystem.cpp.obj /FdCMakeFiles\blink.dir\ /FS -c C:\Users\Taardal\dev\blink\src\FileSystem.cpp
+<<
+
+CMakeFiles\blink.dir\src\FileSystem.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/blink.dir/src/FileSystem.cpp.i"
+	C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\cl.exe > CMakeFiles\blink.dir\src\FileSystem.cpp.i @<<
+ /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\Taardal\dev\blink\src\FileSystem.cpp
+<<
+
+CMakeFiles\blink.dir\src\FileSystem.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/blink.dir/src/FileSystem.cpp.s"
+	C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\cl.exe @<<
+ /nologo /TP $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) /FoNUL /FAs /FaCMakeFiles\blink.dir\src\FileSystem.cpp.s /c C:\Users\Taardal\dev\blink\src\FileSystem.cpp
+<<
+
 # Object files for target blink
 blink_OBJECTS = \
 "CMakeFiles\blink.dir\src\main.cpp.obj" \
-"CMakeFiles\blink.dir\src\LuaClient.cpp.obj"
+"CMakeFiles\blink.dir\src\LuaClient.cpp.obj" \
+"CMakeFiles\blink.dir\src\World.cpp.obj" \
+"CMakeFiles\blink.dir\src\Entity.cpp.obj" \
+"CMakeFiles\blink.dir\src\FileSystem.cpp.obj"
 
 # External object files for target blink
 blink_EXTERNAL_OBJECTS =
 
 blink.exe: CMakeFiles\blink.dir\src\main.cpp.obj
 blink.exe: CMakeFiles\blink.dir\src\LuaClient.cpp.obj
+blink.exe: CMakeFiles\blink.dir\src\World.cpp.obj
+blink.exe: CMakeFiles\blink.dir\src\Entity.cpp.obj
+blink.exe: CMakeFiles\blink.dir\src\FileSystem.cpp.obj
 blink.exe: CMakeFiles\blink.dir\build.make
 blink.exe: lib\lua-5.4.0\lua.lib
 blink.exe: CMakeFiles\blink.dir\objects1.rsp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=C:\Users\Taardal\dev\blink\cmake-build-debug\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable blink.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=C:\Users\Taardal\dev\blink\cmake-build-debug\CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable blink.exe"
 	C:\Users\Taardal\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\202.6948.80\bin\cmake\win\bin\cmake.exe -E vs_link_exe --intdir=CMakeFiles\blink.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100177~1.0\x64\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100177~1.0\x64\mt.exe --manifests  -- C:\PROGRA~2\MICROS~1\2019\COMMUN~1\VC\Tools\MSVC\1423~1.281\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\blink.dir\objects1.rsp @<<
  /out:blink.exe /implib:blink.lib /pdb:C:\Users\Taardal\dev\blink\cmake-build-debug\blink.pdb /version:0.0  /machine:x64 /debug /INCREMENTAL /subsystem:console  lib\lua-5.4.0\lua.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib 
 <<

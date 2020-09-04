@@ -312,10 +312,28 @@
 		<Unit filename="C:/Users/Taardal/dev/blink/lib/lua-5.4.0/src/lzio.h">
 			<Option target="lua"/>
 		</Unit>
+		<Unit filename="C:/Users/Taardal/dev/blink/src/Entity.cpp">
+			<Option target="blink"/>
+		</Unit>
+		<Unit filename="C:/Users/Taardal/dev/blink/src/Entity.h">
+			<Option target="blink"/>
+		</Unit>
+		<Unit filename="C:/Users/Taardal/dev/blink/src/FileSystem.cpp">
+			<Option target="blink"/>
+		</Unit>
+		<Unit filename="C:/Users/Taardal/dev/blink/src/FileSystem.h">
+			<Option target="blink"/>
+		</Unit>
 		<Unit filename="C:/Users/Taardal/dev/blink/src/LuaClient.cpp">
 			<Option target="blink"/>
 		</Unit>
 		<Unit filename="C:/Users/Taardal/dev/blink/src/LuaClient.h">
+			<Option target="blink"/>
+		</Unit>
+		<Unit filename="C:/Users/Taardal/dev/blink/src/World.cpp">
+			<Option target="blink"/>
+		</Unit>
+		<Unit filename="C:/Users/Taardal/dev/blink/src/World.h">
 			<Option target="blink"/>
 		</Unit>
 		<Unit filename="C:/Users/Taardal/dev/blink/src/main.cpp">

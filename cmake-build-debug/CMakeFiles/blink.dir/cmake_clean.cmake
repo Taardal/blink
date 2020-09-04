@@ -1,5 +1,8 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/blink.dir/src/Entity.cpp.obj"
+  "CMakeFiles/blink.dir/src/FileSystem.cpp.obj"
   "CMakeFiles/blink.dir/src/LuaClient.cpp.obj"
+  "CMakeFiles/blink.dir/src/World.cpp.obj"
   "CMakeFiles/blink.dir/src/main.cpp.obj"
   "blink.exe"
   "blink.exe.manifest"

@@ -55,9 +55,6 @@ void LuaClient::PutGlobalOnStack(const std::string& name) const
 
 void LuaClient::PushFunction(const std::string& name, int (*function)(lua_State*)) const
 {
-    auto luaF = [function](lua_State* L) {
-        function(L);
-    };
     lua_pushcfunction(L, function);
     lua_setglobal(L, name.c_str());
 }

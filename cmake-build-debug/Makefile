@@ -140,6 +140,60 @@ lua\fast:
 	$(MAKE) $(MAKESILENT) -f lib\lua-5.4.0\CMakeFiles\lua.dir\build.make /nologo -$(MAKEFLAGS) lib\lua-5.4.0\CMakeFiles\lua.dir\build
 .PHONY : lua\fast
 
+src\Entity.obj: src\Entity.cpp.obj
+
+.PHONY : src\Entity.obj
+
+# target to build an object file
+src\Entity.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\Entity.cpp.obj
+.PHONY : src\Entity.cpp.obj
+
+src\Entity.i: src\Entity.cpp.i
+
+.PHONY : src\Entity.i
+
+# target to preprocess a source file
+src\Entity.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\Entity.cpp.i
+.PHONY : src\Entity.cpp.i
+
+src\Entity.s: src\Entity.cpp.s
+
+.PHONY : src\Entity.s
+
+# target to generate assembly for a file
+src\Entity.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\Entity.cpp.s
+.PHONY : src\Entity.cpp.s
+
+src\FileSystem.obj: src\FileSystem.cpp.obj
+
+.PHONY : src\FileSystem.obj
+
+# target to build an object file
+src\FileSystem.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\FileSystem.cpp.obj
+.PHONY : src\FileSystem.cpp.obj
+
+src\FileSystem.i: src\FileSystem.cpp.i
+
+.PHONY : src\FileSystem.i
+
+# target to preprocess a source file
+src\FileSystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\FileSystem.cpp.i
+.PHONY : src\FileSystem.cpp.i
+
+src\FileSystem.s: src\FileSystem.cpp.s
+
+.PHONY : src\FileSystem.s
+
+# target to generate assembly for a file
+src\FileSystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\FileSystem.cpp.s
+.PHONY : src\FileSystem.cpp.s
+
 src\LuaClient.obj: src\LuaClient.cpp.obj
 
 .PHONY : src\LuaClient.obj
@@ -166,6 +220,33 @@ src\LuaClient.s: src\LuaClient.cpp.s
 src\LuaClient.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\LuaClient.cpp.s
 .PHONY : src\LuaClient.cpp.s
+
+src\World.obj: src\World.cpp.obj
+
+.PHONY : src\World.obj
+
+# target to build an object file
+src\World.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\World.cpp.obj
+.PHONY : src\World.cpp.obj
+
+src\World.i: src\World.cpp.i
+
+.PHONY : src\World.i
+
+# target to preprocess a source file
+src\World.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\World.cpp.i
+.PHONY : src\World.cpp.i
+
+src\World.s: src\World.cpp.s
+
+.PHONY : src\World.s
+
+# target to generate assembly for a file
+src\World.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\blink.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blink.dir\src\World.cpp.s
+.PHONY : src\World.cpp.s
 
 src\main.obj: src\main.cpp.obj
 
@@ -204,9 +285,18 @@ help:
 	@echo ... rebuild_cache
 	@echo ... blink
 	@echo ... lua
+	@echo ... src/Entity.obj
+	@echo ... src/Entity.i
+	@echo ... src/Entity.s
+	@echo ... src/FileSystem.obj
+	@echo ... src/FileSystem.i
+	@echo ... src/FileSystem.s
 	@echo ... src/LuaClient.obj
 	@echo ... src/LuaClient.i
 	@echo ... src/LuaClient.s
+	@echo ... src/World.obj
+	@echo ... src/World.i
+	@echo ... src/World.s
 	@echo ... src/main.obj
 	@echo ... src/main.i
 	@echo ... src/main.s
