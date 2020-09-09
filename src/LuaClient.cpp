@@ -1,14 +1,10 @@
 #include "LuaClient.h"
-
-constexpr int LuaClient::TOP_OF_STACK = -1;
+#include "Log.h"
+#include <cassert>
+#include <sstream>
 
 LuaClient::LuaClient()
-        : L()
-{
-}
-
-LuaClient::LuaClient(lua_State* L)
-        : L(L)
+        : L(luaL_newstate()), canClearStack(true)
 {}
 
 LuaClient::~LuaClient()
@@ -16,36 +12,38 @@ LuaClient::~LuaClient()
     lua_close(L);
 }
 
-std::string LuaClient::RunScript(const std::string& script) const
+void LuaClient::EnableStandardLibraries()
 {
+    luaL_openlibs(L);
+}
+
+void LuaClient::AddPackagePath(const char* path)
+{
+    std::stringstream ss;
+    ss << "package.path = package.path .. ';" << path << "'";
+    luaL_dostring(L, ss.str().c_str());
+}
+
+void LuaClient::RunFile(const std::string& path) const
+{
+    ST_LOG_INFO(ST_TAG, "Running file [{0}]", path);
+    int result = luaL_dofile(L, path.c_str());
+    if (result != LUA_OK)
+    {
+        ST_LOG_ERROR(ST_TAG, "Could not run file [{0}]", GetString());
+        assert(result != LUA_OK);
+    }
+}
+
+void LuaClient::RunScript(const std::string& script) const
+{
+    ST_LOG_DEBUG(ST_TAG, "Running script [{0}]", script);
     int result = luaL_dostring(L, script.c_str());
     if (result != LUA_OK)
     {
-        return GetString();
+        ST_LOG_ERROR(ST_TAG, "Could not run script [{0}]", GetString());
+        assert(result != LUA_OK);
     }
-    return "";
-}
-
-std::string LuaClient::GetString(const std::string& name) const
-{
-    PutGlobalOnStack(name);
-    return GetString();
-}
-
-float LuaClient::GetFloat(const std::string& name) const
-{
-    PutGlobalOnStack(name);
-    return (float) GetNumber();
-}
-
-std::string LuaClient::GetString() const
-{
-    return lua_tostring(L, TOP_OF_STACK);
-}
-
-lua_Number LuaClient::GetNumber() const
-{
-    return lua_tonumber(L, TOP_OF_STACK);
 }
 
 void LuaClient::PutGlobalOnStack(const std::string& name) const
@@ -56,35 +54,76 @@ void LuaClient::PutGlobalOnStack(const std::string& name) const
 void LuaClient::PushFunction(const std::string& name, int (*function)(lua_State*)) const
 {
     lua_pushcfunction(L, function);
-    lua_setglobal(L, name.c_str());
 }
 
-void LuaClient::CallFunction(const std::string& name) const
+const char* LuaClient::GetString() const
 {
-    PutGlobalOnStack(name);
-    constexpr int PARAMETER_COUNT = 0;
-    constexpr int RETURN_VALUE_COUNT = 1;
-    constexpr int ERROR_HANDLER = 0;
-    lua_pcall(L, PARAMETER_COUNT, RETURN_VALUE_COUNT, ERROR_HANDLER);
+    return lua_tostring(L, -1);
 }
 
-std::string LuaClient::GetTableField(const std::string& tableName, const std::string& fieldName) const
+void LuaClient::PrintStack(const std::string& tag) const
 {
-    lua_getglobal(L, tableName.c_str());
-    lua_pushstring(L, fieldName.c_str());
-    lua_gettable(L, -2);
-    return GetString();
-}
-
-void LuaClient::SetTableField(const std::string& tableName, const std::string& fieldName, const std::string& value) const
-{
-    lua_getglobal(L, tableName.c_str());
-    lua_pushstring(L, value.c_str());
-    lua_setfield(L, -2, fieldName.c_str());
-}
-
-void LuaClient::Foo() const
-{
-
-
+    if (!tag.empty())
+    {
+        printf("%s\n", tag.c_str());
+    }
+    printf("-- lua stack\n");
+    int stackSize = lua_gettop(L);
+    if (stackSize == 0)
+    {
+        printf("--   empty\n");
+    }
+    else
+    {
+        for (int i = 1; i <= stackSize; i++)
+        {
+            int stackIndex = i * -1;
+            printf("--   [%d] ", stackIndex);
+            if (lua_isuserdata(L, stackIndex))
+            {
+                printf("userdata\n");
+            }
+            else if (lua_islightuserdata(L, stackIndex))
+            {
+                printf("light userdata\n");
+            }
+            else if (lua_istable(L, stackIndex))
+            {
+                printf("table\n");
+            }
+            else if (lua_isfunction(L, stackIndex))
+            {
+                printf("function\n");
+            }
+            else if (lua_iscfunction(L, stackIndex))
+            {
+                printf("cfunction\n");
+            }
+            else if (lua_isthread(L, stackIndex))
+            {
+                printf("thread\n");
+            }
+            else if (lua_isstring(L, stackIndex))
+            {
+                printf("string\n");
+            }
+            else if (lua_isnumber(L, stackIndex))
+            {
+                printf("number\n");
+            }
+            else if (lua_isnone(L, stackIndex))
+            {
+                printf("none\n");
+            }
+            else if (lua_isnil(L, stackIndex))
+            {
+                printf("nil\n");
+            }
+            else
+            {
+                printf("unknown type\n");
+            }
+        }
+    }
+    printf("-- end\n");
 }

@@ -1,18 +1,16 @@
-enemy = require("enemy")
-enemy:Create()
-a = enemy:Update()
+asd = { hei = 12.3 }
 
-function OnCreate()
-    player = Entity.New()
-    world = World.Load("world.json")
+function blink.onCreate()
+    a = "onCreate"
 end
 
-function OnUpdate()
-    player:Update(5, 7)
-    world:Update()
+function blink.onUpdate()
+    a = "onUpdate"
 end
 
-function OnDraw()
-    player:Draw()
-    world:Draw()
+function blink.onDraw()
+    a = "onDraw"
+
+    foo = "foo"
+    bar = 123
 end
