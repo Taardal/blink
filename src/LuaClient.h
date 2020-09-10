@@ -1,49 +1,191 @@
 #pragma once
+
+#include "Log.h"
 #include "lua/lua.hpp"
 #include <string>
-#include <any>
+#include <cassert>
 
+struct LuaFunctionConfig
+{
+    int ParameterCount = 0;
+    int ReturnCount = 0;
+
+    LuaFunctionConfig& WithParameterCount(int count)
+    {
+        ParameterCount = count;
+        return *this;
+    }
+
+    LuaFunctionConfig& WithReturnCount(int count)
+    {
+        ReturnCount = count;
+        return *this;
+    }
+};
 
 class LuaClient
 {
 private:
-    static const int TOP_OF_STACK;
-
     lua_State* L;
+    bool canClearStack;
 
 public:
     LuaClient();
 
-    LuaClient(lua_State* l);
-
     ~LuaClient();
 
-    [[nodiscard]] std::string RunScript(const std::string& script) const;
+    void EnableStandardLibraries();
 
-    [[nodiscard]] std::string GetString(const std::string& name) const;
+    void AddPackagePath(const char* path);
 
-    [[nodiscard]] std::string GetString() const;
+    void RunFile(const std::string& path) const;
 
-    [[nodiscard]] float GetFloat(const std::string& name) const;
-
-    [[nodiscard]] lua_Number GetNumber() const;
+    void RunScript(const std::string& script) const;
 
     void PushFunction(const std::string& name, int (*function)(lua_State*)) const;
 
-    void CallFunction(const std::string& name) const;
-
     void PutGlobalOnStack(const std::string& name) const;
 
+    void PrintStack(const std::string& tag = "") const;
+
+    [[nodiscard]] const char* GetString() const;
+
     template<typename T>
-    T* GetObject(const std::string& name) const
+    T GetNumber() const
     {
-        lua_getglobal(L, name.c_str());
-        return (T*) lua_touserdata(L, TOP_OF_STACK);
+        return (T) lua_tonumber(L, -1);
     }
 
-    [[nodiscard]] std::string GetTableField(const std::string& tableName, const std::string& fieldName) const;
+    template<typename T>
+    T* GetObject() const
+    {
+        return (T*) lua_touserdata(L, -1);
+    }
 
-    void SetTableField(const std::string& tableName, const std::string& fieldName, const std::string& value) const;
+    LuaClient& Global(const char* name)
+    {
+        lua_getglobal(L, name);
+        return *this;
+    }
 
-    void Foo() const;
+    void WriteToGlobal(const char* name)
+    {
+        lua_setglobal(L, name);
+        ClearStack();
+    }
+
+    LuaClient& Field(const char* name)
+    {
+        for (int i = -1; i >= lua_gettop(L) * -1; i--)
+        {
+            if (lua_istable(L, i))
+            {
+                lua_getfield(L, i, name);
+                break;
+            }
+        }
+        return *this;
+    }
+
+    void WriteToField(const char* name)
+    {
+        for (int i = -2; i >= lua_gettop(L) * -1; i--)
+        {
+            if (lua_istable(L, i))
+            {
+                lua_setfield(L, i, name);
+                break;
+            }
+        }
+        ClearStack();
+    }
+
+    LuaClient& String(const char* string)
+    {
+        lua_pushstring(L, string);
+        return *this;
+    }
+
+    [[nodiscard]] const char* ToString()
+    {
+        int i = -1;
+        assert(lua_isstring(L, i));
+        const char* string = lua_tostring(L, i);
+        ClearStack();
+        return string;
+    }
+
+    template<typename T>
+    LuaClient& Number(T number)
+    {
+        lua_pushnumber(L, number);
+        return *this;
+    }
+
+    template<typename T>
+    T ToNumber()
+    {
+        int i = -1;
+        assert(lua_isnumber(L, i));
+        lua_Number luaNumber = lua_tonumber(L, i);
+        ClearStack();
+        return (T) luaNumber;
+    }
+
+    void CallFunction(const LuaFunctionConfig& config = {})
+    {
+        constexpr int ERROR_HANDLER_STACK_INDEX = 0;
+        int result = lua_pcall(L, config.ParameterCount, config.ReturnCount, ERROR_HANDLER_STACK_INDEX);
+        if (result != LUA_OK)
+        {
+            ST_LOG_ERROR(ST_TAG, "Could not run function [{0}]", GetString());
+            assert(result != LUA_OK);
+        }
+        ClearStack();
+    }
+
+    void Begin()
+    {
+        canClearStack = false;
+    }
+
+    void End()
+    {
+        if (!canClearStack)
+        {
+            canClearStack = true;
+        }
+        ClearStack();
+    }
+
+    LuaClient* Table()
+    {
+        lua_newtable(L);
+        return this;
+    }
+
+    void SetGlobal(const char* name)
+    {
+        lua_setglobal(L, name);
+        ClearStack();
+    }
+
+    void Pop(int count = 1)
+    {
+        lua_pop(L, count);
+    }
+
+private:
+    void ClearStack()
+    {
+        if (canClearStack)
+        {
+            int i = lua_gettop(L);
+            if (i > 0)
+            {
+                lua_pop(L, i);
+            }
+        }
+    }
+
 };

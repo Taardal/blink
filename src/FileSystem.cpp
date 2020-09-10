@@ -1,5 +1,6 @@
 #include "FileSystem.h"
 #include <fstream>
+#include <filesystem>
 
 namespace blink
 {
@@ -20,5 +21,10 @@ namespace blink
             }
         }
         return result;
+    }
+
+    bool FileSystem::Exists(const char* string) const
+    {
+        return std::filesystem::exists(string);
     }
 }

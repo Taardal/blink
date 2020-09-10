@@ -8,7 +8,7 @@ namespace blink
     {
     public:
         std::string ReadFile(const char* path) const;
+
+        bool Exists(const char* string) const;
     };
 }
-
-
