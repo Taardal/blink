@@ -3,21 +3,25 @@
 
 namespace blink
 {
-    Window::Window(const Config& config, GraphicsContext* graphicsContext)
-            : config(config),
-              graphicsContext(graphicsContext),
+    Window::Window()
+            : config(),
               glfwWindow(nullptr)
     {
-        InitGlfw();
-        SetGlfwWindowHints(graphicsContext);
-        glfwWindow = CreateGlfwWindow();
-        graphicsContext->Init(glfwWindow);
     }
 
     Window::~Window()
     {
         DestroyGlfwWindow();
         TerminateGlfw();
+    }
+
+    void Window::Init(const Window::Config& windowConfig, const GraphicsContext::Config& graphicsConfig)
+    {
+        this->config = windowConfig;
+        InitGlfw();
+        SetGlfwWindowHints(graphicsConfig);
+        glfwWindow = CreateGlfwWindow();
+        glfwMakeContextCurrent(glfwWindow);
     }
 
     void Window::OnUpdate() const
@@ -45,9 +49,8 @@ namespace blink
         ST_LOG_ERROR(ST_TAG_TYPE(Window), "GLFW error [{0}: {1}]", error, description);
     }
 
-    void Window::SetGlfwWindowHints(GraphicsContext* graphicsContext) const
+    void Window::SetGlfwWindowHints(const GraphicsContext::Config& graphicsConfig) const
     {
-        const GraphicsContext::Config& graphicsConfig = graphicsContext->GetConfig();
         ST_LOG_DEBUG(ST_TAG, "Setting GLFW context version [{0}.{1}]", graphicsConfig.VersionMajor, graphicsConfig.VersionMinor);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, graphicsConfig.VersionMajor);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, graphicsConfig.VersionMinor);

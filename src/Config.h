@@ -9,9 +9,9 @@ namespace blink
 {
     struct Config
     {
+        LogLevel LogLevel = LogLevel::None;
         Window::Config WindowConfig;
         GraphicsContext::Config GraphicsConfig;
-        LogLevel LogLevel = LogLevel::None;
     };
 }
 

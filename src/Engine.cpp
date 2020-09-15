@@ -2,30 +2,22 @@
 
 namespace blink
 {
-    Engine::Engine(const char* luaFilePath, Config& defaultConfig)
-            : fileSystem(nullptr),
-              luaClient(nullptr),
-              luaEngine(nullptr),
-              graphicsContext(nullptr),
-              window(nullptr),
-              application(nullptr)
+    Engine::Engine()
+            : fileSystem(new FileSystem()),
+              luaClient(new LuaClient()),
+              luaGraphicsEngine(new LuaGraphicsEngine(luaClient)),
+              luaEngine(new LuaEngine(luaGraphicsEngine, luaClient, fileSystem)),
+              window(new Window()),
+              graphicsContext(new GraphicsContext()),
+              renderer(new Renderer()),
+              application(new Application(luaEngine, window, graphicsContext, renderer))
     {
-        Log::SetLevel(defaultConfig.LogLevel);
-
-        fileSystem = new FileSystem();
-
-        luaClient = new LuaClient();
-        luaEngine = new LuaEngine(luaFilePath, luaClient, fileSystem);
-        const Config& config = luaEngine->OnConfigure(defaultConfig);
-
-        graphicsContext = new GraphicsContext(config.GraphicsConfig);
-        window = new Window(config.WindowConfig, graphicsContext);
-        application = new Application(window, luaEngine);
     }
 
     Engine::~Engine()
     {
         delete application;
+        delete renderer;
         delete window;
         delete graphicsContext;
         delete luaEngine;
@@ -33,8 +25,14 @@ namespace blink
         delete fileSystem;
     }
 
-    void Engine::Run() const
+    void Engine::Init(Config& config) const
     {
+        application->Init(config);
+    }
+
+    void Engine::Run(const char* mainLuaFilePath) const
+    {
+        luaEngine->Run(mainLuaFilePath);
         application->Run();
     }
 }

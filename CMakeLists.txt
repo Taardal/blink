@@ -25,6 +25,11 @@ add_executable(
         src/Log.h
         src/Tag.cpp
         src/Tag.h
+        src/LuaGraphicsEngine.cpp
+        src/LuaGraphicsEngine.h
+        src/Renderer.cpp
+        src/Renderer.h
+        src/LuaEngineListener.h
 )
 
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)

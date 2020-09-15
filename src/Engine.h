@@ -1,12 +1,14 @@
 #pragma once
 
-#include "Log.h"
-#include "Config.h"
 #include "FileSystem.h"
 #include "LuaClient.h"
+#include "LuaGraphicsEngine.h"
 #include "LuaEngine.h"
 #include "Window.h"
+#include "GraphicsContext.h"
+#include "Renderer.h"
 #include "Application.h"
+#include "Config.h"
 
 namespace blink
 {
@@ -15,17 +17,21 @@ namespace blink
     private:
         FileSystem* fileSystem;
         LuaClient* luaClient;
+        LuaGraphicsEngine* luaGraphicsEngine;
         LuaEngine* luaEngine;
-        GraphicsContext* graphicsContext;
         Window* window;
+        GraphicsContext* graphicsContext;
+        Renderer* renderer;
         Application* application;
 
     public:
-        Engine(const char* luaFilePath, Config& config);
+        Engine();
 
         virtual ~Engine();
 
-        void Run() const;
+        void Init(Config& config) const;
+
+        void Run(const char* mainLuaFilePath) const;
     };
 }
 

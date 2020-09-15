@@ -1,23 +1,33 @@
 #include "LuaEngine.h"
 
-
 namespace blink
 {
     const char* LuaEngine::LUA_PACKAGE_PATH = "res/?.lua";
     const char* LuaEngine::LUA_CONFIG_PATH = "res/config.lua";
     const char* LuaEngine::LUA_MAIN_PATH = "res/main.lua";
 
-    LuaEngine::LuaEngine(const char* mainFilePath, LuaClient* lua, FileSystem* fileSystem)
-            : lua(lua),
-              fileSystem(fileSystem)
+    LuaEngine::LuaEngine(LuaGraphicsEngine* graphicsEngine, LuaClient* lua, FileSystem* fileSystem)
+            : graphicsEngine(graphicsEngine),
+              lua(lua),
+              fileSystem(fileSystem),
+              listener(nullptr)
+    {
+    }
+
+    void LuaEngine::Init(LuaEngineListener* listener)
     {
         lua->EnableStandardLibraries();
         lua->AddPackagePath(LUA_PACKAGE_PATH);
         lua->Table()->SetGlobal("blink");
+        graphicsEngine->Init(listener);
+    }
+
+    void LuaEngine::Run(const char* mainFilePath)
+    {
         lua->RunFile(mainFilePath ? mainFilePath : LUA_MAIN_PATH);
     }
 
-    Config LuaEngine::OnConfigure(Config& defaultConfig)
+    Config& LuaEngine::OnConfigure(Config& defaultConfig)
     {
         if (fileSystem->Exists(LUA_CONFIG_PATH))
         {

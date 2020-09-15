@@ -17,14 +17,15 @@ namespace blink
         };
 
     private:
-        const Config& config;
-        GraphicsContext* graphicsContext;
+        Window::Config config;
         GLFWwindow* glfwWindow;
 
     public:
-        Window(const Config& config, GraphicsContext* graphicsContext);
+        Window();
 
         virtual ~Window();
+
+        void Init(const Window::Config& windowConfig, const GraphicsContext::Config& graphicsConfig);
 
         void OnUpdate() const;
 
@@ -33,7 +34,7 @@ namespace blink
 
         static void OnGlfwError(int32_t error, const char* description);
 
-        void SetGlfwWindowHints(GraphicsContext* graphicsContext) const;
+        void SetGlfwWindowHints(const GraphicsContext::Config& graphicsConfig) const;
 
         [[nodiscard]] GLFWwindow* CreateGlfwWindow() const;
 
