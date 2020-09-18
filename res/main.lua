@@ -1,16 +1,20 @@
-asd = { hei = 12.3 }
-
 function blink.onCreate()
-    a = "onCreate"
+
 end
 
 function blink.onUpdate()
-    a = "onUpdate"
+
 end
 
 function blink.onDraw()
-    a = "onDraw"
-
-    foo = "foo"
-    bar = 123
+    blink.graphics.drawRectangle({
+        width = 200,
+        height = 200,
+        x = 1,
+        y = 1,
+        r = 0.8,
+        g = 0.2,
+        b = 0.8,
+        a = 1.0,
+    });
 end

@@ -1,8 +1,9 @@
 #pragma once
+
+#include "LuaGraphicsEngine.h"
 #include "LuaClient.h"
 #include "FileSystem.h"
 #include "Config.h"
-
 
 namespace blink
 {
@@ -12,13 +13,19 @@ namespace blink
         static const char* LUA_PACKAGE_PATH;
         static const char* LUA_MAIN_PATH;
         static const char* LUA_CONFIG_PATH;
+        LuaGraphicsEngine* graphicsEngine;
         LuaClient* lua;
         FileSystem* fileSystem;
+        LuaEngineListener* listener;
 
     public:
-        LuaEngine(const char* mainFilePath, LuaClient* lua, FileSystem* fileSystem);
+        LuaEngine(LuaGraphicsEngine* graphicsEngine, LuaClient* lua, FileSystem* fileSystem);
 
-        [[nodiscard]] Config OnConfigure(Config& defaultConfig);
+        void Init(LuaEngineListener* listener);
+
+        void Run(const char* mainFilePath);
+
+        [[nodiscard]] Config& OnConfigure(Config& defaultConfig);
 
         void OnCreate();
 

@@ -5,6 +5,8 @@
 #include <string>
 #include <cassert>
 
+void printlua(lua_State* L, const std::string& tag = "");
+
 struct LuaFunctionConfig
 {
     int ParameterCount = 0;
@@ -33,6 +35,8 @@ public:
     LuaClient();
 
     ~LuaClient();
+
+    lua_State* GetL() const;
 
     void EnableStandardLibraries();
 
@@ -175,7 +179,6 @@ public:
         lua_pop(L, count);
     }
 
-private:
     void ClearStack()
     {
         if (canClearStack)

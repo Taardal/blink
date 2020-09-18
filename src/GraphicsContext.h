@@ -17,12 +17,12 @@ namespace blink
         };
 
     private:
-        const Config& config;
+        Config config;
 
     public:
-        explicit GraphicsContext(const Config& config);
+        GraphicsContext();
 
-        void Init(GLFWwindow* glfwWindow) const;
+        void Init(const GraphicsContext::Config& config);
 
         [[nodiscard]] const Config& GetConfig() const;
 

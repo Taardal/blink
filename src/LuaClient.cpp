@@ -12,6 +12,11 @@ LuaClient::~LuaClient()
     lua_close(L);
 }
 
+lua_State* LuaClient::GetL() const
+{
+    return L;
+}
+
 void LuaClient::EnableStandardLibraries()
 {
     luaL_openlibs(L);
@@ -62,6 +67,11 @@ const char* LuaClient::GetString() const
 }
 
 void LuaClient::PrintStack(const std::string& tag) const
+{
+    printlua(L, tag);
+}
+
+void printlua(lua_State* L, const std::string& tag)
 {
     if (!tag.empty())
     {
