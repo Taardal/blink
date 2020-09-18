@@ -2,21 +2,21 @@
 
 #include "Window.h"
 #include "Renderer.h"
-#include "LuaEngine.h"
+#include "LuaBinding.h"
 
 namespace blink
 {
-    class Application : LuaEngineListener
+    class Application : LuaBindingListener
     {
     private:
-        LuaEngine* luaEngine;
+        LuaBinding* luaEngine;
         Window* window;
         GraphicsContext* graphicsContext;
         Renderer* renderer;
         bool running;
 
     public:
-        Application(LuaEngine* luaEngine, Window* window, GraphicsContext* graphicsContext, Renderer* renderer);
+        Application(LuaBinding* luaEngine, Window* window, GraphicsContext* graphicsContext, Renderer* renderer);
 
         void Run();
 

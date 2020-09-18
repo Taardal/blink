@@ -74,7 +74,7 @@ echo "
 ##########################
 "
 cd "${buildFolder}" || exit
-./blink.exe "$(pwd)/${resourcesFolder}/main.lua"
+./blink "$(pwd)/${resourcesFolder}/main.lua"
 
 echo "
 ############

@@ -1,27 +1,27 @@
 #pragma once
 
-#include "LuaGraphicsEngine.h"
+#include "LuaGraphicsBinding.h"
 #include "LuaClient.h"
 #include "FileSystem.h"
 #include "Config.h"
 
 namespace blink
 {
-    class LuaEngine
+    class LuaBinding
     {
     private:
         static const char* LUA_PACKAGE_PATH;
         static const char* LUA_MAIN_PATH;
         static const char* LUA_CONFIG_PATH;
-        LuaGraphicsEngine* graphicsEngine;
+        LuaGraphicsBinding* graphicsBinding;
         LuaClient* lua;
         FileSystem* fileSystem;
-        LuaEngineListener* listener;
+        LuaBindingListener* listener;
 
     public:
-        LuaEngine(LuaGraphicsEngine* graphicsEngine, LuaClient* lua, FileSystem* fileSystem);
+        LuaBinding(LuaGraphicsBinding* graphicsBinding, LuaClient* lua, FileSystem* fileSystem);
 
-        void Init(LuaEngineListener* listener);
+        void Init(LuaBindingListener* listener);
 
         void Run(const char* mainFilePath);
 
@@ -34,7 +34,7 @@ namespace blink
         void OnDraw();
 
     private:
-        Config& LoadLuaConfig(Config& config);
+        Config& OnConfigureLua(Config& config);
     };
 }
 

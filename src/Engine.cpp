@@ -5,8 +5,8 @@ namespace blink
     Engine::Engine()
             : fileSystem(new FileSystem()),
               luaClient(new LuaClient()),
-              luaGraphicsEngine(new LuaGraphicsEngine(luaClient)),
-              luaEngine(new LuaEngine(luaGraphicsEngine, luaClient, fileSystem)),
+              luaGraphicsEngine(new LuaGraphicsBinding(luaClient)),
+              luaEngine(new LuaBinding(luaGraphicsEngine, luaClient, fileSystem)),
               window(new Window()),
               graphicsContext(new GraphicsContext()),
               renderer(new Renderer()),

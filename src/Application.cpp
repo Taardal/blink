@@ -2,7 +2,7 @@
 
 namespace blink
 {
-    Application::Application(LuaEngine* luaEngine, Window* window, GraphicsContext* graphicsContext, Renderer* renderer)
+    Application::Application(LuaBinding* luaEngine, Window* window, GraphicsContext* graphicsContext, Renderer* renderer)
             : luaEngine(luaEngine),
               window(window),
               graphicsContext(graphicsContext),
@@ -23,11 +23,11 @@ namespace blink
     void Application::Run()
     {
         ST_LOG_INFO(ST_TAG, "Running application...");
-        //running = true;
 
         luaEngine->OnCreate();
         glClearColor(0.8f, 0.2f, 0.3f, 0.2f);
 
+        running = false;
         while (running)
         {
         }

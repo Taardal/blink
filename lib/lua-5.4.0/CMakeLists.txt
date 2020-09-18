@@ -51,10 +51,7 @@ add_library(${PROJECT_NAME}
         ${SRC_DIR}/ltablib.c
         ${SRC_DIR}/ltm.c
         ${SRC_DIR}/ltm.h
-        ${SRC_DIR}/lua.c
-        ${SRC_DIR}/lua.h
         ${SRC_DIR}/lua.hpp
-        ${SRC_DIR}/luac.c
         ${SRC_DIR}/luaconf.h
         ${SRC_DIR}/lualib.h
         ${SRC_DIR}/lundump.c

@@ -1,21 +1,21 @@
-#include "LuaGraphicsEngine.h"
+#include "LuaGraphicsBinding.h"
 #include <glm/glm.hpp>
 
 namespace blink
 {
-    LuaGraphicsEngine::LuaGraphicsEngine(LuaClient* lua)
+    LuaGraphicsBinding::LuaGraphicsBinding(LuaClient* lua)
             : lua(lua),
               listener(nullptr)
     {
     }
 
-    void LuaGraphicsEngine::Init(LuaEngineListener* listener)
+    void LuaGraphicsBinding::Init(LuaBindingListener* listener)
     {
         this->listener = listener;
 
-        lua_State* L = lua->GetL();
+        lua_State* L = lua->GetState();
 
-        lua->ClearStack();
+        lua->Clear();
         lua_getglobal(L, "blink");
 
         lua_newtable(L);
@@ -28,12 +28,12 @@ namespace blink
         lua_setfield(L, -2, "drawRectangle");
     }
 
-    int LuaGraphicsEngine::DrawRectangle(lua_State* L)
+    int LuaGraphicsBinding::DrawRectangle(lua_State* L)
     {
         printlua(L);
 
-        ST_LOG_TRACE(ST_TAG_TYPE(LuaGraphicsEngine), "LuaGraphicsEngine::DrawRectangle");
-        auto listener = (LuaEngineListener*) lua_touserdata(L, lua_upvalueindex(1));
+        ST_LOG_TRACE(ST_TAG_TYPE(LuaGraphicsBinding), "LuaGraphicsBinding::DrawRectangle");
+        auto listener = (LuaBindingListener*) lua_touserdata(L, lua_upvalueindex(1));
 
         lua_getfield(L, -1, "x");
         auto x = (float) lua_tonumber(L, -1);

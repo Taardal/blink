@@ -2,8 +2,8 @@
 
 #include "FileSystem.h"
 #include "LuaClient.h"
-#include "LuaGraphicsEngine.h"
-#include "LuaEngine.h"
+#include "LuaGraphicsBinding.h"
+#include "LuaBinding.h"
 #include "Window.h"
 #include "GraphicsContext.h"
 #include "Renderer.h"
@@ -17,8 +17,8 @@ namespace blink
     private:
         FileSystem* fileSystem;
         LuaClient* luaClient;
-        LuaGraphicsEngine* luaGraphicsEngine;
-        LuaEngine* luaEngine;
+        LuaGraphicsBinding* luaGraphicsEngine;
+        LuaBinding* luaEngine;
         Window* window;
         GraphicsContext* graphicsContext;
         Renderer* renderer;

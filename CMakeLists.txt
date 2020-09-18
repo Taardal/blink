@@ -6,30 +6,32 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(
         blink
         src/main.cpp
-        src/LuaClient.cpp
-        src/LuaClient.h
-        src/FileSystem.cpp
-        src/FileSystem.h
-        src/Engine.cpp
-        src/Engine.h
-        src/LuaEngine.cpp
-        src/LuaEngine.h
-        src/Config.h
         src/Application.cpp
         src/Application.h
-        src/Window.cpp
-        src/Window.h
+        src/Config.h
+        src/Engine.cpp
+        src/Engine.h
         src/GraphicsContext.cpp
         src/GraphicsContext.h
+        src/FileSystem.cpp
+        src/FileSystem.h
         src/Log.cpp
         src/Log.h
-        src/Tag.cpp
-        src/Tag.h
-        src/LuaGraphicsEngine.cpp
-        src/LuaGraphicsEngine.h
+        src/LuaBinding.cpp
+        src/LuaBinding.h
+        src/LuaBindingListener.h
+        src/LuaClient.cpp
+        src/LuaClient.h
+        src/LuaGraphicsBinding.cpp
+        src/LuaGraphicsBinding.h
+        src/LuaPrintStack.cpp
+        src/LuaPrintStack.h
         src/Renderer.cpp
         src/Renderer.h
-        src/LuaEngineListener.h
+        src/Tag.cpp
+        src/Tag.h
+        src/Window.cpp
+        src/Window.h
 )
 
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
@@ -62,5 +64,31 @@ add_subdirectory(${LUA_DIR})
 target_include_directories(${PROJECT_NAME} PRIVATE ${LUA_DIR}/include)
 target_link_libraries(${PROJECT_NAME} ${LUA_NAME})
 
-set(SPD_LOG_DIR ${LIB_DIR}/spdlog-1.4.2)
-target_include_directories(${PROJECT_NAME} PUBLIC ${SPD_LOG_DIR}/include)
+set(SPDLOG_DIR ${LIB_DIR}/spdlog-1.4.2)
+target_include_directories(${PROJECT_NAME} PUBLIC ${SPDLOG_DIR}/include)
+
+if (WIN32)
+    add_compile_definitions(ST_PLATFORM_WINDOWS)
+    set(PLATFORM_FOUND TRUE)
+    if (MSVC)
+        add_compile_definitions(ST_COMPILER_MSVC)
+        set(COMPILER_FOUND TRUE)
+    endif()
+endif()
+
+if (UNIX AND APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    add_compile_definitions(ST_PLATFORM_MACOS)
+    set(PLATFORM_FOUND TRUE)
+    if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+        add_compile_definitions(ST_COMPILER_CLANG)
+        set(COMPILER_FOUND TRUE)
+    endif()
+endif()
+
+if (NOT PLATFORM_FOUND)
+    message(FATAL_ERROR "-- Could not find platform [${CMAKE_SYSTEM_NAME}]")
+endif()
+
+if (NOT COMPILER_FOUND)
+    message(FATAL_ERROR "-- Could not find compiler [${CMAKE_CXX_COMPILER_ID}]")
+endif()
