@@ -17,8 +17,8 @@ namespace blink
     private:
         FileSystem* fileSystem;
         LuaClient* luaClient;
-        LuaGraphicsBinding* luaGraphicsEngine;
-        LuaBinding* luaEngine;
+        LuaGraphicsBinding* luaGraphicsBinding;
+        LuaBinding* luaBinding;
         Window* window;
         GraphicsContext* graphicsContext;
         Renderer* renderer;

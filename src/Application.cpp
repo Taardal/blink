@@ -3,7 +3,7 @@
 namespace blink
 {
     Application::Application(LuaBinding* luaEngine, Window* window, GraphicsContext* graphicsContext, Renderer* renderer)
-            : luaEngine(luaEngine),
+            : luaBinding(luaEngine),
               window(window),
               graphicsContext(graphicsContext),
               renderer(renderer),
@@ -11,20 +11,20 @@ namespace blink
     {
     }
 
-    void Application::Init(Config& defaultConfig)
+    void Application::Init(Config& config)
     {
-        Log::SetLevel(defaultConfig.LogLevel);
-        luaEngine->Init(this);
-        const Config& config = luaEngine->OnConfigure(defaultConfig);
+        Log::SetLevel(config.LogLevel);
+        luaBinding->Init(this);
+        luaBinding->OnConfigure(config);
         window->Init(config.WindowConfig, config.GraphicsConfig);
         graphicsContext->Init(config.GraphicsConfig);
     }
 
-    void Application::Run()
+    void Application::Run(const char* mainLuaFilePath)
     {
         ST_LOG_INFO(ST_TAG, "Running application...");
-
-        luaEngine->OnCreate();
+        luaBinding->Run(mainLuaFilePath);
+        luaBinding->OnCreate();
         glClearColor(0.8f, 0.2f, 0.3f, 0.2f);
 
         running = false;
@@ -32,8 +32,8 @@ namespace blink
         {
         }
         glClear(GL_COLOR_BUFFER_BIT);
-        luaEngine->OnUpdate();
-        luaEngine->OnDraw();
+        luaBinding->OnUpdate();
+        luaBinding->OnDraw();
         window->OnUpdate();
     }
 

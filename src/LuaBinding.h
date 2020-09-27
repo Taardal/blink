@@ -25,16 +25,13 @@ namespace blink
 
         void Run(const char* mainFilePath);
 
-        [[nodiscard]] Config& OnConfigure(Config& defaultConfig);
+        void OnConfigure(Config& config);
 
         void OnCreate();
 
         void OnUpdate();
 
         void OnDraw();
-
-    private:
-        Config& OnConfigureLua(Config& config);
     };
 }
 

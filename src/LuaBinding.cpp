@@ -17,42 +17,18 @@ namespace blink
     void LuaBinding::Init(LuaBindingListener* listener)
     {
         lua->EnableStandardLibraries();
-        lua->AddPackagePath(LUA_PACKAGE_PATH);
         lua->Table().SetGlobal("blink");
         graphicsBinding->Init(listener);
     }
 
     void LuaBinding::Run(const char* mainFilePath)
     {
+        lua->AddPackagePath(LUA_PACKAGE_PATH);
+        lua->RunFile(LUA_CONFIG_PATH);
         lua->RunFile(mainFilePath ? mainFilePath : LUA_MAIN_PATH);
     }
 
-    Config& LuaBinding::OnConfigure(Config& defaultConfig)
-    {
-        if (fileSystem->Exists(LUA_CONFIG_PATH))
-        {
-            lua->RunFile(LUA_CONFIG_PATH);
-            return OnConfigureLua(defaultConfig);
-        }
-        return defaultConfig;
-    }
-
-    void LuaBinding::OnCreate()
-    {
-        lua->Global("blink").Field("onCreate").CallFunction();
-    }
-
-    void LuaBinding::OnUpdate()
-    {
-        lua->Global("blink").Field("onUpdate").CallFunction();
-    }
-
-    void LuaBinding::OnDraw()
-    {
-        lua->Global("blink").Field("onDraw").CallFunction();
-    }
-
-    Config& LuaBinding::OnConfigureLua(Config& config)
+    void LuaBinding::OnConfigure(Config& config)
     {
         lua->Clear();
         lua->Global("blink");
@@ -73,7 +49,21 @@ namespace blink
         config.WindowConfig.Title = lua->Field("title").ToString();
         config.WindowConfig.Width = lua->Field("width").ToNumber<int>();
         config.WindowConfig.Height = lua->Field("height").ToNumber<int>();
-
-        return config;
     }
+
+    void LuaBinding::OnCreate()
+    {
+        lua->Global("blink").Field("onCreate").CallFunction();
+    }
+
+    void LuaBinding::OnUpdate()
+    {
+        lua->Global("blink").Field("onUpdate").CallFunction();
+    }
+
+    void LuaBinding::OnDraw()
+    {
+        lua->Global("blink").Field("onDraw").CallFunction();
+    }
+
 }

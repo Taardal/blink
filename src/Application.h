@@ -9,7 +9,7 @@ namespace blink
     class Application : LuaBindingListener
     {
     private:
-        LuaBinding* luaEngine;
+        LuaBinding* luaBinding;
         Window* window;
         GraphicsContext* graphicsContext;
         Renderer* renderer;
@@ -18,9 +18,9 @@ namespace blink
     public:
         Application(LuaBinding* luaEngine, Window* window, GraphicsContext* graphicsContext, Renderer* renderer);
 
-        void Run();
+        void Run(const char* mainLuaFilePath);
 
-        void Init(Config& defaultConfig);
+        void Init(Config& config);
 
     private:
         void OnDrawRectangle(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color) override;
