@@ -1,0 +1,16 @@
+# Build 
+build
+cmake-build-debug
+cmake-build-release
+
+# Binaries
+bin
+Debug
+Release
+
+# Editors & IDEs
+.idea
+.vscode
+
+# macOS
+.DS_Store

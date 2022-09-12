@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Log.h"
+#include "system/Log.h"
 #include "lua/lua.hpp"
 #include <string>
 #include <cassert>
@@ -142,7 +142,7 @@ public:
         int result = lua_pcall(L, config.ParameterCount, config.ReturnCount, ERROR_HANDLER_STACK_INDEX);
         if (result != LUA_OK)
         {
-            ST_LOG_ERROR(ST_TAG, "Could not run function [{0}]", GetString());
+            BL_LOG_ERROR("Could not run function [{0}]", GetString());
             assert(result != LUA_OK);
         }
         ClearStack();

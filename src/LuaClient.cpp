@@ -1,5 +1,5 @@
 #include "LuaClient.h"
-#include "Log.h"
+#include "system/Log.h"
 #include <cassert>
 #include <sstream>
 
@@ -31,22 +31,22 @@ void LuaClient::AddPackagePath(const char* path)
 
 void LuaClient::RunFile(const std::string& path) const
 {
-    ST_LOG_INFO(ST_TAG, "Running file [{0}]", path);
+    BL_LOG_INFO("Running file [{0}]", path);
     int result = luaL_dofile(L, path.c_str());
     if (result != LUA_OK)
     {
-        ST_LOG_ERROR(ST_TAG, "Could not run file [{0}]", GetString());
+        BL_LOG_ERROR("Could not run file [{0}]", GetString());
         assert(result != LUA_OK);
     }
 }
 
 void LuaClient::RunScript(const std::string& script) const
 {
-    ST_LOG_DEBUG(ST_TAG, "Running script [{0}]", script);
+    BL_LOG_DEBUG("Running script [{0}]", script);
     int result = luaL_dostring(L, script.c_str());
     if (result != LUA_OK)
     {
-        ST_LOG_ERROR(ST_TAG, "Could not run script [{0}]", GetString());
+        BL_LOG_ERROR("Could not run script [{0}]", GetString());
         assert(result != LUA_OK);
     }
 }

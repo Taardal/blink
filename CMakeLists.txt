@@ -3,45 +3,83 @@ project(blink)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(
-        blink
-        src/main.cpp
-        src/LuaClient.cpp
-        src/LuaClient.h
-        src/FileSystem.cpp
-        src/FileSystem.h
-        src/Engine.cpp
-        src/Engine.h
-        src/LuaEngine.cpp
-        src/LuaEngine.h
-        src/Config.h
-        src/Application.cpp
-        src/Application.h
-        src/Window.cpp
-        src/Window.h
-        src/GraphicsContext.cpp
-        src/GraphicsContext.h
-        src/Log.cpp
-        src/Log.h
-        src/Tag.cpp
-        src/Tag.h
-        src/LuaGraphicsEngine.cpp
-        src/LuaGraphicsEngine.h
-        src/Renderer.cpp
-        src/Renderer.h
-        src/LuaEngineListener.h
-)
-
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 set(RES_DIR ${PROJECT_SOURCE_DIR}/res)
 set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
+set(BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
+set(CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake)
 
-set(GLAD_NAME glad)
-set(GLAD_DIR ${LIB_DIR}/glad-0.1.33)
-add_library(${GLAD_NAME} ${GLAD_DIR}/src/glad.c)
-target_include_directories(${GLAD_NAME} PRIVATE ${GLAD_DIR}/include)
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLAD_DIR}/include)
-target_link_libraries(${PROJECT_NAME} glad ${CMAKE_DL_LIBS})
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+    set(CMAKE_BUILD_TYPE Debug)
+endif ()
+
+add_executable(
+        ${PROJECT_NAME}
+        ${SRC_DIR}/main.cpp
+        ${SRC_DIR}/pch.cpp
+        ${SRC_DIR}/pch.h
+        ${SRC_DIR}/App.cpp
+        ${SRC_DIR}/App.h
+        ${SRC_DIR}/Config.h
+        ${SRC_DIR}/Game.cpp
+        ${SRC_DIR}/Game.h
+        ${SRC_DIR}/GameModule.cpp
+        ${SRC_DIR}/GameModule.h
+        ${SRC_DIR}/LuaClient.cpp
+        ${SRC_DIR}/LuaClient.h
+        ${SRC_DIR}/LuaEngine.cpp
+        ${SRC_DIR}/LuaEngine.h
+        ${SRC_DIR}/LuaEngineListener.h
+        ${SRC_DIR}/LuaGraphicsEngine.cpp
+        ${SRC_DIR}/LuaGraphicsEngine.h
+        ${SRC_DIR}/graphics/GraphicsModule.cpp
+        ${SRC_DIR}/graphics/GraphicsModule.h
+        ${SRC_DIR}/graphics/IndexBuffer.cpp
+        ${SRC_DIR}/graphics/IndexBuffer.h
+        ${SRC_DIR}/graphics/Quad.h
+        ${SRC_DIR}/graphics/Renderer.cpp
+        ${SRC_DIR}/graphics/Renderer.h
+        ${SRC_DIR}/graphics/Shader.cpp
+        ${SRC_DIR}/graphics/Shader.h
+        ${SRC_DIR}/graphics/Texture.cpp
+        ${SRC_DIR}/graphics/Texture.h
+        ${SRC_DIR}/graphics/Vertex.h
+        ${SRC_DIR}/graphics/VertexAttribute.cpp
+        ${SRC_DIR}/graphics/VertexAttribute.h
+        ${SRC_DIR}/graphics/VertexBuffer.cpp
+        ${SRC_DIR}/graphics/VertexBuffer.h
+        ${SRC_DIR}/graphics/Vulkan.cpp
+        ${SRC_DIR}/graphics/Vulkan.h
+        ${SRC_DIR}/graphics/VulkanDevice.cpp
+        ${SRC_DIR}/graphics/VulkanDevice.h
+        ${SRC_DIR}/graphics/VulkanPhysicalDevice.cpp
+        ${SRC_DIR}/graphics/VulkanPhysicalDevice.h
+        ${SRC_DIR}/system/Debug.h
+        ${SRC_DIR}/system/Environment.h
+        ${SRC_DIR}/system/FileSystem.cpp
+        ${SRC_DIR}/system/FileSystem.h
+        ${SRC_DIR}/system/Log.cpp
+        ${SRC_DIR}/system/Log.h
+        ${SRC_DIR}/system/SystemModule.cpp
+        ${SRC_DIR}/system/SystemModule.h
+        ${SRC_DIR}/utils/size.h
+        ${SRC_DIR}/window/Window.cpp
+        ${SRC_DIR}/window/Window.h
+        ${SRC_DIR}/window/WindowModule.cpp
+        ${SRC_DIR}/window/WindowModule.h
+)
+
+set_target_properties(
+        ${PROJECT_NAME}
+        PROPERTIES
+        RUNTIME_OUTPUT_NAME ${PROJECT_NAME}
+        RUNTIME_OUTPUT_DIRECTORY ${BIN_DIR}
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BIN_DIR}/debug
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_DIR}/release
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
+target_precompile_headers(${PROJECT_NAME} PUBLIC ${SRC_DIR}/pch.h)
 
 set(GLFW_DIR ${LIB_DIR}/glfw-3.3)
 set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL Build the GLFW example programs)
@@ -64,3 +102,7 @@ target_link_libraries(${PROJECT_NAME} ${LUA_NAME})
 
 set(SPD_LOG_DIR ${LIB_DIR}/spdlog-1.4.2)
 target_include_directories(${PROJECT_NAME} PUBLIC ${SPD_LOG_DIR}/include)
+
+find_package(Vulkan REQUIRED)
+target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)

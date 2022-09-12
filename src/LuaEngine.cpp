@@ -1,6 +1,6 @@
 #include "LuaEngine.h"
 
-namespace blink
+namespace Blink
 {
     const char* LuaEngine::LUA_PACKAGE_PATH = "res/?.lua";
     const char* LuaEngine::LUA_CONFIG_PATH = "res/config.lua";
@@ -29,7 +29,7 @@ namespace blink
 
     Config& LuaEngine::OnConfigure(Config& defaultConfig)
     {
-        if (fileSystem->Exists(LUA_CONFIG_PATH))
+        if (fileSystem->exists(LUA_CONFIG_PATH))
         {
             lua->RunFile(LUA_CONFIG_PATH);
             return LoadLuaConfig(defaultConfig);
@@ -62,6 +62,7 @@ namespace blink
 
         lua->Table();
 
+        /*
         lua->Table();
         lua->String(config.WindowConfig.Title.c_str()).WriteToField("title");
         lua->Number<int>(config.WindowConfig.Width).WriteToField("width");
@@ -97,6 +98,7 @@ namespace blink
         lua->Pop();
         config.GraphicsConfig.VersionMinor = lua->Field("versionMinor").ToNumber<int>();
         lua->Pop(2);
+        */
 
         lua->End();
         return config;

@@ -2,10 +2,10 @@
 
 #include "LuaGraphicsEngine.h"
 #include "LuaClient.h"
-#include "FileSystem.h"
+#include "system/FileSystem.h"
 #include "Config.h"
 
-namespace blink
+namespace Blink
 {
     class LuaEngine
     {

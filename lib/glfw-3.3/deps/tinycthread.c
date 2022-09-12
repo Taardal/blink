@@ -142,10 +142,10 @@ int cnd_init(cnd_t *cond)
 #if defined(_TTHREAD_WIN32_)
   cond->mWaitersCount = 0;
 
-  /* Init critical section */
+  /* initialize critical section */
   InitializeCriticalSection(&cond->mWaitersCountLock);
 
-  /* Init events */
+  /* initialize events */
   cond->mEvents[_CONDITION_EVENT_ONE] = CreateEvent(NULL, FALSE, FALSE, NULL);
   if (cond->mEvents[_CONDITION_EVENT_ONE] == NULL)
   {
