@@ -24,39 +24,72 @@ namespace Blink {
 
 namespace Blink {
 
+    Vulkan::Vulkan(Window* window)
+        : window(window) {}
+
     std::vector<VkPhysicalDevice> Vulkan::getPhysicalDevices() const {
         uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(vkInstance, &deviceCount, nullptr);
-        if (!deviceCount) {
-            return {};
-        }
+        vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, nullptr);
         std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(vkInstance, &deviceCount, devices.data());
+        vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, devices.data());
         return devices;
     }
 
+    VkSurfaceKHR Vulkan::getSurface() const {
+        return surface;
+    }
+
     bool Vulkan::initialize(const VulkanConfig& vulkanConfig) {
-        validationLayersEnabled = vulkanConfig.isValidationLayersEnabled();
-        if (validationLayersEnabled && !hasValidationLayers(vulkanConfig.validationLayers)) {
-            BL_LOG_ERROR("Could not find requested validation layers");
+        this->validationLayersEnabled = vulkanConfig.validationLayersEnabled;
+        if (!window->isVulkanSupported()) {
+            BL_LOG_ERROR("Vulkan is not supported");
             return false;
         }
-        if (!hasExtensions(vulkanConfig.requiredExtensions)) {
+        std::vector<const char*> requiredExtensions = window->getRequiredVulkanExtensions();
+        if (std::count(requiredExtensions.begin(), requiredExtensions.end(), "VK_KHR_surface") == 0) {
+            BL_LOG_ERROR("Vulkan surface extension is not supported");
+            return false;
+        }
+        if (Environment::isMacOS()) {
+            requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+        }
+        if (validationLayersEnabled) {
+            requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+        if (!hasExtensions(requiredExtensions)) {
             BL_LOG_ERROR("Could not find required extensions");
             return false;
         }
-        if (!createInstance(vulkanConfig)) {
+        std::vector<const char*> validationLayers;
+        VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
+        if (validationLayersEnabled) {
+            validationLayers.push_back("VK_LAYER_KHRONOS_validation");
+            if (!hasValidationLayers(validationLayers)) {
+                BL_LOG_ERROR("Could not find validation layers");
+                return false;
+            }
+            debugMessengerCreateInfo = getDebugMessengerCreateInfo();
+        }
+        if (!createInstance(vulkanConfig, requiredExtensions, validationLayers, debugMessengerCreateInfo)) {
             BL_LOG_ERROR("Could not create Vulkan instance");
             return false;
         }
         BL_LOG_INFO("Created Vulkan instance");
         if (validationLayersEnabled) {
-            createDebugMessenger();
+            if (!createDebugMessenger(debugMessengerCreateInfo)) {
+                BL_LOG_ERROR("Could not create debug messenger");
+                return false;
+            }
+        }
+        if (!createSurface()) {
+            BL_LOG_ERROR("Could not create surface");
+            return false;
         }
         return true;
     }
 
     void Vulkan::terminate() {
+        destroySurface();
         if (validationLayersEnabled) {
             destroyDebugMessenger();
         }
@@ -64,81 +97,71 @@ namespace Blink {
         BL_LOG_INFO("Destroyed Vulkan instance");
     }
 
-    bool Vulkan::createInstance(const VulkanConfig& config) {
+    bool Vulkan::createInstance(
+            const VulkanConfig& vulkanConfig,
+            const std::vector<const char*>& requiredExtensions,
+            const std::vector<const char*>& validationLayers,
+            const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo
+    ) {
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = config.applicationName.c_str();
+        appInfo.pApplicationName = vulkanConfig.applicationName.c_str();
         appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.pEngineName = config.engineName.c_str();
+        appInfo.pEngineName = vulkanConfig.engineName.c_str();
         appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_3;
 
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledExtensionCount = (uint32_t) config.requiredExtensions.size();
-        createInfo.ppEnabledExtensionNames = config.requiredExtensions.data();
+        createInfo.enabledExtensionCount = (uint32_t) requiredExtensions.size();
+        createInfo.ppEnabledExtensionNames = requiredExtensions.data();
         if (Environment::isMacOS()) {
             createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
         }
-        VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
         if (validationLayersEnabled) {
-            debugMessengerCreateInfo = getDebugMessengerCreateInfo();
             createInfo.pNext = &debugMessengerCreateInfo;
-            createInfo.enabledLayerCount = (uint32_t) config.validationLayers.size();
-            createInfo.ppEnabledLayerNames = config.validationLayers.data();
+            createInfo.enabledLayerCount = (uint32_t) validationLayers.size();
+            createInfo.ppEnabledLayerNames = validationLayers.data();
         }
 
-        return vkCreateInstance(&createInfo, BL_VK_ALLOCATOR, &vkInstance) == VK_SUCCESS;
+        return vkCreateInstance(&createInfo, BL_VK_ALLOCATOR, &vulkanInstance) == VK_SUCCESS;
     }
 
     void Vulkan::destroyInstance() {
-        vkDestroyInstance(vkInstance, BL_VK_ALLOCATOR);
+        vkDestroyInstance(vulkanInstance, BL_VK_ALLOCATOR);
     }
 
-    bool Vulkan::createDebugMessenger() {
+    bool Vulkan::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) {
         const char* functionName = "vkCreateDebugUtilsMessengerEXT";
-        auto function = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vkInstance, functionName);
+        auto function = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vulkanInstance, functionName);
         if (function == nullptr) {
             BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
             return false;
         }
-        VkDebugUtilsMessengerCreateInfoEXT createInfo = getDebugMessengerCreateInfo();
-        if (function(vkInstance, &createInfo, BL_VK_ALLOCATOR, &debugMessenger) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create debug messenger [{0}]", functionName);
-            return false;
-        }
-        return true;
+        return function(vulkanInstance, &debugMessengerCreateInfo, BL_VK_ALLOCATOR, &debugMessenger) == VK_SUCCESS;
     }
 
     void Vulkan::destroyDebugMessenger() {
         const char* functionName = "vkDestroyDebugUtilsMessengerEXT";
-        auto function = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vkInstance, functionName);
+        auto function = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vulkanInstance, functionName);
         if (function == nullptr) {
             BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
             return;
         }
-        function(vkInstance, debugMessenger, BL_VK_ALLOCATOR);
+        function(vulkanInstance, debugMessenger, BL_VK_ALLOCATOR);
     }
 
-    VkDebugUtilsMessengerCreateInfoEXT Vulkan::getDebugMessengerCreateInfo() const {
-        VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    bool Vulkan::createSurface() {
+        return window->createVulkanSurface(vulkanInstance, &surface, BL_VK_ALLOCATOR) == VK_SUCCESS;
+    }
 
-        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-                                     | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
-                                     | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-
-        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
-                                 | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
-                                 | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-
-        createInfo.pfnUserCallback = onDebugMessage;
-        return createInfo;
+    void Vulkan::destroySurface() const {
+        vkDestroySurfaceKHR(vulkanInstance, surface, BL_VK_ALLOCATOR);
     }
 
     bool Vulkan::hasValidationLayers(const std::vector<const char*>& validationLayers) const {
-        std::vector<VkLayerProperties> availableValidationLayers = findAvailableValidationLayers();
+        std::vector<VkLayerProperties> availableValidationLayers = getAvailableValidationLayers();
         for (const char* layerName: validationLayers) {
             bool layerFound = false;
             for (const auto& availableLayer: availableValidationLayers) {
@@ -155,7 +178,7 @@ namespace Blink {
         return true;
     }
 
-    std::vector<VkLayerProperties> Vulkan::findAvailableValidationLayers() const {
+    std::vector<VkLayerProperties> Vulkan::getAvailableValidationLayers() const {
         uint32_t count;
         VkLayerProperties* layerProperties = nullptr;
         vkEnumerateInstanceLayerProperties(&count, layerProperties);
@@ -165,7 +188,7 @@ namespace Blink {
     }
 
     bool Vulkan::hasExtensions(const std::vector<const char*>& extensions) const {
-        std::vector<VkExtensionProperties> availableExtensions = findAvailableExtensions();
+        std::vector<VkExtensionProperties> availableExtensions = getAvailableExtensions();
         for (const char* extension: extensions) {
             bool extensionFound = false;
             for (const VkExtensionProperties& availableExtension: availableExtensions) {
@@ -182,7 +205,7 @@ namespace Blink {
         return true;
     }
 
-    std::vector<VkExtensionProperties> Vulkan::findAvailableExtensions() const {
+    std::vector<VkExtensionProperties> Vulkan::getAvailableExtensions() const {
         uint32_t extensionCount = 0;
         const char* layerName = nullptr;
         VkExtensionProperties* extensionProperties = nullptr;
@@ -190,5 +213,21 @@ namespace Blink {
         std::vector<VkExtensionProperties> extensions(extensionCount);
         vkEnumerateInstanceExtensionProperties(layerName, &extensionCount, extensions.data());
         return extensions;
+    }
+
+    VkDebugUtilsMessengerCreateInfoEXT Vulkan::getDebugMessengerCreateInfo() const {
+        VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+
+        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+                                     | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+                                     | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+                                 | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+                                 | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+
+        createInfo.pfnUserCallback = onDebugMessage;
+        return createInfo;
     }
 }

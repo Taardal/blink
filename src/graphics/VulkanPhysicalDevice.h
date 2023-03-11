@@ -7,7 +7,7 @@ namespace Blink {
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
-        std::optional<uint32_t> presentationFamily;
+        std::optional<uint32_t> presentFamily;
     };
 
     struct SwapChainInfo {
@@ -23,10 +23,6 @@ namespace Blink {
         std::vector<VkExtensionProperties> extensions{};
         QueueFamilyIndices queueFamilyIndices{};
         SwapChainInfo swapChainInfo{};
-    };
-
-    struct VulkanPhysicalDeviceConfig {
-        std::vector<const char*> requiredExtensions;
     };
 
     class VulkanPhysicalDevice {
@@ -46,24 +42,26 @@ namespace Blink {
 
         const VkPhysicalDeviceFeatures& getFeatures() const;
 
-        VkResult createDevice(const VkDeviceCreateInfo& vkDeviceCreateInfo, VkDevice* vkDevice) const;
+        const SwapChainInfo& getSwapChainInfo() const;
 
-        bool initialize(const VulkanPhysicalDeviceConfig& config);
+        VkResult createDevice(VkDeviceCreateInfo* vkDeviceCreateInfo, VkDevice* vkDevice) const;
+
+        bool initialize();
 
         void terminate() const;
 
     private:
-        VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const VulkanPhysicalDeviceConfig& config) const;
+        VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const std::vector<const char*>& requiredExtensions) const;
 
-        VulkanPhysicalDeviceInfo getDeviceInfo(VkPhysicalDevice vkPhysicalDevice, const VulkanPhysicalDeviceConfig& config) const;
+        VulkanPhysicalDeviceInfo getDeviceInfo(VkPhysicalDevice vkPhysicalDevice, const std::vector<const char*>& requiredExtensions) const;
 
-        std::vector<VkExtensionProperties> findExtensions(VkPhysicalDevice device, const VulkanPhysicalDeviceConfig& config) const;
+        std::vector<VkExtensionProperties> findExtensions(VkPhysicalDevice device, const std::vector<const char*>& requiredExtensions) const;
 
         QueueFamilyIndices findQueueFamilyIndices(VkPhysicalDevice device) const;
 
-        //SwapChainInfo findSwapChainInfo(VkPhysicalDevice device) const;
+        SwapChainInfo findSwapChainInfo(VkPhysicalDevice device) const;
 
-        uint32_t getSuitabilityRating(const VulkanPhysicalDeviceInfo& deviceInfo, const VulkanPhysicalDeviceConfig& config) const;
+        uint32_t getSuitabilityRating(const VulkanPhysicalDeviceInfo& deviceInfo, const std::vector<const char*>& requiredExtensions) const;
 
         bool hasRequiredExtensions(const std::vector<const char*>& extensions, const std::vector<VkExtensionProperties>& availableExtensions) const;
 

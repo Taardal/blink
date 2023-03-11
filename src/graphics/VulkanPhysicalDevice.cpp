@@ -18,13 +18,27 @@ namespace Blink {
         return deviceInfo.features;
     }
 
-    bool VulkanPhysicalDevice::initialize(const VulkanPhysicalDeviceConfig& config) {
+    const SwapChainInfo& VulkanPhysicalDevice::getSwapChainInfo() const {
+        return deviceInfo.swapChainInfo;
+    }
+
+    VkResult VulkanPhysicalDevice::createDevice(VkDeviceCreateInfo* vkDeviceCreateInfo, VkDevice* vkDevice) const {
+        return vkCreateDevice(deviceInfo.physicalDevice, vkDeviceCreateInfo, BL_VK_ALLOCATOR, vkDevice);
+    }
+
+    bool VulkanPhysicalDevice::initialize() {
         std::vector<VkPhysicalDevice> availableDevices = vulkan->getPhysicalDevices();
         if (availableDevices.empty()) {
             BL_LOG_ERROR("Could not find any physical devices");
             return false;
         }
-        VulkanPhysicalDeviceInfo mostSuitableDeviceInfo = getMostSuitableDevice(availableDevices, config);
+        std::vector<const char*> requiredExtensions = {
+                VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        };
+        if (Environment::isMacOS()) {
+            requiredExtensions.push_back("VK_KHR_portability_subset");
+        }
+        VulkanPhysicalDeviceInfo mostSuitableDeviceInfo = getMostSuitableDevice(availableDevices, requiredExtensions);
         if (mostSuitableDeviceInfo.physicalDevice == nullptr) {
             BL_LOG_ERROR("Could not get any suitable device");
             return false;
@@ -38,15 +52,11 @@ namespace Blink {
 
     }
 
-    VkResult VulkanPhysicalDevice::createDevice(const VkDeviceCreateInfo& vkDeviceCreateInfo, VkDevice* vkDevice) const {
-        return vkCreateDevice(deviceInfo.physicalDevice, &vkDeviceCreateInfo, BL_VK_ALLOCATOR, vkDevice);
-    }
-
-    VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const VulkanPhysicalDeviceConfig& config) const {
+    VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const std::vector<const char*>& requiredExtensions) const {
         std::multimap<uint32_t , VulkanPhysicalDeviceInfo> devicesByRating;
         for (VkPhysicalDevice vkPhysicalDevice : vkPhysicalDevices) {
-            VulkanPhysicalDeviceInfo deviceInfo = getDeviceInfo(vkPhysicalDevice, config);
-            uint32_t suitabilityRating = getSuitabilityRating(deviceInfo, config);
+            VulkanPhysicalDeviceInfo deviceInfo = getDeviceInfo(vkPhysicalDevice, requiredExtensions);
+            uint32_t suitabilityRating = getSuitabilityRating(deviceInfo, requiredExtensions);
             devicesByRating.insert(std::make_pair(suitabilityRating, deviceInfo));
         }
         uint32_t highestRating = devicesByRating.rbegin()->first;
@@ -56,7 +66,7 @@ namespace Blink {
         return devicesByRating.rbegin()->second;
     }
 
-    VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getDeviceInfo(VkPhysicalDevice vkPhysicalDevice, const VulkanPhysicalDeviceConfig& config) const {
+    VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getDeviceInfo(VkPhysicalDevice vkPhysicalDevice, const std::vector<const char*>& requiredExtensions) const {
         VkPhysicalDeviceProperties vkPhysicalDeviceProperties;
         vkGetPhysicalDeviceProperties(vkPhysicalDevice, &vkPhysicalDeviceProperties);
 
@@ -67,14 +77,14 @@ namespace Blink {
         deviceInfo.physicalDevice = vkPhysicalDevice;
         deviceInfo.properties = vkPhysicalDeviceProperties;
         deviceInfo.features = vkPhysicalDeviceFeatures;
-        deviceInfo.extensions = findExtensions(vkPhysicalDevice, config);
+        deviceInfo.extensions = findExtensions(vkPhysicalDevice, requiredExtensions);
         deviceInfo.queueFamilyIndices = findQueueFamilyIndices(vkPhysicalDevice);
-        //deviceInfo.swapChainInfo = findSwapChainInfo(vkPhysicalDevice);
+        deviceInfo.swapChainInfo = findSwapChainInfo(vkPhysicalDevice);
 
         return deviceInfo;
     }
 
-    std::vector<VkExtensionProperties> VulkanPhysicalDevice::findExtensions(VkPhysicalDevice device, const VulkanPhysicalDeviceConfig& config) const {
+    std::vector<VkExtensionProperties> VulkanPhysicalDevice::findExtensions(VkPhysicalDevice device, const std::vector<const char*>& requiredExtensions) const {
         const char* layerName = nullptr;
         uint32_t extensionCount = 0;
         vkEnumerateDeviceExtensionProperties(device, layerName, &extensionCount, nullptr);
@@ -82,9 +92,9 @@ namespace Blink {
         vkEnumerateDeviceExtensionProperties(device, layerName, &extensionCount, availableExtensions.data());
 
         std::vector<VkExtensionProperties> extensions;
-        for (const char* extension : config.requiredExtensions) {
+        for (const char* requiredExtension : requiredExtensions) {
             for (const VkExtensionProperties& availableExtension : availableExtensions) {
-                if (strcmp(extension, availableExtension.extensionName) == 0) {
+                if (strcmp(requiredExtension, availableExtension.extensionName) == 0) {
                     extensions.push_back(availableExtension);
                 }
             }
@@ -100,18 +110,16 @@ namespace Blink {
         vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, queueFamilies.data());
 
         QueueFamilyIndices indices;
-        for (int i = 0; i < queueFamilies.size(); i++) {
-            const VkQueueFamilyProperties& queueFamily = queueFamilies[i];
+        for (int queueFamilyIndex = 0; queueFamilyIndex < queueFamilies.size(); queueFamilyIndex++) {
+            const VkQueueFamilyProperties& queueFamily = queueFamilies[queueFamilyIndex];
             if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                indices.graphicsFamily = i;
+                indices.graphicsFamily = queueFamilyIndex;
             }
-            /*
             VkBool32 presentationSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, i, vulkan->getSurface(), &presentationSupport);
+            vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, queueFamilyIndex, vulkan->getSurface(), &presentationSupport);
             if (presentationSupport) {
-                indices.presentationFamily = i;
+                indices.presentFamily = queueFamilyIndex;
             }
-            */
             if (hasRequiredQueueFamilyIndices(indices)) {
                 break;
             }
@@ -119,28 +127,26 @@ namespace Blink {
         return indices;
     }
 
-    /*
     SwapChainInfo VulkanPhysicalDevice::findSwapChainInfo(VkPhysicalDevice device) const {
         SwapChainInfo swapChainInfo;
 
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, vulkan->getSurface(), &swapChainInfo.SurfaceCapabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, vulkan->getSurface(), &swapChainInfo.surfaceCapabilities);
 
         uint32_t formatCount = 0;
         vkGetPhysicalDeviceSurfaceFormatsKHR(device, vulkan->getSurface(), &formatCount, nullptr);
-        swapChainInfo.SurfaceFormats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, vulkan->getSurface(), &formatCount, swapChainInfo.SurfaceFormats.data());
+        swapChainInfo.surfaceFormats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, vulkan->getSurface(), &formatCount, swapChainInfo.surfaceFormats.data());
 
         uint32_t presentationModeCount = 0;
         vkGetPhysicalDeviceSurfacePresentModesKHR(device, vulkan->getSurface(), &presentationModeCount, nullptr);
-        swapChainInfo.PresentModes.resize(presentationModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, vulkan->getSurface(), &presentationModeCount, swapChainInfo.PresentModes.data());
+        swapChainInfo.presentModes.resize(presentationModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, vulkan->getSurface(), &presentationModeCount, swapChainInfo.presentModes.data());
 
         return swapChainInfo;
     }
-    */
 
-    uint32_t VulkanPhysicalDevice::getSuitabilityRating(const VulkanPhysicalDeviceInfo& deviceInfo, const VulkanPhysicalDeviceConfig& config) const {
-        if (!hasRequiredExtensions(config.requiredExtensions, deviceInfo.extensions)) {
+    uint32_t VulkanPhysicalDevice::getSuitabilityRating(const VulkanPhysicalDeviceInfo& deviceInfo, const std::vector<const char*>& requiredExtensions) const {
+        if (!hasRequiredExtensions(requiredExtensions, deviceInfo.extensions)) {
             BL_LOG_DEBUG("{0} does not have required device extensions", deviceInfo.properties.deviceName);
             return 0;
         }
@@ -148,11 +154,11 @@ namespace Blink {
             BL_LOG_DEBUG("{0} does not have required queue family indices", deviceInfo.properties.deviceName);
             return 0;
         }
-        /*
          if (!hasRequiredSwapChainSupport(deviceInfo.swapChainInfo)) {
             BL_LOG_DEBUG("{0} does not have required swap chain info", deviceInfo.properties.deviceName);
             return 0;
         }
+         /*
         if (!hasRequiredFeatures(deviceInfo.features)) {
             BL_LOG_DEBUG("{0} does not have required device features", deviceInfo.properties.deviceName);
             return 0;
@@ -183,7 +189,7 @@ namespace Blink {
     }
 
     bool VulkanPhysicalDevice::hasRequiredQueueFamilyIndices(const QueueFamilyIndices& queueFamilyIndices) const {
-        return queueFamilyIndices.graphicsFamily.has_value(); // && queueFamilyIndices.presentationFamily.has_value();
+        return queueFamilyIndices.graphicsFamily.has_value() && queueFamilyIndices.presentFamily.has_value();
     }
 
     bool VulkanPhysicalDevice::hasRequiredSwapChainSupport(const SwapChainInfo& swapChainInfo) const {

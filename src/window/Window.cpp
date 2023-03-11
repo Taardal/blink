@@ -1,9 +1,17 @@
 #include "Window.h"
 #include "system/Log.h"
+#include "GLFW/glfw3.h"
 
 namespace Blink {
     Window::Window()
             : glfwWindow(nullptr) {
+    }
+
+    WindowSize Window::getSizeInPixels() const {
+        int32_t width = 0;
+        int32_t height = 0;
+        glfwGetFramebufferSize(glfwWindow, &width, &height);
+        return { width, height };
     }
 
     bool Window::initialize(const AppConfig& config) {
@@ -82,12 +90,14 @@ namespace Blink {
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
         if (glfwExtensions == nullptr) {
-            const char* error;
-            uint32_t errorCode = glfwGetError(&error);
-            BL_LOG_ERROR("Could not get required Vulkan extensions. GLFW error: [{}, {}]", errorCode, error);
+            BL_LOG_ERROR("Could not get required Vulkan extensions");
             return {};
         }
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
         return extensions;
+    }
+
+    VkResult Window::createVulkanSurface(VkInstance vulkanInstance, VkSurfaceKHR* surface, VkAllocationCallbacks* allocator) const {
+        return glfwCreateWindowSurface(vulkanInstance, glfwWindow, allocator, surface);
     }
 }

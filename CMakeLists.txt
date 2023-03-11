@@ -20,7 +20,7 @@ add_executable(
         ${SRC_DIR}/pch.h
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
-        ${SRC_DIR}/Config.h
+        ${SRC_DIR}/AppConfig.h
         ${SRC_DIR}/Game.cpp
         ${SRC_DIR}/Game.h
         ${SRC_DIR}/GameModule.cpp
@@ -54,6 +54,8 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanDevice.h
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.cpp
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.h
+        ${SRC_DIR}/graphics/VulkanSwapChain.cpp
+        ${SRC_DIR}/graphics/VulkanSwapChain.h
         ${SRC_DIR}/system/Debug.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/FileSystem.cpp

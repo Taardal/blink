@@ -4,10 +4,10 @@
 namespace Blink {
     GraphicsModule::GraphicsModule(SystemModule* systemModule, WindowModule* windowModule)
             : systemModule(systemModule),
-              windowModule(windowModule),
-              vulkan(new Vulkan()),
+              vulkan(new Vulkan(windowModule->getWindow())),
               vulkanPhysicalDevice(new VulkanPhysicalDevice(vulkan)),
               vulkanDevice(new VulkanDevice(vulkanPhysicalDevice)),
+              vulkanSwapChain(new VulkanSwapChain(vulkanDevice, vulkanPhysicalDevice, vulkan, windowModule->getWindow())),
               indexBuffer(new IndexBuffer()),
               vertexBuffer(new VertexBuffer()),
               shader(new Shader()),
@@ -21,6 +21,7 @@ namespace Blink {
         delete shader;
         delete vertexBuffer;
         delete indexBuffer;
+        delete vulkanSwapChain;
         delete vulkanDevice;
         delete vulkanPhysicalDevice;
         delete vulkan;
@@ -31,44 +32,24 @@ namespace Blink {
     }
 
     bool GraphicsModule::initialize(const AppConfig& appConfig) const {
-        Window* window = windowModule->getWindow();
-        if (!window->isVulkanSupported()) {
-            BL_LOG_ERROR("Vulkan is not supported");
-            return false;
-        }
         VulkanConfig vulkanConfig{};
         vulkanConfig.applicationName = appConfig.windowTitle;
         vulkanConfig.engineName = appConfig.windowTitle;
-        vulkanConfig.requiredExtensions = window->getRequiredVulkanExtensions();
-        if (vulkanConfig.requiredExtensions.empty()) {
-            BL_LOG_ERROR("Could not get required Vulkan instance extensions");
-            return false;
-        }
-        if (Environment::isMacOS()) {
-            vulkanConfig.requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-        }
-        if (Environment::isDebug()) {
-            vulkanConfig.requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-            vulkanConfig.validationLayers.push_back("VK_LAYER_KHRONOS_validation");
-        }
+        vulkanConfig.validationLayersEnabled = Environment::isDebug();
         if (!vulkan->initialize(vulkanConfig)) {
             BL_LOG_ERROR("Could not initialize Vulkan");
             return false;
         }
-
-        VulkanPhysicalDeviceConfig physicalDeviceConfig{};
-        physicalDeviceConfig.requiredExtensions = {
-                VK_KHR_SWAPCHAIN_EXTENSION_NAME
-        };
-        if (Environment::isMacOS()) {
-            physicalDeviceConfig.requiredExtensions.push_back("VK_KHR_portability_subset");
-        }
-        if (!vulkanPhysicalDevice->initialize(physicalDeviceConfig)) {
+        if (!vulkanPhysicalDevice->initialize()) {
             BL_LOG_ERROR("Could not initialize Vulkan physical device");
             return false;
         }
-        if (!vulkanDevice->initialize(appConfig)) {
+        if (!vulkanDevice->initialize()) {
             BL_LOG_ERROR("Could not initialize Vulkan device");
+            return false;
+        }
+        if (!vulkanSwapChain->initialize()) {
+            BL_LOG_ERROR("Could not initialize Vulkan swap chain");
             return false;
         }
         if (!indexBuffer->initialize()) {
@@ -111,6 +92,7 @@ namespace Blink {
         shader->terminate();
         vertexBuffer->terminate();
         indexBuffer->terminate();
+        vulkanSwapChain->terminate();
         vulkanDevice->terminate();
         vulkanPhysicalDevice->terminate();
         vulkan->terminate();

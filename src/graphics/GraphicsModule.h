@@ -3,6 +3,7 @@
 #include "Vulkan.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanDevice.h"
+#include "VulkanSwapChain.h"
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
 #include "Shader.h"
@@ -15,10 +16,10 @@ namespace Blink {
     class GraphicsModule {
     private:
         SystemModule* systemModule;
-        WindowModule* windowModule;
         Vulkan* vulkan;
         VulkanPhysicalDevice* vulkanPhysicalDevice;
         VulkanDevice* vulkanDevice;
+        VulkanSwapChain* vulkanSwapChain;
         IndexBuffer* indexBuffer;
         VertexBuffer* vertexBuffer;
         Shader* shader;
