@@ -27,7 +27,7 @@ namespace Blink
         lua->RunFile(mainFilePath ? mainFilePath : LUA_MAIN_PATH);
     }
 
-    Config& LuaEngine::OnConfigure(Config& defaultConfig)
+    AppConfig& LuaEngine::OnConfigure(AppConfig& defaultConfig)
     {
         if (fileSystem->exists(LUA_CONFIG_PATH))
         {
@@ -55,7 +55,7 @@ namespace Blink
         lua->End();
     }
 
-    Config& LuaEngine::LoadLuaConfig(Config& config)
+    AppConfig& LuaEngine::LoadLuaConfig(AppConfig& config)
     {
         lua->Begin();
         lua->Global("blink");

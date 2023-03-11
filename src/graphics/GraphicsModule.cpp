@@ -2,8 +2,9 @@
 #include "system/Log.h"
 
 namespace Blink {
-    GraphicsModule::GraphicsModule(SystemModule* systemModule)
+    GraphicsModule::GraphicsModule(SystemModule* systemModule, WindowModule* windowModule)
             : systemModule(systemModule),
+              windowModule(windowModule),
               vulkan(new Vulkan()),
               vulkanPhysicalDevice(new VulkanPhysicalDevice(vulkan)),
               vulkanDevice(new VulkanDevice(vulkanPhysicalDevice)),
@@ -29,16 +30,44 @@ namespace Blink {
         return renderer;
     }
 
-    bool GraphicsModule::initialize(const Config& config) const {
-        if (!vulkan->initialize(config)) {
+    bool GraphicsModule::initialize(const AppConfig& appConfig) const {
+        Window* window = windowModule->getWindow();
+        if (!window->isVulkanSupported()) {
+            BL_LOG_ERROR("Vulkan is not supported");
+            return false;
+        }
+        VulkanConfig vulkanConfig{};
+        vulkanConfig.applicationName = appConfig.windowTitle;
+        vulkanConfig.engineName = appConfig.windowTitle;
+        vulkanConfig.requiredExtensions = window->getRequiredVulkanExtensions();
+        if (vulkanConfig.requiredExtensions.empty()) {
+            BL_LOG_ERROR("Could not get required Vulkan instance extensions");
+            return false;
+        }
+        if (Environment::isMacOS()) {
+            vulkanConfig.requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+        }
+        if (Environment::isDebug()) {
+            vulkanConfig.requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+            vulkanConfig.validationLayers.push_back("VK_LAYER_KHRONOS_validation");
+        }
+        if (!vulkan->initialize(vulkanConfig)) {
             BL_LOG_ERROR("Could not initialize Vulkan");
             return false;
         }
-        if (!vulkanPhysicalDevice->initialize()) {
+
+        VulkanPhysicalDeviceConfig physicalDeviceConfig{};
+        physicalDeviceConfig.requiredExtensions = {
+                VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        };
+        if (Environment::isMacOS()) {
+            physicalDeviceConfig.requiredExtensions.push_back("VK_KHR_portability_subset");
+        }
+        if (!vulkanPhysicalDevice->initialize(physicalDeviceConfig)) {
             BL_LOG_ERROR("Could not initialize Vulkan physical device");
             return false;
         }
-        if (!vulkanDevice->initialize(config)) {
+        if (!vulkanDevice->initialize(appConfig)) {
             BL_LOG_ERROR("Could not initialize Vulkan device");
             return false;
         }

@@ -6,7 +6,7 @@ namespace Blink {
             : glfwWindow(nullptr) {
     }
 
-    bool Window::initialize(const Config& config) {
+    bool Window::initialize(const AppConfig& config) {
         bool glfwInitialized = glfwInit();
         if (!glfwInitialized) {
             BL_LOG_ERROR("Could not initialize GLFW");
@@ -72,5 +72,22 @@ namespace Blink {
         if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
             glfwSetWindowShouldClose(glfwWindow, true);
         }
+    }
+
+    bool Window::isVulkanSupported() const {
+        return glfwVulkanSupported() == GLFW_TRUE;
+    }
+
+    std::vector<const char*> Window::getRequiredVulkanExtensions() const {
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+        if (glfwExtensions == nullptr) {
+            const char* error;
+            uint32_t errorCode = glfwGetError(&error);
+            BL_LOG_ERROR("Could not get required Vulkan extensions. GLFW error: [{}, {}]", errorCode, error);
+            return {};
+        }
+        std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+        return extensions;
     }
 }

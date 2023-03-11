@@ -9,11 +9,13 @@
 #include "Texture.h"
 #include "Renderer.h"
 #include "system/SystemModule.h"
+#include "window/WindowModule.h"
 
 namespace Blink {
     class GraphicsModule {
     private:
         SystemModule* systemModule;
+        WindowModule* windowModule;
         Vulkan* vulkan;
         VulkanPhysicalDevice* vulkanPhysicalDevice;
         VulkanDevice* vulkanDevice;
@@ -24,13 +26,13 @@ namespace Blink {
         Renderer *renderer;
 
     public:
-        explicit GraphicsModule(SystemModule* systemModule);
+        GraphicsModule(SystemModule* systemModule, WindowModule* windowModule);
 
         ~GraphicsModule();
 
         Renderer *getRenderer() const;
 
-        bool initialize(const Config& config) const;
+        bool initialize(const AppConfig& appConfig) const;
 
         void terminate() const;
     };

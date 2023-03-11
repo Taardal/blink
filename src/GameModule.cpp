@@ -13,7 +13,7 @@ namespace Blink {
         return game;
     }
 
-    bool GameModule::initialize(const Config& config) {
+    bool GameModule::initialize(const AppConfig& appConfig) {
         return true;
     }
 

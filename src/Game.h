@@ -3,7 +3,7 @@
 #include "window/Window.h"
 #include "graphics/Renderer.h"
 #include "LuaEngine.h"
-#include "Config.h"
+#include "AppConfig.h"
 
 namespace Blink {
     class Game {

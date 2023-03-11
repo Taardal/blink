@@ -1,24 +1,31 @@
 #pragma once
 
-#include "Config.h"
+#include "AppConfig.h"
 #include "VulkanPhysicalDevice.h"
 #include <vulkan/vulkan.h>
 
 namespace Blink {
+
     class VulkanDevice {
     private:
-        VulkanPhysicalDevice* physicalDevice;
-        VkDevice vkDevice = nullptr;
-        VkQueue graphicsVkQueue = nullptr;
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VkDevice device = nullptr;
+        VkQueue graphicsQueue = nullptr;
 
     public:
         explicit VulkanDevice(VulkanPhysicalDevice* physicalDevice);
 
-        bool initialize(const Config& config);
+        bool initialize(const AppConfig& config);
 
         void terminate() const;
 
     private:
-        VkQueue findDeviceQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const;
+        bool createDevice(const QueueFamilyIndices& queueFamilyIndices);
+
+        void destroyDevice() const;
+
+        VkQueue getGraphicsQueue(const QueueFamilyIndices& queueFamilyIndices) const;
+
+        VkQueue findQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const;
     };
 }

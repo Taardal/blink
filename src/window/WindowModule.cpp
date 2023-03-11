@@ -12,8 +12,8 @@ namespace Blink {
         return window;
     }
 
-    bool WindowModule::initialize(const Config& config) const {
-        if (!window->initialize(config)) {
+    bool WindowModule::initialize(const AppConfig& appConfig) const {
+        if (!window->initialize(appConfig)) {
             BL_LOG_ERROR("Could not initialize window");
             return false;
         }

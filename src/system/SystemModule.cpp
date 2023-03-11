@@ -13,8 +13,8 @@ namespace Blink {
         return fileSystem;
     }
 
-    bool SystemModule::initialize(const Config& config) const {
-        Log::SetLevel(config.logLevel);
+    bool SystemModule::initialize(const AppConfig& appConfig) const {
+        Log::SetLevel(appConfig.logLevel);
         return true;
     }
 

@@ -1,5 +1,5 @@
 #include "Vulkan.h"
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 namespace Blink {
 
@@ -24,57 +24,32 @@ namespace Blink {
 
 namespace Blink {
 
-    const std::vector<const char*> Vulkan::validationLayers = {
-            "VK_LAYER_KHRONOS_validation"
-    };
-
-    bool Vulkan::initialize(const Config& config) {
-        VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = config.windowTitle.c_str();
-        appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.pEngineName = "Blink";
-        appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_3;
-
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-
-        this->validationLayersEnabled = config.vulkanValidationLayersEnabled;
-
-        // The debugCreateInfo variable is placed outside the if statement
-        // to ensure that it is not destroyed before the vkCreateInstance call
-        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-
-        if (validationLayersEnabled) {
-            if (!hasValidationLayers(validationLayers)) {
-                BL_LOG_ERROR("Could not find requested validation layers");
-                return false;
-            }
-            createInfo.enabledLayerCount = (uint32_t) validationLayers.size();
-            createInfo.ppEnabledLayerNames = validationLayers.data();
-            debugCreateInfo = getDebugMessengerCreateInfo();
-            createInfo.pNext = &debugCreateInfo;
+    std::vector<VkPhysicalDevice> Vulkan::getPhysicalDevices() const {
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(vkInstance, &deviceCount, nullptr);
+        if (!deviceCount) {
+            return {};
         }
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+        vkEnumeratePhysicalDevices(vkInstance, &deviceCount, devices.data());
+        return devices;
+    }
 
-        std::vector<const char*> extensions = findRequiredExtensions();
-        if (validationLayersEnabled) {
-            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    bool Vulkan::initialize(const VulkanConfig& vulkanConfig) {
+        validationLayersEnabled = vulkanConfig.isValidationLayersEnabled();
+        if (validationLayersEnabled && !hasValidationLayers(vulkanConfig.validationLayers)) {
+            BL_LOG_ERROR("Could not find requested validation layers");
+            return false;
         }
-        if (!hasExtensions(extensions)) {
+        if (!hasExtensions(vulkanConfig.requiredExtensions)) {
             BL_LOG_ERROR("Could not find required extensions");
             return false;
         }
-        createInfo.enabledExtensionCount = (uint32_t) extensions.size();
-        createInfo.ppEnabledExtensionNames = extensions.data();
-
-        if (vkCreateInstance(&createInfo, BL_VK_ALLOCATOR, &vkInstance) != VK_SUCCESS) {
+        if (!createInstance(vulkanConfig)) {
             BL_LOG_ERROR("Could not create Vulkan instance");
             return false;
         }
         BL_LOG_INFO("Created Vulkan instance");
-
         if (validationLayersEnabled) {
             createDebugMessenger();
         }
@@ -85,19 +60,81 @@ namespace Blink {
         if (validationLayersEnabled) {
             destroyDebugMessenger();
         }
-        vkDestroyInstance(vkInstance, BL_VK_ALLOCATOR);
+        destroyInstance();
         BL_LOG_INFO("Destroyed Vulkan instance");
     }
 
-    std::vector<VkPhysicalDevice> Vulkan::getPhysicalDevices() const {
-        uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(vkInstance, &deviceCount, nullptr);
-        if (!deviceCount) {
-            return {};
+    bool Vulkan::createInstance(const VulkanConfig& config) {
+        VkApplicationInfo appInfo{};
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pApplicationName = config.applicationName.c_str();
+        appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
+        appInfo.pEngineName = config.engineName.c_str();
+        appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_3;
+
+        VkInstanceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        createInfo.pApplicationInfo = &appInfo;
+        createInfo.enabledExtensionCount = (uint32_t) config.requiredExtensions.size();
+        createInfo.ppEnabledExtensionNames = config.requiredExtensions.data();
+        if (Environment::isMacOS()) {
+            createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
         }
-        std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(vkInstance, &deviceCount, devices.data());
-        return devices;
+        VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
+        if (validationLayersEnabled) {
+            debugMessengerCreateInfo = getDebugMessengerCreateInfo();
+            createInfo.pNext = &debugMessengerCreateInfo;
+            createInfo.enabledLayerCount = (uint32_t) config.validationLayers.size();
+            createInfo.ppEnabledLayerNames = config.validationLayers.data();
+        }
+
+        return vkCreateInstance(&createInfo, BL_VK_ALLOCATOR, &vkInstance) == VK_SUCCESS;
+    }
+
+    void Vulkan::destroyInstance() {
+        vkDestroyInstance(vkInstance, BL_VK_ALLOCATOR);
+    }
+
+    bool Vulkan::createDebugMessenger() {
+        const char* functionName = "vkCreateDebugUtilsMessengerEXT";
+        auto function = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vkInstance, functionName);
+        if (function == nullptr) {
+            BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
+            return false;
+        }
+        VkDebugUtilsMessengerCreateInfoEXT createInfo = getDebugMessengerCreateInfo();
+        if (function(vkInstance, &createInfo, BL_VK_ALLOCATOR, &debugMessenger) != VK_SUCCESS) {
+            BL_LOG_ERROR("Could not create debug messenger [{0}]", functionName);
+            return false;
+        }
+        return true;
+    }
+
+    void Vulkan::destroyDebugMessenger() {
+        const char* functionName = "vkDestroyDebugUtilsMessengerEXT";
+        auto function = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vkInstance, functionName);
+        if (function == nullptr) {
+            BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
+            return;
+        }
+        function(vkInstance, debugMessenger, BL_VK_ALLOCATOR);
+    }
+
+    VkDebugUtilsMessengerCreateInfoEXT Vulkan::getDebugMessengerCreateInfo() const {
+        VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+
+        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+                                     | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+                                     | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+                                 | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+                                 | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+
+        createInfo.pfnUserCallback = onDebugMessage;
+        return createInfo;
     }
 
     bool Vulkan::hasValidationLayers(const std::vector<const char*>& validationLayers) const {
@@ -127,14 +164,6 @@ namespace Blink {
         return layers;
     }
 
-    std::vector<const char*> Vulkan::findRequiredExtensions() const {
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-        std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-        return extensions;
-    }
-
     bool Vulkan::hasExtensions(const std::vector<const char*>& extensions) const {
         std::vector<VkExtensionProperties> availableExtensions = findAvailableExtensions();
         for (const char* extension: extensions) {
@@ -161,46 +190,5 @@ namespace Blink {
         std::vector<VkExtensionProperties> extensions(extensionCount);
         vkEnumerateInstanceExtensionProperties(layerName, &extensionCount, extensions.data());
         return extensions;
-    }
-
-    VkDebugUtilsMessengerCreateInfoEXT Vulkan::getDebugMessengerCreateInfo() const {
-        VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-
-        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-                | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
-                | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-
-        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
-                | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
-                | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-
-        createInfo.pfnUserCallback = onDebugMessage;
-        return createInfo;
-    }
-
-    bool Vulkan::createDebugMessenger() {
-        const char* functionName = "vkCreateDebugUtilsMessengerEXT";
-        auto function = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vkInstance, functionName);
-        if (function == nullptr) {
-            BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
-            return false;
-        }
-        VkDebugUtilsMessengerCreateInfoEXT createInfo = getDebugMessengerCreateInfo();
-        if (function(vkInstance, &createInfo, BL_VK_ALLOCATOR, &vkDebugMessenger) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create debug messenger [{0}]", functionName);
-            return false;
-        }
-        return true;
-    }
-
-    void Vulkan::destroyDebugMessenger() {
-        const char* functionName = "vkDestroyDebugUtilsMessengerEXT";
-        auto function = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vkInstance, functionName);
-        if (function == nullptr) {
-            BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
-            return;
-        }
-        function(vkInstance, vkDebugMessenger, BL_VK_ALLOCATOR);
     }
 }

@@ -19,7 +19,7 @@ namespace Blink {
 
         Game* getGame() const;
 
-        bool initialize(const Config& config);
+        bool initialize(const AppConfig& appConfig);
 
         void terminate();
     };

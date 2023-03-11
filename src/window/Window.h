@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+#include "AppConfig.h"
 #include "GLFW/glfw3.h"
 #include <string>
 
@@ -14,13 +14,17 @@ namespace Blink
     public:
         Window();
 
-        bool initialize(const Config& config);
+        bool initialize(const AppConfig& config);
 
         void terminate() const;
 
         void onUpdate() const;
 
         bool shouldClose() const;
+
+        bool isVulkanSupported() const;
+
+        std::vector<const char*> getRequiredVulkanExtensions() const;
 
     private:
         static void onGlfwError(int32_t error, const char* description);

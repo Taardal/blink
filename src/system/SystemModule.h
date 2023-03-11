@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+#include "AppConfig.h"
 #include "FileSystem.h"
 
 namespace Blink {
@@ -15,7 +15,7 @@ namespace Blink {
 
         FileSystem* getFileSystem() const;
 
-        bool initialize(const Config& config) const;
+        bool initialize(const AppConfig& appConfig) const;
 
         void terminate() const;
     };

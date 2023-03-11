@@ -24,41 +24,53 @@ namespace Blink {
         QueueFamilyIndices queueFamilyIndices{};
         SwapChainInfo swapChainInfo{};
     };
-}
 
-namespace Blink {
+    struct VulkanPhysicalDeviceConfig {
+        std::vector<const char*> requiredExtensions;
+    };
+
     class VulkanPhysicalDevice {
     public:
         static const std::vector<const char*> requiredExtensions;
 
     private:
-        Vulkan* vulkan;
+        Vulkan* vulkan = nullptr;
         VulkanPhysicalDeviceInfo deviceInfo{};
 
     public:
         explicit VulkanPhysicalDevice(Vulkan* vulkan);
 
+        const std::vector<VkExtensionProperties>& getExtensions() const;
+
         const QueueFamilyIndices& getQueueFamilyIndices() const;
 
         const VkPhysicalDeviceFeatures& getFeatures() const;
 
-        bool initialize();
-
-        void terminate();
-
         VkResult createDevice(const VkDeviceCreateInfo& vkDeviceCreateInfo, VkDevice* vkDevice) const;
 
+        bool initialize(const VulkanPhysicalDeviceConfig& config);
+
+        void terminate() const;
+
     private:
-        VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices) const;
+        VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const VulkanPhysicalDeviceConfig& config) const;
 
-        VulkanPhysicalDeviceInfo getDeviceInfo(VkPhysicalDevice vkPhysicalDevice) const;
+        VulkanPhysicalDeviceInfo getDeviceInfo(VkPhysicalDevice vkPhysicalDevice, const VulkanPhysicalDeviceConfig& config) const;
 
-        uint32_t getSuitabilityRating(const VulkanPhysicalDeviceInfo& deviceInfo) const;
+        std::vector<VkExtensionProperties> findExtensions(VkPhysicalDevice device, const VulkanPhysicalDeviceConfig& config) const;
 
         QueueFamilyIndices findQueueFamilyIndices(VkPhysicalDevice device) const;
 
-        std::vector<VkExtensionProperties> findRequiredExtensions() const;
+        //SwapChainInfo findSwapChainInfo(VkPhysicalDevice device) const;
+
+        uint32_t getSuitabilityRating(const VulkanPhysicalDeviceInfo& deviceInfo, const VulkanPhysicalDeviceConfig& config) const;
+
+        bool hasRequiredExtensions(const std::vector<const char*>& extensions, const std::vector<VkExtensionProperties>& availableExtensions) const;
 
         bool hasRequiredQueueFamilyIndices(const QueueFamilyIndices& queueFamilyIndices) const;
+
+        bool hasRequiredSwapChainSupport(const SwapChainInfo& swapChainInfo) const;
+
+        bool hasRequiredFeatures(const VkPhysicalDeviceFeatures& availableDeviceFeatures) const;
     };
 }
