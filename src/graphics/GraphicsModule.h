@@ -1,14 +1,17 @@
 #pragma once
 
-#include "Vulkan.h"
-#include "VulkanPhysicalDevice.h"
-#include "VulkanDevice.h"
-#include "VulkanSwapChain.h"
-#include "IndexBuffer.h"
-#include "VertexBuffer.h"
-#include "Shader.h"
-#include "Texture.h"
-#include "Renderer.h"
+#include "graphics/Vulkan.h"
+#include "graphics/VulkanPhysicalDevice.h"
+#include "graphics/VulkanDevice.h"
+#include "graphics/VulkanSwapChain.h"
+#include "graphics/VulkanShader.h"
+#include "graphics/VulkanRenderPass.h"
+#include "graphics/VulkanGraphicsPipeline.h"
+#include "graphics/VulkanCommandPool.h"
+#include "graphics/IndexBuffer.h"
+#include "graphics/VertexBuffer.h"
+#include "graphics/Texture.h"
+#include "graphics/Renderer.h"
 #include "system/SystemModule.h"
 #include "window/WindowModule.h"
 
@@ -17,12 +20,16 @@ namespace Blink {
     private:
         SystemModule* systemModule;
         Vulkan* vulkan;
-        VulkanPhysicalDevice* vulkanPhysicalDevice;
-        VulkanDevice* vulkanDevice;
-        VulkanSwapChain* vulkanSwapChain;
+        VulkanPhysicalDevice* physicalDevice;
+        VulkanDevice* device;
+        VulkanSwapChain* swapChain;
+        VulkanShader* vertexShader;
+        VulkanShader* fragmentShader;
+        VulkanRenderPass* renderPass;
+        VulkanGraphicsPipeline* graphicsPipeline;
+        VulkanCommandPool* commandPool;
         IndexBuffer* indexBuffer;
         VertexBuffer* vertexBuffer;
-        Shader* shader;
         Texture* whiteTexture;
         Renderer *renderer;
 
@@ -33,7 +40,7 @@ namespace Blink {
 
         Renderer *getRenderer() const;
 
-        bool initialize(const AppConfig& appConfig) const;
+        bool initialize(const AppConfig& appConfig);
 
         void terminate() const;
     };

@@ -46,6 +46,8 @@ namespace Blink {
 
         VkResult createDevice(VkDeviceCreateInfo* vkDeviceCreateInfo, VkDevice* vkDevice) const;
 
+        void updateSwapChainInfo();
+
         bool initialize();
 
         void terminate() const;

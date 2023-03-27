@@ -6,6 +6,14 @@ namespace Blink {
     VulkanDevice::VulkanDevice(VulkanPhysicalDevice* physicalDevice)
             : physicalDevice(physicalDevice) {}
 
+    VkQueue VulkanDevice::getGraphicsQueue() const {
+        return graphicsQueue;
+    }
+
+    VkQueue VulkanDevice::getPresentQueue() const {
+        return presentQueue;
+    }
+
     bool VulkanDevice::initialize() {
         const QueueFamilyIndices& queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
         if (!createDevice(queueFamilyIndices)) {
@@ -31,6 +39,10 @@ namespace Blink {
         BL_LOG_INFO("Destroyed logical device");
     }
 
+    void VulkanDevice::waitUntilIdle() const {
+        vkDeviceWaitIdle(device);
+    }
+
     VkResult VulkanDevice::createSwapChain(VkSwapchainCreateInfoKHR* createInfo, VkSwapchainKHR* swapchain) const {
         return vkCreateSwapchainKHR(device, createInfo, BL_VK_ALLOCATOR, swapchain);
     }
@@ -52,6 +64,102 @@ namespace Blink {
     void VulkanDevice::destroyImageView(VkImageView imageView) const {
         vkDestroyImageView(device, imageView, BL_VK_ALLOCATOR);
     }
+
+    VkResult VulkanDevice::createShaderModule(VkShaderModuleCreateInfo* createInfo, VkShaderModule* shaderModule) const {
+        return vkCreateShaderModule(device, createInfo, BL_VK_ALLOCATOR, shaderModule);
+    }
+
+    void VulkanDevice::destroyShaderModule(VkShaderModule shaderModule) const {
+        vkDestroyShaderModule(device, shaderModule, BL_VK_ALLOCATOR);
+    }
+
+    VkResult VulkanDevice::createPipelineLayout(VkPipelineLayoutCreateInfo* createInfo, VkPipelineLayout* layout) const {
+        return vkCreatePipelineLayout(device, createInfo, BL_VK_ALLOCATOR, layout);
+    }
+
+    void VulkanDevice::destroyPipelineLayout(VkPipelineLayout layout) const {
+        vkDestroyPipelineLayout(device, layout, BL_VK_ALLOCATOR);
+    }
+
+    VkResult VulkanDevice::createRenderPass(VkRenderPassCreateInfo* createInfo, VkRenderPass* renderPass) const {
+        return vkCreateRenderPass(device, createInfo, BL_VK_ALLOCATOR, renderPass);
+    }
+
+    void VulkanDevice::destroyRenderPass(VkRenderPass renderPass) const {
+        vkDestroyRenderPass(device, renderPass, BL_VK_ALLOCATOR);
+    }
+
+    VkResult VulkanDevice::createGraphicsPipeline(VkGraphicsPipelineCreateInfo* createInfo, VkPipeline* pipeline) const {
+        constexpr uint32_t count = 1;
+        VkPipelineCache cache = VK_NULL_HANDLE;
+        return vkCreateGraphicsPipelines(device, cache, count, createInfo, BL_VK_ALLOCATOR, pipeline);
+    };
+
+    void VulkanDevice::destroyGraphicsPipeline(VkPipeline pipeline) const {
+        vkDestroyPipeline(device, pipeline, BL_VK_ALLOCATOR);
+    };
+
+    VkResult VulkanDevice::createFramebuffer(VkFramebufferCreateInfo* createInfo, VkFramebuffer* framebuffer) const {
+        return vkCreateFramebuffer(device, createInfo, BL_VK_ALLOCATOR, framebuffer);
+    };
+
+    void VulkanDevice::destroyFramebuffer(VkFramebuffer framebuffer) const {
+        vkDestroyFramebuffer(device, framebuffer, BL_VK_ALLOCATOR);
+    };
+
+    VkResult VulkanDevice::createCommandPool(VkCommandPoolCreateInfo* createInfo, VkCommandPool* commandPool) const {
+        return vkCreateCommandPool(device, createInfo, BL_VK_ALLOCATOR, commandPool);
+    };
+
+    void VulkanDevice::destroyCommandPool(VkCommandPool commandPool) const {
+        vkDestroyCommandPool(device, commandPool, BL_VK_ALLOCATOR);
+    };
+
+    VkResult VulkanDevice::allocateCommandBuffers(VkCommandBufferAllocateInfo* allocateInfo, VkCommandBuffer* commandBuffers) const {
+        return vkAllocateCommandBuffers(device, allocateInfo, commandBuffers);
+    };
+
+    void VulkanDevice::freeCommandBuffers(uint32_t count, VkCommandBuffer* commandBuffers, VkCommandPool commandPool) const {
+        vkFreeCommandBuffers(device, commandPool, count, commandBuffers);
+    };
+
+    VkResult VulkanDevice::createSemaphore(VkSemaphoreCreateInfo* createInfo, VkSemaphore* semaphore) const {
+        return vkCreateSemaphore(device, createInfo, BL_VK_ALLOCATOR, semaphore);
+    };
+
+    void VulkanDevice::destroySemaphore(VkSemaphore semaphore) const {
+        vkDestroySemaphore(device, semaphore, BL_VK_ALLOCATOR);
+    };
+
+    VkResult VulkanDevice::createFence(VkFenceCreateInfo* createInfo, VkFence* fence) const {
+        return vkCreateFence(device, createInfo, BL_VK_ALLOCATOR, fence);
+    };
+
+    void VulkanDevice::destroyFence(VkFence fence) const {
+        vkDestroyFence(device, fence, BL_VK_ALLOCATOR);
+    };
+
+    void VulkanDevice::waitForFence(VkFence* fence) const {
+        uint32_t count = 1;
+        bool waitAll = VK_TRUE;
+        uint64_t timeout = UINT64_MAX;
+        vkWaitForFences(device, count, fence, waitAll, timeout);
+    };
+
+    void VulkanDevice::resetFence(VkFence* fence) const {
+        uint32_t count = 1;
+        resetFences(1, fence);
+    };
+
+    void VulkanDevice::resetFences(uint32_t count, VkFence* fences) const {
+        vkResetFences(device, count, fences);
+    };
+
+    VkResult VulkanDevice::acquireSwapChainImage(VkSwapchainKHR swapChain, VkSemaphore semaphore, uint32_t* imageIndex) const {
+        uint64_t timeout = UINT64_MAX;
+        VkFence fence = VK_NULL_HANDLE;
+        return vkAcquireNextImageKHR(device, swapChain, timeout, semaphore, fence, imageIndex);
+    };
 
     bool VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) {
         const VkPhysicalDeviceFeatures features = physicalDevice->getFeatures();

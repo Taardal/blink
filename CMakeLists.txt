@@ -39,8 +39,6 @@ add_executable(
         ${SRC_DIR}/graphics/Quad.h
         ${SRC_DIR}/graphics/Renderer.cpp
         ${SRC_DIR}/graphics/Renderer.h
-        ${SRC_DIR}/graphics/Shader.cpp
-        ${SRC_DIR}/graphics/Shader.h
         ${SRC_DIR}/graphics/Texture.cpp
         ${SRC_DIR}/graphics/Texture.h
         ${SRC_DIR}/graphics/Vertex.h
@@ -50,10 +48,18 @@ add_executable(
         ${SRC_DIR}/graphics/VertexBuffer.h
         ${SRC_DIR}/graphics/Vulkan.cpp
         ${SRC_DIR}/graphics/Vulkan.h
+        ${SRC_DIR}/graphics/VulkanCommandPool.cpp
+        ${SRC_DIR}/graphics/VulkanCommandPool.h
         ${SRC_DIR}/graphics/VulkanDevice.cpp
         ${SRC_DIR}/graphics/VulkanDevice.h
+        ${SRC_DIR}/graphics/VulkanGraphicsPipeline.cpp
+        ${SRC_DIR}/graphics/VulkanGraphicsPipeline.h
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.cpp
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.h
+        ${SRC_DIR}/graphics/VulkanRenderPass.cpp
+        ${SRC_DIR}/graphics/VulkanRenderPass.h
+        ${SRC_DIR}/graphics/VulkanShader.cpp
+        ${SRC_DIR}/graphics/VulkanShader.h
         ${SRC_DIR}/graphics/VulkanSwapChain.cpp
         ${SRC_DIR}/graphics/VulkanSwapChain.h
         ${SRC_DIR}/system/Debug.h

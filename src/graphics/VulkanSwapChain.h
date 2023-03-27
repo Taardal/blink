@@ -7,8 +7,8 @@
 namespace Blink {
     class VulkanSwapChain {
     private:
-        VulkanDevice* vulkanDevice;
-        VulkanPhysicalDevice* vulkanPhysicalDevice;
+        VulkanDevice* device;
+        VulkanPhysicalDevice* physicalDevice;
         Vulkan* vulkan;
         Window* window;
         VkSurfaceFormatKHR surfaceFormat{};
@@ -19,14 +19,24 @@ namespace Blink {
         std::vector<VkImageView> imageViews;
 
     public:
-        VulkanSwapChain(VulkanDevice* vulkanDevice, VulkanPhysicalDevice* vulkanPhysicalDevice, Vulkan* vulkan, Window* window);
+        VulkanSwapChain(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice, Vulkan* vulkan, Window* window);
+
+        VkSwapchainKHR getSwapChain() const;
+
+        const VkSurfaceFormatKHR& getSurfaceFormat() const;
+
+        const VkExtent2D& getExtent() const;
+
+        const std::vector<VkImageView>& getImageViews() const;
 
         bool initialize();
 
         void terminate();
 
+        VkResult acquireNextImage(VkSemaphore semaphore, uint32_t* imageIndex) const;
+
     private:
-        bool createSwapChain(uint32_t imageCount, const VkSurfaceCapabilitiesKHR& surfaceCapabilities);
+        bool createSwapChain(uint32_t imageCount, const SwapChainInfo& swapChainInfo, const QueueFamilyIndices& queueFamilyIndices, VkSurfaceKHR surface);
 
         VkSurfaceFormatKHR chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const;
 

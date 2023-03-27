@@ -26,6 +26,10 @@ namespace Blink {
         return vkCreateDevice(deviceInfo.physicalDevice, vkDeviceCreateInfo, BL_VK_ALLOCATOR, vkDevice);
     }
 
+    void VulkanPhysicalDevice::updateSwapChainInfo() {
+        deviceInfo.swapChainInfo = findSwapChainInfo(deviceInfo.physicalDevice);
+    }
+
     bool VulkanPhysicalDevice::initialize() {
         std::vector<VkPhysicalDevice> availableDevices = vulkan->getPhysicalDevices();
         if (availableDevices.empty()) {

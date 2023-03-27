@@ -5,25 +5,37 @@ namespace Blink {
     GraphicsModule::GraphicsModule(SystemModule* systemModule, WindowModule* windowModule)
             : systemModule(systemModule),
               vulkan(new Vulkan(windowModule->getWindow())),
-              vulkanPhysicalDevice(new VulkanPhysicalDevice(vulkan)),
-              vulkanDevice(new VulkanDevice(vulkanPhysicalDevice)),
-              vulkanSwapChain(new VulkanSwapChain(vulkanDevice, vulkanPhysicalDevice, vulkan, windowModule->getWindow())),
+              physicalDevice(new VulkanPhysicalDevice(vulkan)),
+              device(new VulkanDevice(physicalDevice)),
+              swapChain(new VulkanSwapChain(device, physicalDevice, vulkan, windowModule->getWindow())),
+              renderPass(new VulkanRenderPass(swapChain, device)),
+              vertexShader(new VulkanShader(device)),
+              fragmentShader(new VulkanShader(device)),
+              graphicsPipeline(new VulkanGraphicsPipeline(vertexShader, fragmentShader, renderPass, swapChain, device)),
+              commandPool(new VulkanCommandPool(device, physicalDevice)),
+
               indexBuffer(new IndexBuffer()),
               vertexBuffer(new VertexBuffer()),
-              shader(new Shader()),
               whiteTexture(new Texture()),
-              renderer(new Renderer(indexBuffer, vertexBuffer, shader, whiteTexture)) {
+
+              renderer(new Renderer(commandPool, graphicsPipeline, renderPass, swapChain, device, physicalDevice, windowModule->getWindow())) {
     }
 
     GraphicsModule::~GraphicsModule() {
         delete renderer;
+
         delete whiteTexture;
-        delete shader;
         delete vertexBuffer;
         delete indexBuffer;
-        delete vulkanSwapChain;
-        delete vulkanDevice;
-        delete vulkanPhysicalDevice;
+
+        delete commandPool;
+        delete graphicsPipeline;
+        delete fragmentShader;
+        delete vertexShader;
+        delete renderPass;
+        delete swapChain;
+        delete device;
+        delete physicalDevice;
         delete vulkan;
     }
 
@@ -31,7 +43,7 @@ namespace Blink {
         return renderer;
     }
 
-    bool GraphicsModule::initialize(const AppConfig& appConfig) const {
+    bool GraphicsModule::initialize(const AppConfig& appConfig) {
         VulkanConfig vulkanConfig{};
         vulkanConfig.applicationName = appConfig.windowTitle;
         vulkanConfig.engineName = appConfig.windowTitle;
@@ -40,18 +52,40 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize Vulkan");
             return false;
         }
-        if (!vulkanPhysicalDevice->initialize()) {
+        if (!physicalDevice->initialize()) {
             BL_LOG_ERROR("Could not initialize Vulkan physical device");
             return false;
         }
-        if (!vulkanDevice->initialize()) {
+        if (!device->initialize()) {
             BL_LOG_ERROR("Could not initialize Vulkan device");
             return false;
         }
-        if (!vulkanSwapChain->initialize()) {
+        if (!swapChain->initialize()) {
             BL_LOG_ERROR("Could not initialize Vulkan swap chain");
             return false;
         }
+        if (!renderPass->initialize()) {
+            BL_LOG_ERROR("Could not initialize Vulkan render pass");
+            return false;
+        }
+        FileSystem* fileSystem = systemModule->getFileSystem();
+        if (!vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv"))) {
+            BL_LOG_ERROR("Could not initialize vertex shader");
+            return false;
+        }
+        if (!fragmentShader->initialize(fileSystem->readBytes("shaders/shader.frag.spv"))) {
+            BL_LOG_ERROR("Could not initialize fragment shader");
+            return false;
+        }
+        if (!graphicsPipeline->initialize()) {
+            BL_LOG_ERROR("Could not initialize graphics pipeline");
+            return false;
+        }
+        if (!commandPool->initialize()) {
+            BL_LOG_ERROR("Could not initialize command pool");
+            return false;
+        }
+
         if (!indexBuffer->initialize()) {
             BL_LOG_ERROR("Could not initialize index buffer");
             return false;
@@ -60,41 +94,34 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize vertex buffer");
             return false;
         }
-        FileSystem* fileSystem = systemModule->getFileSystem();
-        std::string vertexShaderSrc = fileSystem->readFile("res/shaders/texture.vert.glsl");
-        if (vertexShaderSrc.empty()) {
-            BL_LOG_ERROR("Could not read vertex shader src");
-            return false;
-        }
-        std::string fragmentShaderSrc = fileSystem->readFile("res/shaders/texture.frag.glsl");
-        if (fragmentShaderSrc.empty()) {
-            BL_LOG_ERROR("Could not read fragment shader src");
-            return false;
-        }
-        if (!shader->initialize(vertexShaderSrc, fragmentShaderSrc)) {
-            BL_LOG_ERROR("Could not initialize shader");
-            return false;
-        }
         if (!whiteTexture->initialize()) {
             BL_LOG_ERROR("Could not initialize white texture");
             return false;
         }
+
         if (!renderer->initialize()) {
             BL_LOG_ERROR("Could not initialize renderer");
             return false;
         }
+
         return true;
     }
 
     void GraphicsModule::terminate() const {
         renderer->terminate();
+
         whiteTexture->terminate();
-        shader->terminate();
         vertexBuffer->terminate();
         indexBuffer->terminate();
-        vulkanSwapChain->terminate();
-        vulkanDevice->terminate();
-        vulkanPhysicalDevice->terminate();
+
+        commandPool->terminate();
+        graphicsPipeline->terminate();
+        fragmentShader->terminate();
+        vertexShader->terminate();
+        renderPass->terminate();
+        swapChain->terminate();
+        device->terminate();
+        physicalDevice->terminate();
         vulkan->terminate();
     }
 }

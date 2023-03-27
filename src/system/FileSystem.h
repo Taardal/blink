@@ -2,12 +2,10 @@
 
 #include <string>
 
-namespace Blink
-{
-    class FileSystem
-    {
+namespace Blink {
+    class FileSystem {
     public:
-        std::string readFile(const char* path) const;
+        std::vector<char> readBytes(const char* path) const;
 
         bool exists(const char* string) const;
     };

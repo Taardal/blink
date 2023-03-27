@@ -4,24 +4,22 @@
 #include <filesystem>
 
 namespace Blink {
-    std::string FileSystem::readFile(const char* path) const {
+    std::vector<char> FileSystem::readBytes(const char* path) const {
         if (!exists(path)) {
             BL_LOG_ERROR("Could not find file [{}]", path);
-            return "";
+            return {};
         }
-        std::string result;
-        std::ifstream inputStream(path, std::ios::in | std::ios::binary);
-        if (inputStream) {
-            inputStream.seekg(0, std::ios::end);
-            size_t length = inputStream.tellg();
-            if (length != -1) {
-                result.resize(length);
-                inputStream.seekg(0, std::ios::beg);
-                inputStream.read(&result[0], (std::streamsize) length);
-                inputStream.close();
-            }
+        std::ifstream file{path, std::ios::ate | std::ios::binary};
+        if (!file.is_open()) {
+            BL_LOG_ERROR("Could not open file with path [{0}]", path);
+            return {};
         }
-        return result;
+        uint32_t fileSize = (uint32_t) file.tellg();
+        std::vector<char> buffer(fileSize);
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
+        file.close();
+        return buffer;
     }
 
     bool FileSystem::exists(const char* string) const {

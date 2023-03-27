@@ -12,6 +12,8 @@ add_executable(
         ${SRC_DIR}/main.cpp
         ${SRC_DIR}/commands/BuildProjectCommand.cpp
         ${SRC_DIR}/commands/BuildProjectCommand.h
+        ${SRC_DIR}/commands/CompileShadersCommand.cpp
+        ${SRC_DIR}/commands/CompileShadersCommand.h
         ${SRC_DIR}/commands/CopyResourcesCommand.cpp
         ${SRC_DIR}/commands/CopyResourcesCommand.h
         ${SRC_DIR}/commands/RunProjectCommand.cpp

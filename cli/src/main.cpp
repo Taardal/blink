@@ -1,6 +1,7 @@
 #include "commands/BuildProjectCommand.h"
 #include "commands/RunProjectCommand.h"
 #include "commands/CopyResourcesCommand.h"
+#include "commands/CompileShadersCommand.h"
 #include <cli.h>
 
 int main(int argc, char* argv[]) {
@@ -10,7 +11,8 @@ int main(int argc, char* argv[]) {
     app.Commands = {
             BlinkCLI::buildProject(),
             BlinkCLI::runProject(),
-            BlinkCLI::copyResources()
+            BlinkCLI::copyResources(),
+            BlinkCLI::compileShaders(),
     };
     app.Run(argc, argv);
     return 0;

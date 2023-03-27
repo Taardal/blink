@@ -10,9 +10,21 @@ namespace Blink {
     WindowSize Window::getSizeInPixels() const {
         int32_t width = 0;
         int32_t height = 0;
-        glfwGetFramebufferSize(glfwWindow, &width, &height);
+        getSizeInPixels(&width, &height);
         return { width, height };
     }
+
+    void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
+        glfwGetFramebufferSize(glfwWindow, width, height);
+    };
+
+    void Window::setResizeListener(const std::function<void(uint32_t, uint32_t)>& onResize) {
+        callbackData.onResize = onResize;
+    };
+
+    void Window::setMinimizeListener(const std::function<void(bool)>& onMinimize) {
+        callbackData.onMinimize = onMinimize;
+    };
 
     bool Window::initialize(const AppConfig& config) {
         bool glfwInitialized = glfwInit();
@@ -46,11 +58,9 @@ namespace Blink {
         }
         BL_LOG_INFO("Created GLFW window");
 
-        //glfwMakeContextCurrent(glfwWindow);
-
-        //glfwSetWindowUserPointer(glfwWindow, &userPointer);
-        //glfwSetFramebufferSizeCallback(glfwWindow, onFramebufferSizeChange);
-        //glfwSetWindowIconifyCallback(glfwWindow, onWindowIconifyChange);
+        glfwSetWindowUserPointer(glfwWindow, &callbackData);
+        glfwSetFramebufferSizeCallback(glfwWindow, onFramebufferSizeChange);
+        glfwSetWindowIconifyCallback(glfwWindow, onWindowIconifyChange);
         glfwSetKeyCallback(glfwWindow, onKeyChange);
 
         return true;
@@ -72,16 +82,6 @@ namespace Blink {
         return glfwWindowShouldClose(glfwWindow);
     }
 
-    void Window::onGlfwError(int32_t error, const char *description) {
-        BL_LOG_ERROR("GLFW error [{0}: {1}]", error, description);
-    }
-
-    void Window::onKeyChange(GLFWwindow* glfwWindow, int32_t key, int32_t scanCode, int32_t action, int32_t mods) {
-        if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
-            glfwSetWindowShouldClose(glfwWindow, true);
-        }
-    }
-
     bool Window::isVulkanSupported() const {
         return glfwVulkanSupported() == GLFW_TRUE;
     }
@@ -99,5 +99,44 @@ namespace Blink {
 
     VkResult Window::createVulkanSurface(VkInstance vulkanInstance, VkSurfaceKHR* surface, VkAllocationCallbacks* allocator) const {
         return glfwCreateWindowSurface(vulkanInstance, glfwWindow, allocator, surface);
+    }
+
+    void Window::onGlfwError(int32_t error, const char *description) {
+        BL_LOG_ERROR("GLFW error [{0}: {1}]", error, description);
+    }
+
+    void Window::onKeyChange(GLFWwindow* glfwWindow, int32_t key, int32_t scanCode, int32_t action, int32_t mods) {
+        if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
+            glfwSetWindowShouldClose(glfwWindow, true);
+        }
+    }
+
+    void Window::waitUntilNotMinimized() const {
+        int width = 0;
+        int height = 0;
+        getSizeInPixels(&width, &height);
+
+        bool iconified = isIconified();
+
+        while (width == 0 || height == 0 || iconified) {
+            getSizeInPixels(&width, &height);
+            iconified = isIconified();
+            glfwWaitEvents();
+        }
+    }
+
+    bool Window::isIconified() const {
+        return glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED) == 1;
+    }
+
+    void Window::onFramebufferSizeChange(GLFWwindow* glfWwindow, int width, int height) {
+        auto userPointer = (CallbackData*) glfwGetWindowUserPointer(glfWwindow);
+        userPointer->onResize(width, height);
+    }
+
+    void Window::onWindowIconifyChange(GLFWwindow* glfWwindow, int iconified) {
+        auto userPointer = (CallbackData*) glfwGetWindowUserPointer(glfWwindow);
+        bool minimized = iconified == 1;
+        userPointer->onMinimize(minimized);
     }
 }

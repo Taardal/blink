@@ -8,20 +8,20 @@ namespace Blink {
 
     void Game::run() {
         BL_LOG_INFO("Running application...");
+
+        window->setResizeListener([this](uint32_t width, uint32_t height) {
+            renderer->onResize(width, height);
+        });
+        window->setMinimizeListener([this](bool minimized) {
+            renderer->onMinimize(minimized);
+        });
+
         while (!window->shouldClose()) {
-
-            renderer->beginFrame();
-
-            Quad quad{};
-            quad.position = { 0.0f, 0.0f, 0.0f };
-            quad.size = { 1.0f, 1.0f };
-            quad.color = { 0.0f, 1.0f, 0.0f, 0.0f };
-            renderer->submitQuad(quad);
-
-            renderer->endFrame();
-
             window->onUpdate();
+            renderer->onRender();
         }
+
+        renderer->onComplete();
     }
 
     void Game::onUpdate() const {

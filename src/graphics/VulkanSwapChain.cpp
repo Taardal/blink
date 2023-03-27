@@ -2,12 +2,30 @@
 
 namespace Blink {
 
-    VulkanSwapChain::VulkanSwapChain(VulkanDevice* vulkanDevice, VulkanPhysicalDevice* vulkanPhysicalDevice, Vulkan* vulkan, Window* window)
-            : vulkanDevice(vulkanDevice), vulkanPhysicalDevice(vulkanPhysicalDevice), vulkan(vulkan), window(window) {
+    VulkanSwapChain::VulkanSwapChain(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice, Vulkan* vulkan, Window* window)
+            : device(device), physicalDevice(physicalDevice), vulkan(vulkan), window(window) {
+    }
+
+    VkSwapchainKHR VulkanSwapChain::getSwapChain() const {
+        return swapChain;
+    };
+
+    const VkSurfaceFormatKHR& VulkanSwapChain::getSurfaceFormat() const {
+        return surfaceFormat;
+    }
+
+    const VkExtent2D& VulkanSwapChain::getExtent() const {
+        return extent;
+    }
+
+    const std::vector<VkImageView>& VulkanSwapChain::getImageViews() const {
+        return imageViews;
     }
 
     bool VulkanSwapChain::initialize() {
-        const SwapChainInfo& swapChainInfo = vulkanPhysicalDevice->getSwapChainInfo();
+        const SwapChainInfo& swapChainInfo = physicalDevice->getSwapChainInfo();
+        const QueueFamilyIndices& queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
+        VkSurfaceKHR surface = vulkan->getSurface();
 
         surfaceFormat = chooseSurfaceFormat(swapChainInfo.surfaceFormats);
         presentMode = choosePresentMode(swapChainInfo.presentModes);
@@ -15,7 +33,7 @@ namespace Blink {
 
         uint32_t imageCount = getImageCount(swapChainInfo.surfaceCapabilities);
 
-        if (!createSwapChain(imageCount, swapChainInfo.surfaceCapabilities)) {
+        if (!createSwapChain(imageCount, swapChainInfo, queueFamilyIndices, surface)) {
             BL_LOG_ERROR("Could not create swap chain");
             return false;
         }
@@ -34,29 +52,32 @@ namespace Blink {
 
     void VulkanSwapChain::terminate() {
         for (VkImageView imageView : imageViews) {
-            vulkanDevice->destroyImageView(imageView);
+            device->destroyImageView(imageView);
         }
-        vulkanDevice->destroySwapChain(swapChain);
+        device->destroySwapChain(swapChain);
         BL_LOG_INFO("Destroyed swap chain");
     }
 
-    bool VulkanSwapChain::createSwapChain(uint32_t imageCount, const VkSurfaceCapabilitiesKHR& surfaceCapabilities) {
+    VkResult VulkanSwapChain::acquireNextImage(VkSemaphore semaphore, uint32_t* imageIndex) const {
+        return device->acquireSwapChainImage(swapChain, semaphore, imageIndex);
+    }
+
+    bool VulkanSwapChain::createSwapChain(uint32_t imageCount, const SwapChainInfo& swapChainInfo, const QueueFamilyIndices& queueFamilyIndices, VkSurfaceKHR surface) {
         VkSwapchainCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createInfo.minImageCount = imageCount;
-        createInfo.surface = vulkan->getSurface();
+        createInfo.surface = surface;
         createInfo.imageFormat = surfaceFormat.format;
         createInfo.imageColorSpace = surfaceFormat.colorSpace;
         createInfo.imageExtent = extent;
         createInfo.imageArrayLayers = 1;
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        createInfo.preTransform = surfaceCapabilities.currentTransform;
+        createInfo.preTransform = swapChainInfo.surfaceCapabilities.currentTransform;
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createInfo.presentMode = presentMode;
         createInfo.clipped = VK_TRUE;
         createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-        const QueueFamilyIndices& queueFamilyIndices = vulkanPhysicalDevice->getQueueFamilyIndices();
         if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily) {
             std::vector<uint32_t> queueFamilyIndexValues = {
                     queueFamilyIndices.graphicsFamily.value(),
@@ -71,7 +92,7 @@ namespace Blink {
             createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
 
-        return vulkanDevice->createSwapChain(&createInfo, &swapChain) == VK_SUCCESS;
+        return device->createSwapChain(&createInfo, &swapChain) == VK_SUCCESS;
     }
 
     VkSurfaceFormatKHR VulkanSwapChain::chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const {
@@ -115,7 +136,7 @@ namespace Blink {
     }
 
     bool VulkanSwapChain::findImages(uint32_t imageCount) {
-        vulkanDevice->getSwapChainImages(&imageCount, &images, swapChain);
+        device->getSwapChainImages(&imageCount, &images, swapChain);
         return !images.empty();
     }
 
@@ -136,7 +157,7 @@ namespace Blink {
             createInfo.subresourceRange.levelCount = 1;
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
-            if (vulkanDevice->createImageView(&createInfo, &imageViews[i]) != VK_SUCCESS) {
+            if (device->createImageView(&createInfo, &imageViews[i]) != VK_SUCCESS) {
                 return false;
             }
         }

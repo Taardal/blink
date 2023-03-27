@@ -21,9 +21,15 @@ namespace Blink {
     public:
         explicit VulkanDevice(VulkanPhysicalDevice* physicalDevice);
 
+        VkQueue getGraphicsQueue() const;
+
+        VkQueue getPresentQueue() const;
+
         bool initialize();
 
         void terminate() const;
+
+        void waitUntilIdle() const;
 
         VkResult createSwapChain(VkSwapchainCreateInfoKHR* createInfo, VkSwapchainKHR* swapchain) const;
 
@@ -34,6 +40,51 @@ namespace Blink {
         VkResult createImageView(VkImageViewCreateInfo* createInfo, VkImageView* imageView) const;
 
         void destroyImageView(VkImageView imageView) const;
+
+        VkResult createShaderModule(VkShaderModuleCreateInfo* createInfo, VkShaderModule* shaderModule) const;
+
+        void destroyShaderModule(VkShaderModule shaderModule) const;
+
+        VkResult createPipelineLayout(VkPipelineLayoutCreateInfo* createInfo, VkPipelineLayout* layout) const;
+
+        void destroyPipelineLayout(VkPipelineLayout layout) const;
+
+        VkResult createRenderPass(VkRenderPassCreateInfo* createInfo, VkRenderPass* renderPass) const;
+
+        void destroyRenderPass(VkRenderPass renderPass) const;
+
+        VkResult createGraphicsPipeline(VkGraphicsPipelineCreateInfo* createInfo, VkPipeline* pipeline) const;
+
+        void destroyGraphicsPipeline(VkPipeline pipeline) const;
+
+        VkResult createFramebuffer(VkFramebufferCreateInfo* createInfo, VkFramebuffer* framebuffer) const;
+
+        void destroyFramebuffer(VkFramebuffer framebuffer) const;
+
+        VkResult createCommandPool(VkCommandPoolCreateInfo* createInfo, VkCommandPool* commandPool) const;
+
+        void destroyCommandPool(VkCommandPool commandPool) const;
+
+        VkResult allocateCommandBuffers(VkCommandBufferAllocateInfo* allocateInfo, VkCommandBuffer* commandBuffers) const;
+
+        void freeCommandBuffers(uint32_t count, VkCommandBuffer* commandBuffers, VkCommandPool commandPool) const;
+
+        VkResult createSemaphore(VkSemaphoreCreateInfo* createInfo, VkSemaphore* semaphore) const;
+
+        void destroySemaphore(VkSemaphore semaphore) const;
+
+        VkResult createFence(VkFenceCreateInfo* createInfo, VkFence* fence) const;
+
+        void destroyFence(VkFence fence) const;
+
+        void waitForFence(VkFence* fence) const;
+
+        void resetFences(uint32_t count, VkFence* fences) const;
+
+        void resetFence(VkFence* fence) const;
+
+        VkResult acquireSwapChainImage(VkSwapchainKHR swapChain, VkSemaphore semaphore, uint32_t* imageIndex) const;
+
     private:
 
         bool createDevice(const QueueFamilyIndices& queueFamilyIndices);

@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
     config.windowTitle = "Blink";
     config.windowWidth = 1280;
     config.windowHeight = 768;
+    config.windowResizable = true;
 
     auto* app = new Blink::App(config);
     app->run();
