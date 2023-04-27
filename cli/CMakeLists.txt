@@ -10,14 +10,12 @@ set(BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
 add_executable(
         ${PROJECT_NAME}
         ${SRC_DIR}/main.cpp
-        ${SRC_DIR}/commands/BuildProjectCommand.cpp
-        ${SRC_DIR}/commands/BuildProjectCommand.h
-        ${SRC_DIR}/commands/CompileShadersCommand.cpp
-        ${SRC_DIR}/commands/CompileShadersCommand.h
-        ${SRC_DIR}/commands/CopyResourcesCommand.cpp
-        ${SRC_DIR}/commands/CopyResourcesCommand.h
-        ${SRC_DIR}/commands/RunProjectCommand.cpp
-        ${SRC_DIR}/commands/RunProjectCommand.h
+        ${SRC_DIR}/pch.cpp
+        ${SRC_DIR}/pch.h
+        ${SRC_DIR}/commands/commands.h
+        ${SRC_DIR}/commands/build.cpp
+        ${SRC_DIR}/commands/run.cpp
+        ${SRC_DIR}/commands/shaders.cpp
 )
 
 set_target_properties(
@@ -34,6 +32,9 @@ install(
         TARGETS ${PROJECT_NAME}
         DESTINATION ..
 )
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
+target_precompile_headers(${PROJECT_NAME} PUBLIC ${SRC_DIR}/pch.h)
 
 set(CLI_DIR ${LIB_DIR}/cli)
 add_subdirectory(${CLI_DIR})

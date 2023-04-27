@@ -1,9 +1,9 @@
-#include "CompileShadersCommand.h"
-#include <sstream>
+#include "pch.h"
+#include "commands.h"
 
 namespace BlinkCLI {
 
-    CLI::Command compileShaders() {
+    CLI::Command shaders() {
         CLI::Option releaseOption;
         releaseOption.Name = "release";
         releaseOption.Usage = "Use Release mode";
@@ -15,8 +15,6 @@ namespace BlinkCLI {
         command.Options = {
                 releaseOption
         };
-
-        //cmake -DSHADER_SRC_DIR="$(pwd)/res/shaders" -DSHADER_DST_DIR="$(pwd)/bin/debug/shaders"  -P cmake/compile_shaders.cmake
         command.Action = [](const CLI::Context& context) -> void {
             const char* resourcesDirectoryName = "res";
             const char* shaderDirectoryName = "shaders";

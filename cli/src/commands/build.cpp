@@ -1,12 +1,9 @@
-#include "BuildProjectCommand.h"
-#include <cli.h>
-#include <iostream>
-#include <sstream>
-#include <algorithm>
+#include "pch.h"
+#include "commands.h"
 
 namespace BlinkCLI {
 
-    CLI::Command buildProject() {
+    CLI::Command build() {
         CLI::Option buildDirectoryOption;
         buildDirectoryOption.Name = "buildDir";
         buildDirectoryOption.Usage = "Where to store build files generated with CMake";

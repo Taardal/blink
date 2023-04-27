@@ -1,9 +1,9 @@
-#include "RunProjectCommand.h"
-#include <sstream>
+#include "pch.h"
+#include "commands.h"
 
 namespace BlinkCLI {
 
-    CLI::Command runProject() {
+    CLI::Command run() {
         CLI::Option buildOption;
         buildOption.Name = "build";
         buildOption.Usage = "Build project before running";

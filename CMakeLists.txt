@@ -16,7 +16,6 @@ endif ()
 add_executable(
         ${PROJECT_NAME}
         ${SRC_DIR}/main.cpp
-        ${SRC_DIR}/pch.cpp
         ${SRC_DIR}/pch.h
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
