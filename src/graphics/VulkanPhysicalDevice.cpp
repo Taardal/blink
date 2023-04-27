@@ -22,14 +22,6 @@ namespace Blink {
         return deviceInfo.swapChainInfo;
     }
 
-    VkResult VulkanPhysicalDevice::createDevice(VkDeviceCreateInfo* vkDeviceCreateInfo, VkDevice* vkDevice) const {
-        return vkCreateDevice(deviceInfo.physicalDevice, vkDeviceCreateInfo, BL_VK_ALLOCATOR, vkDevice);
-    }
-
-    void VulkanPhysicalDevice::updateSwapChainInfo() {
-        deviceInfo.swapChainInfo = findSwapChainInfo(deviceInfo.physicalDevice);
-    }
-
     bool VulkanPhysicalDevice::initialize() {
         std::vector<VkPhysicalDevice> availableDevices = vulkan->getPhysicalDevices();
         if (availableDevices.empty()) {
@@ -54,6 +46,32 @@ namespace Blink {
 
     void VulkanPhysicalDevice::terminate() const {
 
+    }
+
+    void VulkanPhysicalDevice::updateSwapChainInfo() {
+        deviceInfo.swapChainInfo = findSwapChainInfo(deviceInfo.physicalDevice);
+    }
+
+    VkResult VulkanPhysicalDevice::createDevice(VkDeviceCreateInfo* createInfo, VkDevice* device) const {
+        return vkCreateDevice(deviceInfo.physicalDevice, createInfo, BL_VK_ALLOCATOR, device);
+    }
+
+    uint32_t VulkanPhysicalDevice::getMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags memoryPropertyFlags) const {
+        VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
+        vkGetPhysicalDeviceMemoryProperties(deviceInfo.physicalDevice, &physicalDeviceMemoryProperties);
+        for (uint32_t memoryTypeIndex = 0; memoryTypeIndex < physicalDeviceMemoryProperties.memoryTypeCount; memoryTypeIndex++) {
+            bool memoryTypeIsSuitable = (memoryTypeBits & (1 << memoryTypeIndex)) > 0;
+            if (!memoryTypeIsSuitable) {
+                continue;
+            }
+            VkMemoryType& memoryType = physicalDeviceMemoryProperties.memoryTypes[memoryTypeIndex];
+            bool memoryTypeHasNecessaryProperties = (memoryType.propertyFlags & memoryPropertyFlags) == memoryPropertyFlags;
+            if (!memoryTypeHasNecessaryProperties) {
+                continue;
+            }
+            return memoryTypeIndex;
+        }
+        return -1;
     }
 
     VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const std::vector<const char*>& requiredExtensions) const {

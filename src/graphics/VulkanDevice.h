@@ -85,6 +85,22 @@ namespace Blink {
 
         VkResult acquireSwapChainImage(VkSwapchainKHR swapChain, VkSemaphore semaphore, uint32_t* imageIndex) const;
 
+        VkResult createBuffer(VkBufferCreateInfo* createInfo, VkBuffer* buffer) const;
+
+        void destroyBuffer(VkBuffer buffer) const;
+
+        VkMemoryRequirements getMemoryRequirements(VkBuffer buffer) const;
+
+        VkResult allocateMemory(VkMemoryAllocateInfo* allocateInfo, VkDeviceMemory* memory) const;
+
+        void freeMemory(VkDeviceMemory memory) const;
+
+        void bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const;
+
+        void mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const;
+
+        void unmapMemory(VkDeviceMemory memory) const;
+
     private:
 
         bool createDevice(const QueueFamilyIndices& queueFamilyIndices);

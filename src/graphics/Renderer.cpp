@@ -10,7 +10,8 @@ namespace Blink {
             VulkanDevice* device,
             VulkanPhysicalDevice* physicalDevice,
             Window* window
-    ) : commandPool(commandPool),
+    ) : vertexBuffer(new VulkanVertexBuffer(device, physicalDevice)),
+        commandPool(commandPool),
         graphicsPipeline(graphicsPipeline),
         renderPass(renderPass),
         swapChain(swapChain),
@@ -18,7 +19,15 @@ namespace Blink {
         physicalDevice(physicalDevice),
         window(window) {}
 
+    Renderer::~Renderer() {
+        delete vertexBuffer;
+    }
+
     bool Renderer::initialize() {
+        if (!vertexBuffer->initialize(vertices)) {
+            BL_LOG_ERROR("Could not initialize vertex buffer");
+            return false;
+        }
         if (!initializeFramebuffers()) {
             BL_LOG_ERROR("Could not initialize framebuffers");
             return false;
@@ -37,6 +46,7 @@ namespace Blink {
     void Renderer::terminate() {
         terminateSyncObjects();
         terminateFramebuffers();
+        vertexBuffer->terminate();
     }
 
     void Renderer::onResize(uint32_t width, uint32_t height) {
@@ -143,6 +153,7 @@ namespace Blink {
 
         renderPass->begin(commandBuffer, framebuffers.at(imageIndex));
         graphicsPipeline->bind(commandBuffer);
+        vertexBuffer->bind(commandBuffer);
 
         const VkExtent2D& swapChainExtent = swapChain->getExtent();
 
@@ -156,7 +167,7 @@ namespace Blink {
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
         VkRect2D scissor{};
-        scissor.offset = {0, 0};
+        scissor.offset = { 0, 0 };
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
@@ -220,7 +231,8 @@ namespace Blink {
         submitInfo.pSignalSemaphores = signalSemaphores;
 
         uint32_t submitCount = 1;
-        if (vkQueueSubmit(device->getGraphicsQueue(), submitCount, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
+        if (vkQueueSubmit(device->getGraphicsQueue(), submitCount, &submitInfo, inFlightFences[currentFrame]) !=
+            VK_SUCCESS) {
             throw std::runtime_error("Could not submit draw command buffer");
         }
 

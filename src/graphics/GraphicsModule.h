@@ -8,8 +8,6 @@
 #include "graphics/VulkanRenderPass.h"
 #include "graphics/VulkanGraphicsPipeline.h"
 #include "graphics/VulkanCommandPool.h"
-#include "graphics/IndexBuffer.h"
-#include "graphics/VertexBuffer.h"
 #include "graphics/Texture.h"
 #include "graphics/Renderer.h"
 #include "system/SystemModule.h"
@@ -28,9 +26,6 @@ namespace Blink {
         VulkanRenderPass* renderPass;
         VulkanGraphicsPipeline* graphicsPipeline;
         VulkanCommandPool* commandPool;
-        IndexBuffer* indexBuffer;
-        VertexBuffer* vertexBuffer;
-        Texture* whiteTexture;
         Renderer *renderer;
 
     public:

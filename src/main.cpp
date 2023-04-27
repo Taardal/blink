@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     }
 
     Blink::AppConfig config;
-    config.logLevel = Blink::LogLevel::Info;
+    config.logLevel = Blink::LogLevel::Debug;
     config.windowTitle = "Blink";
     config.windowWidth = 1280;
     config.windowHeight = 768;

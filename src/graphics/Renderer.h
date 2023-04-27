@@ -5,7 +5,10 @@
 #include "VulkanRenderPass.h"
 #include "VulkanSwapChain.h"
 #include "VulkanDevice.h"
+#include "VulkanPhysicalDevice.h"
+#include "VulkanVertexBuffer.h"
 #include "Quad.h"
+#include "Vertex.h"
 
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
@@ -24,6 +27,7 @@ namespace Blink {
         static const uint32_t MAX_TEXTURE_SLOTS = 16;
 
     private:
+        VulkanVertexBuffer* vertexBuffer;
         VulkanCommandPool* commandPool;
         VulkanGraphicsPipeline* graphicsPipeline;
         VulkanRenderPass* renderPass;
@@ -39,6 +43,13 @@ namespace Blink {
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
 
+    private:
+        const std::vector<Vertex> vertices = {
+                {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+        };
+
     public:
         Renderer(
                 VulkanCommandPool* commandPool,
@@ -49,6 +60,8 @@ namespace Blink {
                 VulkanPhysicalDevice* physicalDevice,
                 Window* window
         );
+
+        virtual ~Renderer();
 
         bool initialize();
 

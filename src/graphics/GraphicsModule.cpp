@@ -13,21 +13,11 @@ namespace Blink {
               fragmentShader(new VulkanShader(device)),
               graphicsPipeline(new VulkanGraphicsPipeline(vertexShader, fragmentShader, renderPass, swapChain, device)),
               commandPool(new VulkanCommandPool(device, physicalDevice)),
-
-              indexBuffer(new IndexBuffer()),
-              vertexBuffer(new VertexBuffer()),
-              whiteTexture(new Texture()),
-
               renderer(new Renderer(commandPool, graphicsPipeline, renderPass, swapChain, device, physicalDevice, windowModule->getWindow())) {
     }
 
     GraphicsModule::~GraphicsModule() {
         delete renderer;
-
-        delete whiteTexture;
-        delete vertexBuffer;
-        delete indexBuffer;
-
         delete commandPool;
         delete graphicsPipeline;
         delete fragmentShader;
@@ -85,35 +75,15 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize command pool");
             return false;
         }
-
-        if (!indexBuffer->initialize()) {
-            BL_LOG_ERROR("Could not initialize index buffer");
-            return false;
-        }
-        if (!vertexBuffer->initialize()) {
-            BL_LOG_ERROR("Could not initialize vertex buffer");
-            return false;
-        }
-        if (!whiteTexture->initialize()) {
-            BL_LOG_ERROR("Could not initialize white texture");
-            return false;
-        }
-
         if (!renderer->initialize()) {
             BL_LOG_ERROR("Could not initialize renderer");
             return false;
         }
-
         return true;
     }
 
     void GraphicsModule::terminate() const {
         renderer->terminate();
-
-        whiteTexture->terminate();
-        vertexBuffer->terminate();
-        indexBuffer->terminate();
-
         commandPool->terminate();
         graphicsPipeline->terminate();
         fragmentShader->terminate();

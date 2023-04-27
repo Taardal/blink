@@ -33,8 +33,6 @@ add_executable(
         ${SRC_DIR}/LuaGraphicsEngine.h
         ${SRC_DIR}/graphics/GraphicsModule.cpp
         ${SRC_DIR}/graphics/GraphicsModule.h
-        ${SRC_DIR}/graphics/IndexBuffer.cpp
-        ${SRC_DIR}/graphics/IndexBuffer.h
         ${SRC_DIR}/graphics/Quad.h
         ${SRC_DIR}/graphics/Renderer.cpp
         ${SRC_DIR}/graphics/Renderer.h
@@ -43,10 +41,10 @@ add_executable(
         ${SRC_DIR}/graphics/Vertex.h
         ${SRC_DIR}/graphics/VertexAttribute.cpp
         ${SRC_DIR}/graphics/VertexAttribute.h
-        ${SRC_DIR}/graphics/VertexBuffer.cpp
-        ${SRC_DIR}/graphics/VertexBuffer.h
         ${SRC_DIR}/graphics/Vulkan.cpp
         ${SRC_DIR}/graphics/Vulkan.h
+        ${SRC_DIR}/graphics/VulkanBuffer.cpp
+        ${SRC_DIR}/graphics/VulkanBuffer.h
         ${SRC_DIR}/graphics/VulkanCommandPool.cpp
         ${SRC_DIR}/graphics/VulkanCommandPool.h
         ${SRC_DIR}/graphics/VulkanDevice.cpp
@@ -61,6 +59,8 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanShader.h
         ${SRC_DIR}/graphics/VulkanSwapChain.cpp
         ${SRC_DIR}/graphics/VulkanSwapChain.h
+        ${SRC_DIR}/graphics/VulkanVertexBuffer.cpp
+        ${SRC_DIR}/graphics/VulkanVertexBuffer.h
         ${SRC_DIR}/system/Debug.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/FileSystem.cpp

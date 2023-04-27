@@ -161,6 +161,43 @@ namespace Blink {
         return vkAcquireNextImageKHR(device, swapChain, timeout, semaphore, fence, imageIndex);
     };
 
+    VkResult VulkanDevice::createBuffer(VkBufferCreateInfo* createInfo, VkBuffer* buffer) const {
+        return vkCreateBuffer(device, createInfo, BL_VK_ALLOCATOR, buffer);
+    }
+
+    void VulkanDevice::destroyBuffer(VkBuffer buffer) const {
+        vkDestroyBuffer(device, buffer, BL_VK_ALLOCATOR);
+    }
+
+    VkMemoryRequirements VulkanDevice::getMemoryRequirements(VkBuffer buffer) const {
+        VkMemoryRequirements memoryRequirements;
+        vkGetBufferMemoryRequirements(device, buffer, &memoryRequirements);
+        return memoryRequirements;
+    }
+
+    VkResult VulkanDevice::allocateMemory(VkMemoryAllocateInfo* allocateInfo, VkDeviceMemory* memory) const {
+        return vkAllocateMemory(device, allocateInfo, BL_VK_ALLOCATOR, memory);
+    }
+
+    void VulkanDevice::freeMemory(VkDeviceMemory memory) const {
+        vkFreeMemory(device, memory, BL_VK_ALLOCATOR);
+    }
+
+    void VulkanDevice::bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const {
+        constexpr VkDeviceSize memoryOffset = 0;
+        vkBindBufferMemory(device, buffer, memory, memoryOffset);
+    }
+
+    void VulkanDevice::mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const {
+        constexpr VkDeviceSize memoryOffset = 0;
+        constexpr VkMemoryMapFlags memoryMapFlags = 0;
+        vkMapMemory(device, memory, memoryOffset, memorySize, memoryMapFlags, data);
+    }
+
+    void VulkanDevice::unmapMemory(VkDeviceMemory memory) const {
+        vkUnmapMemory(device, memory);
+    }
+
     bool VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) {
         const VkPhysicalDeviceFeatures features = physicalDevice->getFeatures();
 

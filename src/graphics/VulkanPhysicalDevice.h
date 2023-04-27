@@ -44,13 +44,15 @@ namespace Blink {
 
         const SwapChainInfo& getSwapChainInfo() const;
 
-        VkResult createDevice(VkDeviceCreateInfo* vkDeviceCreateInfo, VkDevice* vkDevice) const;
-
-        void updateSwapChainInfo();
-
         bool initialize();
 
         void terminate() const;
+
+        void updateSwapChainInfo();
+
+        VkResult createDevice(VkDeviceCreateInfo* createInfo, VkDevice* device) const;
+
+        uint32_t getMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags memoryPropertyFlags) const;
 
     private:
         VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const std::vector<const char*>& requiredExtensions) const;
