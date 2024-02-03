@@ -1,13 +1,11 @@
 #pragma once
 
-#ifdef NDEBUG
-    #define BL_RELEASE
-#else
-    #define BL_DEBUG
+#ifdef BL_DEBUG
+    #define BL_ENABLE_BREAK
+    #define BL_ENABLE_ASSERT
 #endif
 
-#ifdef BL_DEBUG
-    #include "Log.h"
+#ifdef BL_ENABLE_BREAK
     #ifdef BL_PLATFORM_WINDOWS
         #define BL_BREAK() __debugbreak()
     #elif __has_builtin(__builtin_debugtrap)
@@ -20,15 +18,19 @@
             #define BL_BREAK() std::raise(SIGABRT)
         #endif
     #endif
-    #define BL_ASSERT(tag, expression) \
+#else
+    #define BL_BREAK()
+#endif
+
+#ifdef BL_ENABLE_ASSERT
+    #define BL_ASSERT(expression) \
         if (expression) \
         {} \
         else \
         { \
-            BL_LOG_ERROR(tag, "Could not assert [{0}]", BL_TO_STRING(expression)); \
+            BL_LOG_ERROR("Could not assert [{0}]", #expression); \
             BL_BREAK(); \
         }
 #else
-    #define BL_BREAK()
-    #define BL_ASSERT(tag, expression)
+    #define BL_ASSERT(expression)
 #endif

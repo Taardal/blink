@@ -42,4 +42,8 @@ namespace Blink {
         }
         return true;
     };
+
+    void VulkanCommandPool::freeCommandBuffer(VkCommandBuffer commandBuffer) const {
+        device->freeCommandBuffers(1, &commandBuffer, commandPool);
+    };
 }

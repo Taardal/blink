@@ -1,17 +1,16 @@
-#include "pch.h"
-#include "VulkanVertexBuffer.h"
+#include "VulkanIndexBuffer.h"
 
 namespace Blink {
 
-    VulkanVertexBuffer::VulkanVertexBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
+    VulkanIndexBuffer::VulkanIndexBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
             : commandPool(commandPool), device(device), physicalDevice(physicalDevice) {}
 
-    VulkanVertexBuffer::~VulkanVertexBuffer() {
+    VulkanIndexBuffer::~VulkanIndexBuffer() {
         delete buffer;
     }
 
-    bool VulkanVertexBuffer::initialize(const std::vector<Vertex>& vertices) {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+    bool VulkanIndexBuffer::initialize(const std::vector<uint16_t>& indices) {
+        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
         VulkanBufferConfig stagingBufferConfig{};
         stagingBufferConfig.size = bufferSize;
@@ -25,8 +24,8 @@ namespace Blink {
         }
 
         VulkanBufferConfig bufferConfig{};
-        bufferConfig.size = sizeof(vertices[0]) * vertices.size();
-        bufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferConfig.size = sizeof(indices[0]) * indices.size();
+        bufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
         bufferConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
         buffer = new VulkanBuffer(bufferConfig, commandPool, device, physicalDevice);
@@ -35,24 +34,21 @@ namespace Blink {
             return false;
         }
 
-        stagingBuffer.setData((void*) vertices.data());
+        stagingBuffer.setData((void*) indices.data());
         stagingBuffer.copyTo(buffer);
         stagingBuffer.terminate();
 
         return true;
     }
 
-    void VulkanVertexBuffer::terminate() {
+    void VulkanIndexBuffer::terminate() {
         buffer->terminate();
     }
 
-    void VulkanVertexBuffer::bind(VkCommandBuffer commandBuffer) const {
-        VkBuffer buffers[] = {
-                buffer->getBuffer()
-        };
-        VkDeviceSize offsets[] = { 0 };
-        constexpr uint32_t firstBinding = 0;
-        constexpr uint32_t bindingCount = 1;
-        vkCmdBindVertexBuffers(commandBuffer, firstBinding, bindingCount, buffers, offsets);
+    void VulkanIndexBuffer::bind(VkCommandBuffer commandBuffer) const {
+        constexpr VkDeviceSize offset = 0;
+        constexpr VkIndexType indexType = VK_INDEX_TYPE_UINT16;
+        vkCmdBindIndexBuffer(commandBuffer, buffer->getBuffer(), offset, indexType);
     }
+
 }

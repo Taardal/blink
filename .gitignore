@@ -35,6 +35,9 @@ Win32
 x64
 CMakeSettings.json
 
+# Clangd
+.cache/
+
 # Xcode
 *.build
 *.xcodeproj
@@ -43,4 +46,5 @@ CMakeSettings.json
 .DS_Store
 
 # CLI
-blinky
+blink*
+

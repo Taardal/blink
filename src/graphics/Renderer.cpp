@@ -10,21 +10,27 @@ namespace Blink {
             VulkanDevice* device,
             VulkanPhysicalDevice* physicalDevice,
             Window* window
-    ) : vertexBuffer(new VulkanVertexBuffer(device, physicalDevice)),
-        commandPool(commandPool),
+    ) : commandPool(commandPool),
         graphicsPipeline(graphicsPipeline),
         renderPass(renderPass),
         swapChain(swapChain),
         device(device),
         physicalDevice(physicalDevice),
-        window(window) {}
+        window(window),
+        vertexBuffer(new VulkanVertexBuffer(commandPool, device, physicalDevice)),
+        indexBuffer(new VulkanIndexBuffer(commandPool, device, physicalDevice)){}
 
     Renderer::~Renderer() {
+        delete indexBuffer;
         delete vertexBuffer;
     }
 
     bool Renderer::initialize() {
         if (!vertexBuffer->initialize(vertices)) {
+            BL_LOG_ERROR("Could not initialize vertex buffer");
+            return false;
+        }
+        if (!indexBuffer->initialize(indices)) {
             BL_LOG_ERROR("Could not initialize vertex buffer");
             return false;
         }
@@ -46,6 +52,7 @@ namespace Blink {
     void Renderer::terminate() {
         terminateSyncObjects();
         terminateFramebuffers();
+        indexBuffer->terminate();
         vertexBuffer->terminate();
     }
 
@@ -154,6 +161,7 @@ namespace Blink {
         renderPass->begin(commandBuffer, framebuffers.at(imageIndex));
         graphicsPipeline->bind(commandBuffer);
         vertexBuffer->bind(commandBuffer);
+        indexBuffer->bind(commandBuffer);
 
         const VkExtent2D& swapChainExtent = swapChain->getExtent();
 
@@ -171,7 +179,11 @@ namespace Blink {
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+        constexpr uint32_t instanceCount = 1;
+        constexpr uint32_t firstIndex = 0;
+        constexpr uint32_t vertexOffset = 0;
+        constexpr uint32_t firstInstance = 0;
+        vkCmdDrawIndexed(commandBuffer, (uint32_t) indices.size(), instanceCount, firstIndex, vertexOffset, firstInstance);
 
         renderPass->end(commandBuffer);
 
@@ -231,8 +243,7 @@ namespace Blink {
         submitInfo.pSignalSemaphores = signalSemaphores;
 
         uint32_t submitCount = 1;
-        if (vkQueueSubmit(device->getGraphicsQueue(), submitCount, &submitInfo, inFlightFences[currentFrame]) !=
-            VK_SUCCESS) {
+        if (vkQueueSubmit(device->getGraphicsQueue(), submitCount, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
             throw std::runtime_error("Could not submit draw command buffer");
         }
 

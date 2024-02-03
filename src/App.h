@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AppConfig.h"
 #include "system/SystemModule.h"
 #include "window/WindowModule.h"
 #include "graphics/GraphicsModule.h"

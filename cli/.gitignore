@@ -12,5 +12,8 @@ Release
 .idea
 .vscode
 
+# Clangd
+.cache/
+
 # macOS
 .DS_Store

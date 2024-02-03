@@ -23,6 +23,9 @@ echo "-- Using CMake source directory [${sourceDirectory}]"
 buildDirectory="${workingDirectory}/build"
 echo "-- Using CMake build directory [${buildDirectory}]"
 
+generator="Ninja"
+echo "-- Using CMake generator [${generator}]"
+
 buildType="Debug"
 echo "-- Using build type [${buildType}]"
 
@@ -31,18 +34,18 @@ echo "
 #  Generating build files...          #
 #######################################
 "
-cmake -DCMAKE_BUILD_TYPE="${buildType}" -B "${buildDirectory}" -S "${sourceDirectory}"
+cmake -DCMAKE_BUILD_TYPE="${buildType}" -B "${buildDirectory}" -S "${sourceDirectory}" -G "${generator}"
 
 echo "
 #######################################
-#  Building binaries...               #
+#  Building binary...                 #
 #######################################
 "
 cmake --build "${buildDirectory}" --config "${buildType}"
 
 echo "
 #######################################
-#  Installing binaries...             #
+#  Installing binary...               #
 #######################################
 "
 cmake --install "${buildDirectory}" --config "${buildType}"

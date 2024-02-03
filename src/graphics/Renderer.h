@@ -1,12 +1,13 @@
 #pragma once
 
+#include "VulkanIndexBuffer.h"
+#include "VulkanVertexBuffer.h"
 #include "VulkanCommandPool.h"
 #include "VulkanGraphicsPipeline.h"
 #include "VulkanRenderPass.h"
 #include "VulkanSwapChain.h"
 #include "VulkanDevice.h"
 #include "VulkanPhysicalDevice.h"
-#include "VulkanVertexBuffer.h"
 #include "Quad.h"
 #include "Vertex.h"
 
@@ -27,6 +28,7 @@ namespace Blink {
         static const uint32_t MAX_TEXTURE_SLOTS = 16;
 
     private:
+        VulkanIndexBuffer* indexBuffer;
         VulkanVertexBuffer* vertexBuffer;
         VulkanCommandPool* commandPool;
         VulkanGraphicsPipeline* graphicsPipeline;
@@ -45,9 +47,13 @@ namespace Blink {
 
     private:
         const std::vector<Vertex> vertices = {
-                {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+                {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+                {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+                {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+        };
+        const std::vector<uint16_t> indices = {
+                0, 1, 2, 2, 3, 0
         };
 
     public:

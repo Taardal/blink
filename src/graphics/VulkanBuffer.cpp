@@ -3,10 +3,10 @@
 
 namespace Blink {
 
-    VulkanBuffer::VulkanBuffer(const VulkanBufferConfig& config, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
-            : config(config), device(device), physicalDevice(physicalDevice) {}
+    VulkanBuffer::VulkanBuffer(const VulkanBufferConfig& config, VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
+            : config(config), commandPool(commandPool), device(device), physicalDevice(physicalDevice) {}
 
-    const VkBuffer VulkanBuffer::getBuffer() const {
+    VkBuffer VulkanBuffer::getBuffer() const {
         return buffer;
     }
 
@@ -48,5 +48,49 @@ namespace Blink {
         device->mapMemory(memory, config.size, &dst);
         memcpy(dst, src, (size_t) config.size);
         device->unmapMemory(memory);
+    }
+
+    void VulkanBuffer::copyTo(VulkanBuffer* destinationBuffer) {
+        copy(this, destinationBuffer, device, commandPool);
+    }
+
+    void VulkanBuffer::copyFrom(VulkanBuffer* sourceBuffer) {
+        copy(sourceBuffer, this, device, commandPool);
+    }
+
+    void VulkanBuffer::copy(
+            VulkanBuffer* sourceBuffer,
+            VulkanBuffer* destinationBuffer,
+            VulkanDevice* device,
+            VulkanCommandPool* commandPool
+    ) {
+        BL_ASSERT(sourceBuffer.config.size == destinationBuffer.config.size);
+
+        VkCommandBuffer commandBuffer;
+        commandPool->allocateCommandBuffers(1, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+        VkBufferCopy copyRegion{};
+        copyRegion.size = sourceBuffer->config.size;
+        constexpr uint32_t regionCount = 1;
+        vkCmdCopyBuffer(commandBuffer, sourceBuffer->buffer, destinationBuffer->buffer, regionCount, &copyRegion);
+
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        constexpr uint32_t submitCount = 1;
+        VkFence fence = VK_NULL_HANDLE;
+        vkQueueSubmit(device->getGraphicsQueue(), submitCount, &submitInfo, fence);
+        vkQueueWaitIdle(device->getGraphicsQueue());
+
+        commandPool->freeCommandBuffer(commandBuffer);
     }
 }

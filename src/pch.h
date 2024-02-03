@@ -11,3 +11,4 @@
 
 #include "system/Environment.h"
 #include "system/Log.h"
+#include "system/Assert.h"

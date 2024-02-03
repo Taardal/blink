@@ -4,13 +4,10 @@
 #include "VulkanDevice.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanBuffer.h"
-#include "Vertex.h"
-
-#include <vulkan/vulkan.h>
 
 namespace Blink {
 
-    class VulkanVertexBuffer {
+    class VulkanIndexBuffer {
     private:
         VulkanCommandPool* commandPool;
         VulkanDevice* device;
@@ -18,14 +15,15 @@ namespace Blink {
         VulkanBuffer* buffer = nullptr;
 
     public:
-        VulkanVertexBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        VulkanIndexBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
 
-        ~VulkanVertexBuffer();
+        ~VulkanIndexBuffer();
 
-        bool initialize(const std::vector<Vertex>& vertices);
+        bool initialize(const std::vector<uint16_t>& indices);
 
         void terminate();
 
         void bind(VkCommandBuffer commandBuffer) const;
     };
+
 }

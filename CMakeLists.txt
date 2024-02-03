@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 project(blink)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 set(RES_DIR ${PROJECT_SOURCE_DIR}/res)
@@ -51,6 +51,8 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanDevice.h
         ${SRC_DIR}/graphics/VulkanGraphicsPipeline.cpp
         ${SRC_DIR}/graphics/VulkanGraphicsPipeline.h
+        ${SRC_DIR}/graphics/VulkanIndexBuffer.cpp
+        ${SRC_DIR}/graphics/VulkanIndexBuffer.h
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.cpp
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.h
         ${SRC_DIR}/graphics/VulkanRenderPass.cpp
@@ -61,7 +63,7 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanSwapChain.h
         ${SRC_DIR}/graphics/VulkanVertexBuffer.cpp
         ${SRC_DIR}/graphics/VulkanVertexBuffer.h
-        ${SRC_DIR}/system/Debug.h
+        ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/FileSystem.cpp
         ${SRC_DIR}/system/FileSystem.h
@@ -113,3 +115,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${SPD_LOG_DIR}/include)
 find_package(Vulkan REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
+

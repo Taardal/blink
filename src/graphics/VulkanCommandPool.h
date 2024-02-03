@@ -20,5 +20,7 @@ namespace Blink {
         bool allocateCommandBuffers(std::vector<VkCommandBuffer>* commandBuffers) const;
 
         bool allocateCommandBuffers(uint32_t count, VkCommandBuffer* commandBuffers) const;
+
+        void freeCommandBuffer(VkCommandBuffer commandBuffer) const;
     };
 }

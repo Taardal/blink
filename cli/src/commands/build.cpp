@@ -16,6 +16,12 @@ namespace BlinkCLI {
         cmakeSourceDirectoryOption.DefaultValue = ".";
         cmakeSourceDirectoryOption.Aliases = {"c"};
 
+        CLI::Option cmakeGeneratorOption;
+        cmakeGeneratorOption.Name = "generator";
+        cmakeGeneratorOption.Usage = "Which generator to use for generating build files";
+        cmakeGeneratorOption.DefaultValue = "Ninja";
+        cmakeGeneratorOption.Aliases = {"g"};
+
         CLI::Option glfwOption;
         glfwOption.Name = "glfw";
         glfwOption.Usage = "Build GLFW as part of this project instead of using binaries installed on local machine";
@@ -32,6 +38,7 @@ namespace BlinkCLI {
         command.Options = {
                 buildDirectoryOption,
                 cmakeSourceDirectoryOption,
+                cmakeGeneratorOption,
                 glfwOption,
                 releaseOption
         };
@@ -39,6 +46,7 @@ namespace BlinkCLI {
             std::string_view buildType = context.hasOption("release") ? "Release" : "Debug";
             std::string_view buildDirectory = context.hasOption("buildDir") ? context.getOption("buildDir")->Value : context.Command->getOption("buildDir")->DefaultValue;
             std::string_view cmakeSourceDirectory = context.hasOption("cmakeDir") ? context.getOption("cmakeDir")->Value : context.Command->getOption("cmakeDir")->DefaultValue;
+            std::string_view cmakeGenerator = context.hasOption("generator") ? context.getOption("generator")->Value : context.Command->getOption("generator")->DefaultValue;
 
             std::stringstream ss;
             ss << "cmake -DCMAKE_BUILD_TYPE=" << buildType;
@@ -47,6 +55,8 @@ namespace BlinkCLI {
             }
             ss << " -B " << buildDirectory;
             ss << " -S " << cmakeSourceDirectory;
+            ss << " -G " << cmakeGenerator;
+            ss << " -D CMAKE_EXPORT_COMPILE_COMMANDS=ON";
             ss << " && ";
             ss << "cmake --build " << buildDirectory << " --config " << buildType;
 
