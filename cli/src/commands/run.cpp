@@ -4,16 +4,6 @@
 namespace BlinkCLI {
 
     CLI::Command run() {
-        CLI::Option buildOption;
-        buildOption.Name = "build";
-        buildOption.Usage = "Build project before running";
-        buildOption.Aliases = {"b"};
-
-        CLI::Option glfwOption;
-        glfwOption.Name = "glfw";
-        glfwOption.Usage = "Build GLFW as part of this project (Requires build option)";
-        glfwOption.Aliases = {"g"};
-
         CLI::Option releaseOption;
         releaseOption.Name = "release";
         releaseOption.Usage = "Use Release mode";
@@ -24,8 +14,6 @@ namespace BlinkCLI {
         command.Usage = "Run project";
         command.Aliases = {"r"};
         command.Options = {
-                buildOption,
-                glfwOption,
                 releaseOption,
         };
         command.Action = [](const CLI::Context& context) -> void {
@@ -34,16 +22,6 @@ namespace BlinkCLI {
             std::string_view appName = context.App->Name;
 
             std::stringstream ss;
-            if (context.hasOption("build")) {
-                ss << "./" << context.App->Name << " build";
-                if (context.hasOption("release")) {
-                    ss << " --release";
-                }
-                if (context.hasOption("glfw")) {
-                    ss << " --glfw";
-                }
-                ss << " && ";
-            }
             ss << "cd " << binDirName << "/" << buildTypeDirName;
             ss << " && ";
             ss << "./";

@@ -6,7 +6,11 @@ namespace Blink {
     VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanShader* vertexShader, VulkanShader* fragmentShader, VulkanRenderPass* renderPass, VulkanSwapChain* swapChain, VulkanDevice* device)
             : vertexShader(vertexShader), fragmentShader(fragmentShader), renderPass(renderPass), swapChain(swapChain), device(device) {}
 
-    bool VulkanGraphicsPipeline::initialize() {
+    VkPipelineLayout VulkanGraphicsPipeline::getLayout() const {
+        return layout;
+    }
+
+    bool VulkanGraphicsPipeline::initialize(VkDescriptorSetLayout descriptorSetLayout) {
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
         vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -76,7 +80,7 @@ namespace Blink {
         rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizationStateCreateInfo.lineWidth = 1.0f;
         rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
 
         VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
@@ -96,6 +100,8 @@ namespace Blink {
 
         VkPipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        layoutCreateInfo.setLayoutCount = 1;
+        layoutCreateInfo.pSetLayouts = &descriptorSetLayout;
 
         if (device->createPipelineLayout(&layoutCreateInfo, &layout) != VK_SUCCESS) {
             BL_LOG_ERROR("Could not create pipeline layout");

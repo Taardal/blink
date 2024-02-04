@@ -18,8 +18,8 @@ namespace Blink {
         stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-        VulkanBuffer stagingBuffer(stagingBufferConfig, commandPool, device, physicalDevice);
-        if (!stagingBuffer.initialize()) {
+        VulkanBuffer stagingBuffer(commandPool, device, physicalDevice);
+        if (!stagingBuffer.initialize(stagingBufferConfig)) {
             BL_LOG_ERROR("Could not initialize staging buffer");
             return false;
         }
@@ -29,8 +29,8 @@ namespace Blink {
         bufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
         bufferConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-        buffer = new VulkanBuffer(bufferConfig, commandPool, device, physicalDevice);
-        if (!buffer->initialize()) {
+        buffer = new VulkanBuffer(commandPool, device, physicalDevice);
+        if (!buffer->initialize(bufferConfig)) {
             BL_LOG_ERROR("Could not initialize buffer");
             return false;
         }

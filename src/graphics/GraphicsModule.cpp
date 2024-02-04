@@ -9,19 +9,13 @@ namespace Blink {
               device(new VulkanDevice(physicalDevice)),
               swapChain(new VulkanSwapChain(device, physicalDevice, vulkan, windowModule->getWindow())),
               renderPass(new VulkanRenderPass(swapChain, device)),
-              vertexShader(new VulkanShader(device)),
-              fragmentShader(new VulkanShader(device)),
-              graphicsPipeline(new VulkanGraphicsPipeline(vertexShader, fragmentShader, renderPass, swapChain, device)),
               commandPool(new VulkanCommandPool(device, physicalDevice)),
-              renderer(new Renderer(commandPool, graphicsPipeline, renderPass, swapChain, device, physicalDevice, windowModule->getWindow())) {
+              renderer(new Renderer(systemModule->getFileSystem(), windowModule->getWindow(), physicalDevice, device, swapChain, renderPass, commandPool)) {
     }
 
     GraphicsModule::~GraphicsModule() {
         delete renderer;
         delete commandPool;
-        delete graphicsPipeline;
-        delete fragmentShader;
-        delete vertexShader;
         delete renderPass;
         delete swapChain;
         delete device;
@@ -58,19 +52,6 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize Vulkan render pass");
             return false;
         }
-        FileSystem* fileSystem = systemModule->getFileSystem();
-        if (!vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv"))) {
-            BL_LOG_ERROR("Could not initialize vertex shader");
-            return false;
-        }
-        if (!fragmentShader->initialize(fileSystem->readBytes("shaders/shader.frag.spv"))) {
-            BL_LOG_ERROR("Could not initialize fragment shader");
-            return false;
-        }
-        if (!graphicsPipeline->initialize()) {
-            BL_LOG_ERROR("Could not initialize graphics pipeline");
-            return false;
-        }
         if (!commandPool->initialize()) {
             BL_LOG_ERROR("Could not initialize command pool");
             return false;
@@ -85,9 +66,6 @@ namespace Blink {
     void GraphicsModule::terminate() const {
         renderer->terminate();
         commandPool->terminate();
-        graphicsPipeline->terminate();
-        fragmentShader->terminate();
-        vertexShader->terminate();
         renderPass->terminate();
         swapChain->terminate();
         device->terminate();

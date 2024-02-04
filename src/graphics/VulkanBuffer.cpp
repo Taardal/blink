@@ -3,14 +3,15 @@
 
 namespace Blink {
 
-    VulkanBuffer::VulkanBuffer(const VulkanBufferConfig& config, VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
-            : config(config), commandPool(commandPool), device(device), physicalDevice(physicalDevice) {}
+    VulkanBuffer::VulkanBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
+            : commandPool(commandPool), device(device), physicalDevice(physicalDevice) {}
 
     VkBuffer VulkanBuffer::getBuffer() const {
         return buffer;
     }
 
-    bool VulkanBuffer::initialize() {
+    bool VulkanBuffer::initialize(const VulkanBufferConfig& config) {
+        this->config = config;
 
         VkBufferCreateInfo bufferCreateInfo{};
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

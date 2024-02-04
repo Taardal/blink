@@ -198,6 +198,32 @@ namespace Blink {
         vkUnmapMemory(device, memory);
     }
 
+    VkResult VulkanDevice::createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo* createInfo, VkDescriptorSetLayout* layout) const {
+        return vkCreateDescriptorSetLayout(device, createInfo, BL_VK_ALLOCATOR, layout);
+    }
+
+    void VulkanDevice::destroyDescriptorSetLayout(VkDescriptorSetLayout layout) const {
+        vkDestroyDescriptorSetLayout(device, layout, BL_VK_ALLOCATOR);
+    }
+
+    VkResult VulkanDevice::createDescriptorPool(VkDescriptorPoolCreateInfo* createInfo, VkDescriptorPool* pool) const {
+        return vkCreateDescriptorPool(device, createInfo, BL_VK_ALLOCATOR, pool);
+    }
+
+    void VulkanDevice::destroyDescriptorPool(VkDescriptorPool pool) const {
+        vkDestroyDescriptorPool(device, pool, BL_VK_ALLOCATOR);
+    }
+
+    VkResult VulkanDevice::allocateDescriptorSets(VkDescriptorSetAllocateInfo* allocateInfo, VkDescriptorSet* descriptorSets) const {
+        return vkAllocateDescriptorSets(device, allocateInfo, descriptorSets);
+    }
+
+    void VulkanDevice::updateDescriptorSets(uint32_t count, VkWriteDescriptorSet* write) const {
+        constexpr uint32_t copyCount = 0;
+        constexpr VkCopyDescriptorSet* copies = nullptr;
+        vkUpdateDescriptorSets(device, count, write, copyCount, copies);
+    }
+
     bool VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) {
         const VkPhysicalDeviceFeatures features = physicalDevice->getFeatures();
 

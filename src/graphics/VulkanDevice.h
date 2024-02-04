@@ -101,6 +101,18 @@ namespace Blink {
 
         void unmapMemory(VkDeviceMemory memory) const;
 
+        VkResult createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo* createInfo, VkDescriptorSetLayout* layout) const;
+
+        void destroyDescriptorSetLayout(VkDescriptorSetLayout layout) const;
+
+        VkResult createDescriptorPool(VkDescriptorPoolCreateInfo* createInfo, VkDescriptorPool* pool) const;
+
+        void destroyDescriptorPool(VkDescriptorPool pool) const;
+
+        VkResult allocateDescriptorSets(VkDescriptorSetAllocateInfo* allocateInfo, VkDescriptorSet* descriptorSets) const;
+
+        void updateDescriptorSets(uint32_t count, VkWriteDescriptorSet* write) const;
+
     private:
 
         bool createDevice(const QueueFamilyIndices& queueFamilyIndices);

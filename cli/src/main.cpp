@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "commands/commands.h"
 #include <cli.h>
 
@@ -8,6 +7,7 @@ int main(int argc, char* argv[]) {
     app.Usage = "Blink CLI";
     app.Commands = {
             BlinkCLI::build(),
+            BlinkCLI::generate(),
             BlinkCLI::run(),
             BlinkCLI::shaders(),
     };

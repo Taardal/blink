@@ -38,6 +38,7 @@ add_executable(
         ${SRC_DIR}/graphics/Renderer.h
         ${SRC_DIR}/graphics/Texture.cpp
         ${SRC_DIR}/graphics/Texture.h
+        ${SRC_DIR}/graphics/UniformBufferObject.h
         ${SRC_DIR}/graphics/Vertex.h
         ${SRC_DIR}/graphics/VertexAttribute.cpp
         ${SRC_DIR}/graphics/VertexAttribute.h
@@ -61,6 +62,8 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanShader.h
         ${SRC_DIR}/graphics/VulkanSwapChain.cpp
         ${SRC_DIR}/graphics/VulkanSwapChain.h
+        ${SRC_DIR}/graphics/VulkanUniformBuffer.cpp
+        ${SRC_DIR}/graphics/VulkanUniformBuffer.h
         ${SRC_DIR}/graphics/VulkanVertexBuffer.cpp
         ${SRC_DIR}/graphics/VulkanVertexBuffer.h
         ${SRC_DIR}/system/Assert.h

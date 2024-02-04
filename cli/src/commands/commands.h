@@ -4,6 +4,7 @@
 
 namespace BlinkCLI {
     CLI::Command build();
+    CLI::Command generate();
     CLI::Command run();
     CLI::Command shaders();
 }

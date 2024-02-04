@@ -14,6 +14,7 @@ add_executable(
         ${SRC_DIR}/pch.h
         ${SRC_DIR}/commands/commands.h
         ${SRC_DIR}/commands/build.cpp
+        ${SRC_DIR}/commands/generate.cpp
         ${SRC_DIR}/commands/run.cpp
         ${SRC_DIR}/commands/shaders.cpp
 )

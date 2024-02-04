@@ -1,47 +1,57 @@
 #pragma once
 
-#include "VulkanIndexBuffer.h"
-#include "VulkanVertexBuffer.h"
-#include "VulkanCommandPool.h"
-#include "VulkanGraphicsPipeline.h"
-#include "VulkanRenderPass.h"
-#include "VulkanSwapChain.h"
-#include "VulkanDevice.h"
+#include "system/FileSystem.h"
+#include "window/Window.h"
 #include "VulkanPhysicalDevice.h"
+#include "VulkanDevice.h"
+#include "VulkanSwapChain.h"
+#include "VulkanRenderPass.h"
+#include "VulkanCommandPool.h"
+#include "VulkanShader.h"
+#include "VulkanGraphicsPipeline.h"
+#include "VulkanVertexBuffer.h"
+#include "VulkanIndexBuffer.h"
+#include "VulkanUniformBuffer.h"
 #include "Quad.h"
 #include "Vertex.h"
 
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
-#include <string>
 
 namespace Blink {
 
     class Renderer {
     private:
-        static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
-        static const uint32_t VERTICES_PER_QUAD = 4;
-        static const uint32_t INDICES_PER_QUAD = 6;
-        static const uint32_t QUADS_PER_BATCH = 1000;
-        static const uint32_t VERTICES_PER_BATCH = QUADS_PER_BATCH * VERTICES_PER_QUAD;
-        static const uint32_t INDICES_PER_BATCH = QUADS_PER_BATCH * INDICES_PER_QUAD;
-        static const uint32_t MAX_TEXTURE_SLOTS = 16;
+        static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+        static constexpr uint32_t VERTICES_PER_QUAD = 4;
+        static constexpr uint32_t INDICES_PER_QUAD = 6;
+        static constexpr uint32_t QUADS_PER_BATCH = 1000;
+        static constexpr uint32_t VERTICES_PER_BATCH = QUADS_PER_BATCH * VERTICES_PER_QUAD;
+        static constexpr uint32_t INDICES_PER_BATCH = QUADS_PER_BATCH * INDICES_PER_QUAD;
+        static constexpr uint32_t MAX_TEXTURE_SLOTS = 16;
 
     private:
-        VulkanIndexBuffer* indexBuffer;
-        VulkanVertexBuffer* vertexBuffer;
-        VulkanCommandPool* commandPool;
-        VulkanGraphicsPipeline* graphicsPipeline;
-        VulkanRenderPass* renderPass;
-        VulkanSwapChain* swapChain;
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
+        FileSystem* fileSystem;
         Window* window;
+        VulkanPhysicalDevice* physicalDevice;
+        VulkanDevice* device;
+        VulkanSwapChain* swapChain;
+        VulkanRenderPass* renderPass;
+        VulkanCommandPool* commandPool;
+        VulkanShader* vertexShader;
+        VulkanShader* fragmentShader;
+        VulkanGraphicsPipeline* graphicsPipeline;
+        VulkanVertexBuffer* vertexBuffer;
+        VulkanIndexBuffer* indexBuffer;
+        std::vector<VulkanUniformBuffer*> uniformBuffers;
         std::vector<VkFramebuffer> framebuffers;
         std::vector<VkCommandBuffer> commandBuffers;
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
         std::vector<VkFence> inFlightFences;
+        VkDescriptorSetLayout descriptorSetLayout = nullptr;
+        VkDescriptorPool descriptorPool = nullptr;
+        std::vector<VkDescriptorSet> descriptorSets;
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
 
@@ -58,13 +68,13 @@ namespace Blink {
 
     public:
         Renderer(
-                VulkanCommandPool* commandPool,
-                VulkanGraphicsPipeline* graphicsPipeline,
-                VulkanRenderPass* renderPass,
-                VulkanSwapChain* swapChain,
-                VulkanDevice* device,
-                VulkanPhysicalDevice* physicalDevice,
-                Window* window
+            FileSystem* fileSystem,
+            Window* window,
+            VulkanPhysicalDevice* physicalDevice,
+            VulkanDevice* device,
+            VulkanSwapChain* swapChain,
+            VulkanRenderPass* renderPass,
+            VulkanCommandPool* commandPool
         );
 
         virtual ~Renderer();
@@ -84,6 +94,14 @@ namespace Blink {
         void submitQuad(Quad& quad);
 
     private:
+        bool initializeDescriptorObjects();
+
+        void terminateDescriptorObjects();
+
+        bool initializeUniformBuffers();
+
+        void terminateUniformBuffers();
+
         bool initializeFramebuffers();
 
         void terminateFramebuffers();
@@ -94,15 +112,17 @@ namespace Blink {
 
         void terminateSyncObjects();
 
-        void drawFrame();
-
-        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-
         bool recreateSwapChain();
 
         bool initializeSwapChain();
 
         void terminateSwapChain();
+
+        void drawFrame();
+
+        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+        void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer);
     };
 }
 

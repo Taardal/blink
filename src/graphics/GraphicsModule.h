@@ -4,11 +4,8 @@
 #include "graphics/VulkanPhysicalDevice.h"
 #include "graphics/VulkanDevice.h"
 #include "graphics/VulkanSwapChain.h"
-#include "graphics/VulkanShader.h"
 #include "graphics/VulkanRenderPass.h"
-#include "graphics/VulkanGraphicsPipeline.h"
 #include "graphics/VulkanCommandPool.h"
-#include "graphics/Texture.h"
 #include "graphics/Renderer.h"
 #include "system/SystemModule.h"
 #include "window/WindowModule.h"
@@ -21,10 +18,7 @@ namespace Blink {
         VulkanPhysicalDevice* physicalDevice;
         VulkanDevice* device;
         VulkanSwapChain* swapChain;
-        VulkanShader* vertexShader;
-        VulkanShader* fragmentShader;
         VulkanRenderPass* renderPass;
-        VulkanGraphicsPipeline* graphicsPipeline;
         VulkanCommandPool* commandPool;
         Renderer *renderer;
 

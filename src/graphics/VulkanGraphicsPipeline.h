@@ -25,7 +25,9 @@ namespace Blink {
     public:
         VulkanGraphicsPipeline(VulkanShader* vertexShader, VulkanShader* fragmentShader, VulkanRenderPass* renderPass, VulkanSwapChain* swapChain, VulkanDevice* device);
 
-        bool initialize();
+        VkPipelineLayout getLayout() const;
+
+        bool initialize(VkDescriptorSetLayout descriptorSetLayout);
 
         void terminate();
 

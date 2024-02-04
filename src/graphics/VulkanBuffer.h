@@ -16,19 +16,19 @@ namespace Blink {
 
     class VulkanBuffer {
     private:
-        VulkanBufferConfig config;
         VulkanCommandPool* commandPool;
         VulkanDevice* device;
         VulkanPhysicalDevice* physicalDevice;
+        VulkanBufferConfig config;
         VkBuffer buffer = nullptr;
         VkDeviceMemory memory = nullptr;
 
     public:
-        VulkanBuffer(const VulkanBufferConfig& config, VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        VulkanBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
 
         VkBuffer getBuffer() const;
 
-        bool initialize();
+        bool initialize(const VulkanBufferConfig& config);
 
         void terminate();
 
