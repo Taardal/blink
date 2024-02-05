@@ -456,19 +456,68 @@ namespace Blink {
     }
 
     void Renderer::updateUniformBuffer(VulkanUniformBuffer* uniformBuffer) {
-        static auto startTime = std::chrono::high_resolution_clock::now();
 
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        constexpr float cameraSpeed = 0.05f;
+
+        GLFWwindow* glfWwindow = window->getGlfwWindow();
+        if (glfwGetKey(glfWwindow, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraPosition += cameraSpeed * cameraDirection;
+        }
+        if (glfwGetKey(glfWwindow, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraPosition -= cameraSpeed * cameraDirection;
+        }
+        if (glfwGetKey(glfWwindow, GLFW_KEY_A) == GLFW_PRESS) {
+            cameraPosition -= glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
+        }
+        if (glfwGetKey(glfWwindow, GLFW_KEY_D) == GLFW_PRESS) {
+            cameraPosition += glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
+        }
+        BL_LOG_DEBUG("Camera position [{}, {}, {}]", cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
         UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        // TRANSLATION
+        glm::vec3 pos(0.0f, 0.0f, 0.0f);
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), playerPosition);
 
+        // ROTATION
+        // const float angle = glm::radians(90.0f);
+        // const glm::vec3 axis(0.0f, 0.0f, 1.0f);
+        // glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, axis);
+        glm::mat4 rotation = glm::mat4(1.0f);
+
+        // SCALE
+        //glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+        glm::mat4 scale = glm::mat4(1.0f);
+
+        // MODEL MATRIX
+        ubo.model = translation * rotation * scale;
+
+        // VIEW MATRIX
+        glm::vec3 targetPosition = cameraPosition + cameraDirection;
+        ubo.view = glm::lookAt(cameraPosition, targetPosition, cameraUp);
+
+        // PROJECTION MATRIX
         const VkExtent2D& swapChainExtent = swapChain->getExtent();
-        ubo.proj = glm::perspective(glm::radians(45.0f), (float) swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
+        const float fieldOfView = glm::radians(45.0f);
+        const float aspectRatio = (float) swapChainExtent.width / (float) swapChainExtent.height;
+        const float nearPlane = 0.1f;
+        const float farPlane = 10.0f;
+        ubo.proj = glm::perspective(fieldOfView, aspectRatio, nearPlane, farPlane);
 
+        //
+        // GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
+        // The easiest way to compensate for that is to flip the sign on the scaling factor of the Y rotationAxis in the projection matrix.
+        // If we don't do this, then the image will be rendered upside down.
+        //
+        // This change causes the vertices to be drawn in counter-clockwise order instead of clockwise order.
+        // This causes backface culling to kick in and prevents any geometry from being drawn.
+        // To fix this the graphics pipeline's rasterization state should have a counter clockwise front-facing triangle orientation to be used for culling.
+        //
+        // VkPipelineRasterizationStateCreateInfo rasterizationState{};
+        // rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
+        // rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        //
         ubo.proj[1][1] *= -1;
 
         uniformBuffer->setData(&ubo);
