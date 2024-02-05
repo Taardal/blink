@@ -1,7 +1,7 @@
 #include "LuaGraphicsEngine.h"
 #include <glm/glm.hpp>
 
-namespace blink
+namespace Blink
 {
     LuaGraphicsEngine::LuaGraphicsEngine(LuaClient* lua)
             : lua(lua),
@@ -32,7 +32,6 @@ namespace blink
     {
         printlua(L);
 
-        ST_LOG_TRACE(ST_TAG_TYPE(LuaGraphicsEngine), "LuaGraphicsEngine::DrawRectangle");
         auto listener = (LuaEngineListener*) lua_touserdata(L, lua_upvalueindex(1));
 
         lua_getfield(L, -1, "x");

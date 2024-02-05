@@ -3,7 +3,7 @@
 #include "LuaEngineListener.h"
 #include "LuaClient.h"
 
-namespace blink
+namespace Blink
 {
     class LuaGraphicsEngine
     {

@@ -1131,10 +1131,10 @@ typedef enum VkDescriptorUpdateTemplateType {
     VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET = 0
 } VkDescriptorUpdateTemplateType;
 
-typedef enum VkPointClippingBehavior {
+typedef enum VkPointCLIingBehavior {
     VK_POINT_CLIPPING_BEHAVIOR_ALL_CLIP_PLANES = 0,
     VK_POINT_CLIPPING_BEHAVIOR_USER_CLIP_PLANES_ONLY = 1
-} VkPointClippingBehavior;
+} VkPointCLIingBehavior;
 typedef enum VkColorSpaceKHR {
     VK_COLOR_SPACE_SRGB_NONLINEAR_KHR = 0,
     VK_COLORSPACE_SRGB_NONLINEAR_KHR = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
@@ -1647,11 +1647,11 @@ typedef struct VkImageSparseMemoryRequirementsInfo2 {
     const  void *                                                           pNext;
     VkImage                                                                image;
 } VkImageSparseMemoryRequirementsInfo2;
-typedef struct VkPhysicalDevicePointClippingProperties {
+typedef struct VkPhysicalDevicePointCLIingProperties {
     VkStructureType   sType;
     void *                             pNext;
-    VkPointClippingBehavior        pointClippingBehavior;
-} VkPhysicalDevicePointClippingProperties;
+    VkPointCLIingBehavior        pointCLIingBehavior;
+} VkPhysicalDevicePointCLIingProperties;
 typedef struct VkMemoryDedicatedAllocateInfo {
     VkStructureType   sType;
     const  void *                       pNext;

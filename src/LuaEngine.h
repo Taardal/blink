@@ -2,10 +2,10 @@
 
 #include "LuaGraphicsEngine.h"
 #include "LuaClient.h"
-#include "FileSystem.h"
-#include "Config.h"
+#include "system/FileSystem.h"
+#include "AppConfig.h"
 
-namespace blink
+namespace Blink
 {
     class LuaEngine
     {
@@ -25,7 +25,7 @@ namespace blink
 
         void Run(const char* mainFilePath);
 
-        [[nodiscard]] Config& OnConfigure(Config& defaultConfig);
+        [[nodiscard]] AppConfig& OnConfigure(AppConfig& defaultConfig);
 
         void OnCreate();
 
@@ -34,7 +34,7 @@ namespace blink
         void OnDraw();
 
     private:
-        Config& LoadLuaConfig(Config& config);
+        AppConfig& LoadLuaConfig(AppConfig& config);
     };
 }
 

@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-namespace blink
+namespace Blink
 {
     class LuaEngineListener
     {
