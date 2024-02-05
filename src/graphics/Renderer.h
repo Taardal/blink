@@ -20,6 +20,12 @@
 
 namespace Blink {
 
+    struct Frame {
+        glm::mat4 model;
+        glm::mat4 view;
+        glm::mat4 projection;
+    };
+
     class Renderer {
     private:
         static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
@@ -54,11 +60,6 @@ namespace Blink {
         std::vector<VkDescriptorSet> descriptorSets;
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
-        glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 2.0f);
-        glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-        glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-        float cameraAngleInDegrees = 0.0f;
-        glm::vec3 playerPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 
     private:
         const std::vector<Vertex> vertices = {
@@ -92,7 +93,7 @@ namespace Blink {
 
         void onMinimize(bool minimized);
 
-        void onRender();
+        void onRender(const Frame& frame);
 
         void onComplete();
 
@@ -123,11 +124,11 @@ namespace Blink {
 
         void terminateSwapChain();
 
-        void drawFrame();
+        void drawFrame(const Frame& frame);
 
         void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
-        void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer);
+        void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame);
     };
 }
 

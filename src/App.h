@@ -4,7 +4,7 @@
 #include "system/SystemModule.h"
 #include "window/WindowModule.h"
 #include "graphics/GraphicsModule.h"
-#include "GameModule.h"
+#include "game/GameModule.h"
 
 namespace Blink {
     class App {

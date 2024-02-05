@@ -1,19 +1,20 @@
 #pragma once
 
-#include "graphics/GraphicsModule.h"
-#include "window/WindowModule.h"
-#include "system/FileSystem.h"
-#include "window/Window.h"
+#include "Camera.h"
 #include "Game.h"
+#include "window/WindowModule.h"
+#include "graphics/GraphicsModule.h"
 
 
 namespace Blink {
     class GameModule {
     private:
+        AppConfig appConfig;
+        Camera* camera;
         Game* game;
 
     public:
-        GameModule(WindowModule* windowModule, GraphicsModule* graphicsModule);
+        GameModule(const AppConfig& appConfig, WindowModule* windowModule, GraphicsModule* graphicsModule);
 
         ~GameModule();
 

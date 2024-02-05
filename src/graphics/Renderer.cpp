@@ -108,8 +108,8 @@ namespace Blink {
         this->framebufferResized = true;
     };
 
-    void Renderer::onRender() {
-        drawFrame();
+    void Renderer::onRender(const Frame& frame) {
+        drawFrame(frame);
     }
 
     void Renderer::onComplete() {
@@ -308,7 +308,7 @@ namespace Blink {
         swapChain->terminate();
     }
 
-    void Renderer::drawFrame() {
+    void Renderer::drawFrame(const Frame& frame) {
         /*
          * Frame resources
          */
@@ -345,7 +345,7 @@ namespace Blink {
          */
 
         recordCommandBuffer(commandBuffer, imageIndex);
-        updateUniformBuffer(uniformBuffer);
+        updateUniformBuffer(uniformBuffer, frame);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -455,55 +455,11 @@ namespace Blink {
         }
     }
 
-    void Renderer::updateUniformBuffer(VulkanUniformBuffer* uniformBuffer) {
-
-        constexpr float cameraSpeed = 0.05f;
-
-        GLFWwindow* glfWwindow = window->getGlfwWindow();
-        if (glfwGetKey(glfWwindow, GLFW_KEY_W) == GLFW_PRESS) {
-            cameraPosition += cameraSpeed * cameraDirection;
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_S) == GLFW_PRESS) {
-            cameraPosition -= cameraSpeed * cameraDirection;
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_A) == GLFW_PRESS) {
-            cameraPosition -= glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_D) == GLFW_PRESS) {
-            cameraPosition += glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
-        }
-        BL_LOG_DEBUG("Camera position [{}, {}, {}]", cameraPosition.x, cameraPosition.y, cameraPosition.z);
-
+    void Renderer::updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame) {
         UniformBufferObject ubo{};
-
-        // TRANSLATION
-        glm::vec3 pos(0.0f, 0.0f, 0.0f);
-        glm::mat4 translation = glm::translate(glm::mat4(1.0f), playerPosition);
-
-        // ROTATION
-        // const float angle = glm::radians(90.0f);
-        // const glm::vec3 axis(0.0f, 0.0f, 1.0f);
-        // glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, axis);
-        glm::mat4 rotation = glm::mat4(1.0f);
-
-        // SCALE
-        //glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-        glm::mat4 scale = glm::mat4(1.0f);
-
-        // MODEL MATRIX
-        ubo.model = translation * rotation * scale;
-
-        // VIEW MATRIX
-        glm::vec3 targetPosition = cameraPosition + cameraDirection;
-        ubo.view = glm::lookAt(cameraPosition, targetPosition, cameraUp);
-
-        // PROJECTION MATRIX
-        const VkExtent2D& swapChainExtent = swapChain->getExtent();
-        const float fieldOfView = glm::radians(45.0f);
-        const float aspectRatio = (float) swapChainExtent.width / (float) swapChainExtent.height;
-        const float nearPlane = 0.1f;
-        const float farPlane = 10.0f;
-        ubo.proj = glm::perspective(fieldOfView, aspectRatio, nearPlane, farPlane);
+        ubo.model = frame.model;
+        ubo.view = frame.view;
+        ubo.proj = frame.projection;
 
         //
         // GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.

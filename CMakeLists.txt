@@ -20,10 +20,6 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
-        ${SRC_DIR}/Game.cpp
-        ${SRC_DIR}/Game.h
-        ${SRC_DIR}/GameModule.cpp
-        ${SRC_DIR}/GameModule.h
         ${SRC_DIR}/LuaClient.cpp
         ${SRC_DIR}/LuaClient.h
         ${SRC_DIR}/LuaEngine.cpp
@@ -31,6 +27,12 @@ add_executable(
         ${SRC_DIR}/LuaEngineListener.h
         ${SRC_DIR}/LuaGraphicsEngine.cpp
         ${SRC_DIR}/LuaGraphicsEngine.h
+        ${SRC_DIR}/game/Camera.cpp
+        ${SRC_DIR}/game/Camera.h
+        ${SRC_DIR}/game/Game.cpp
+        ${SRC_DIR}/game/Game.h
+        ${SRC_DIR}/game/GameModule.cpp
+        ${SRC_DIR}/game/GameModule.h
         ${SRC_DIR}/graphics/GraphicsModule.cpp
         ${SRC_DIR}/graphics/GraphicsModule.h
         ${SRC_DIR}/graphics/Quad.h
