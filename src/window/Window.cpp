@@ -3,8 +3,8 @@
 #include "GLFW/glfw3.h"
 
 namespace Blink {
-    Window::Window()
-            : glfwWindow(nullptr) {
+    GLFWwindow* Window::getGlfwWindow() const {
+        return glfwWindow;
     }
 
     WindowSize Window::getSizeInPixels() const {

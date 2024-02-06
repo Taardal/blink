@@ -20,6 +20,12 @@
 
 namespace Blink {
 
+    struct Frame {
+        glm::mat4 model;
+        glm::mat4 view;
+        glm::mat4 projection;
+    };
+
     class Renderer {
     private:
         static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
@@ -57,13 +63,31 @@ namespace Blink {
 
     private:
         const std::vector<Vertex> vertices = {
-                {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-                {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-                {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+            // Front face
+            {{-0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+            {{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
+
+            // Back face
+            {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+            {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},
+            {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}
         };
         const std::vector<uint16_t> indices = {
-                0, 1, 2, 2, 3, 0
+            // Front face
+            0, 1, 2, 2, 3, 0,
+            // Right face
+            1, 5, 6, 6, 2, 1,
+            // Back face
+            5, 4, 7, 7, 6, 5,
+            // Left face
+            4, 0, 3, 3, 7, 4,
+            // Top face
+            3, 2, 6, 6, 7, 3,
+            // Bottom face
+            0, 1, 5, 5, 4, 0
         };
 
     public:
@@ -87,7 +111,7 @@ namespace Blink {
 
         void onMinimize(bool minimized);
 
-        void onRender();
+        void onRender(const Frame& frame);
 
         void onComplete();
 
@@ -118,11 +142,11 @@ namespace Blink {
 
         void terminateSwapChain();
 
-        void drawFrame();
+        void drawFrame(const Frame& frame);
 
         void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
-        void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer);
+        void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame);
     };
 }
 

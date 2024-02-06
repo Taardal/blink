@@ -108,8 +108,8 @@ namespace Blink {
         this->framebufferResized = true;
     };
 
-    void Renderer::onRender() {
-        drawFrame();
+    void Renderer::onRender(const Frame& frame) {
+        drawFrame(frame);
     }
 
     void Renderer::onComplete() {
@@ -308,7 +308,7 @@ namespace Blink {
         swapChain->terminate();
     }
 
-    void Renderer::drawFrame() {
+    void Renderer::drawFrame(const Frame& frame) {
         /*
          * Frame resources
          */
@@ -345,7 +345,7 @@ namespace Blink {
          */
 
         recordCommandBuffer(commandBuffer, imageIndex);
-        updateUniformBuffer(uniformBuffer);
+        updateUniformBuffer(uniformBuffer, frame);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -455,20 +455,25 @@ namespace Blink {
         }
     }
 
-    void Renderer::updateUniformBuffer(VulkanUniformBuffer* uniformBuffer) {
-        static auto startTime = std::chrono::high_resolution_clock::now();
-
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
+    void Renderer::updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame) {
         UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.model = frame.model;
+        ubo.view = frame.view;
+        ubo.proj = frame.projection;
 
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        const VkExtent2D& swapChainExtent = swapChain->getExtent();
-        ubo.proj = glm::perspective(glm::radians(45.0f), (float) swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
-
+        //
+        // GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
+        // The easiest way to compensate for that is to flip the sign on the scaling factor of the Y rotationAxis in the projection matrix.
+        // If we don't do this, then the image will be rendered upside down.
+        //
+        // This change causes the vertices to be drawn in counter-clockwise order instead of clockwise order.
+        // This causes backface culling to kick in and prevents any geometry from being drawn.
+        // To fix this the graphics pipeline's rasterization state should have a counter clockwise front-facing triangle orientation to be used for culling.
+        //
+        // VkPipelineRasterizationStateCreateInfo rasterizationState{};
+        // rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
+        // rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        //
         ubo.proj[1][1] *= -1;
 
         uniformBuffer->setData(&ubo);

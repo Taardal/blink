@@ -23,7 +23,7 @@ namespace Blink {
         CallbackData callbackData;
 
     public:
-        Window();
+        GLFWwindow* getGlfwWindow() const;
 
         WindowSize getSizeInPixels() const;
 
