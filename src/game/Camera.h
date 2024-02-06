@@ -19,9 +19,12 @@ namespace Blink {
         float roll = 0.0f;
         float moveSpeed = 2.5f;
         float lookSpeed = 1.0f;
+        float fieldOfView = glm::radians(45.0f);
+        float nearClip = 0.1f;
+        float farClip = 10.0f;
 
     public:
-        Camera(Window* window);
+        explicit Camera(Window* window);
 
         glm::mat4 getViewMatrix() const;
 
@@ -34,5 +37,7 @@ namespace Blink {
         void processKeyboardInput(float deltaTime);
 
         void updateCameraVectors();
+
+        void logState() const;
     };
 }
