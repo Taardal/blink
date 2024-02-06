@@ -8,7 +8,7 @@ namespace Blink {
         WindowModule* windowModule,
         GraphicsModule* graphicsModule
     ) : appConfig(appConfig),
-        camera(new Camera(appConfig, windowModule->getWindow())),
+        camera(new Camera(windowModule->getWindow())),
         game(new Game(camera, windowModule->getWindow(), graphicsModule->getRenderer())) {
     }
 
