@@ -26,11 +26,12 @@ namespace Blink {
         });
 
         while (!window->shouldClose()) {
+            window->onUpdate();
+
             double time = glfwGetTime();
             double timestep = time - lastFrameTime;
             lastFrameTime = time;
 
-            window->onUpdate();
             camera->onUpdate(timestep);
 
             // TRANSLATION

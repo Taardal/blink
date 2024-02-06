@@ -22,6 +22,10 @@ namespace Blink {
     }
 
     bool GameModule::initialize(const AppConfig& appConfig) {
+        if (!camera->initialize()) {
+            BL_LOG_ERROR("Could not initialize camera");
+            return false;
+        }
         return true;
     }
 

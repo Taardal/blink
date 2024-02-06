@@ -13,32 +13,56 @@ namespace Blink {
     }
 
     glm::mat4 Camera::getViewMatrix() const {
-        return glm::lookAt(cameraPosition, cameraPosition + cameraDirection, cameraUp);
+        return glm::lookAt(position, position + lookDirection, upDirection);
     }
 
     glm::mat4 Camera::getProjectionMatrix() const {
         float fieldOfView = glm::radians(45.0f);
-        WindowSize windowSize = window->getSizeInPixels();
-        const float aspectRatio = (float) windowSize.width / (float) windowSize.height;
         constexpr float nearClip = 0.1f;
         constexpr float farClip = 10.0f;
         return glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
     }
 
+    bool Camera::initialize() {
+        WindowSize windowSize = window->getSizeInPixels();
+        aspectRatio = (float) windowSize.width / (float) windowSize.height;
+        return true;
+    }
+
     void Camera::onUpdate(double timestep) {
-        GLFWwindow* glfWwindow = window->getGlfwWindow();
-        if (glfwGetKey(glfWwindow, GLFW_KEY_W) == GLFW_PRESS) {
-            cameraPosition += cameraSpeed * cameraDirection;
+        auto deltaTime = static_cast<float>(timestep);
+        GLFWwindow* glfwWindow = window->getGlfwWindow();
+        if (glfwGetKey(glfwWindow, GLFW_KEY_W) == GLFW_PRESS) {
+            position += lookDirection * speed * deltaTime;
         }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_S) == GLFW_PRESS) {
-            cameraPosition -= cameraSpeed * cameraDirection;
+        if (glfwGetKey(glfwWindow, GLFW_KEY_S) == GLFW_PRESS) {
+            position -= lookDirection * speed * deltaTime;
         }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_A) == GLFW_PRESS) {
-            cameraPosition -= glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
+        if (glfwGetKey(glfwWindow, GLFW_KEY_A) == GLFW_PRESS) {
+            position -= glm::normalize(glm::cross(lookDirection, upDirection)) * speed * deltaTime;
         }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_D) == GLFW_PRESS) {
-            cameraPosition += glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
+        if (glfwGetKey(glfwWindow, GLFW_KEY_D) == GLFW_PRESS) {
+            position += glm::normalize(glm::cross(lookDirection, upDirection)) * speed * deltaTime;
         }
-        BL_LOG_DEBUG("Camera position [{}, {}, {}]", cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+        glm::vec3 rotate{0};
+        if (glfwGetKey(glfwWindow, GLFW_KEY_UP) == GLFW_PRESS) {
+            rotate.x += 1.0f;
+        }
+        if (glfwGetKey(glfwWindow, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            rotate.x -= 1.0f;
+        }
+        if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            rotate.y += 1.0f;
+        }
+        if (glfwGetKey(glfwWindow, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            rotate.y -= 1.0f;
+        }
+
+        if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon()) {
+            gameObject.transform.rotation += lookSpeed * dt * glm::normalize(rotate);
+        }
+
+        BL_LOG_DEBUG("Camera position [{}, {}, {}]", position.x, position.y, position.z);
     }
 }
