@@ -5,7 +5,7 @@
 namespace Blink {
 
     struct Vertex {
-        glm::vec2 position = { 0.0f, 0.0f };
+        glm::vec3 position = { 0.0f, 0.0f, 0.0f };
         glm::vec3 color = { 1.0f, 1.0f, 1.0f };
 
         //glm::vec3 position = { 0.0f, 0.0f, 0.0f };
@@ -28,7 +28,7 @@ namespace Blink {
 
             attributeDescriptions[0].binding = 0;
             attributeDescriptions[0].location = 0;
-            attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+            attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
             attributeDescriptions[0].offset = offsetof(Vertex, position);
 
             attributeDescriptions[1].binding = 0;

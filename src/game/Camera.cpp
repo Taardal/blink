@@ -7,10 +7,23 @@
 
 namespace Blink {
     Camera::Camera(Window* window) : window(window) {
+        updateCameraVectors();
+    }
+
+    bool Camera::initialize() {
+        WindowSize windowSize = window->getSizeInPixels();
+        aspectRatio = (float) windowSize.width / (float) windowSize.height;
+        return true;
     }
 
     glm::mat4 Camera::getViewMatrix() const {
-        return glm::lookAt(translation, translation + lookDirection, worldUpDirection);
+        // Create rotation matrix for the roll angle
+        glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(roll), frontDirection);
+
+        // Rotate the up vector using the roll matrix
+        glm::vec3 rotatedUpDirection = glm::vec3(rollMatrix * glm::vec4(upDirection, 0.0f));
+
+        return glm::lookAt(position, position + frontDirection, rotatedUpDirection);
     }
 
     glm::mat4 Camera::getProjectionMatrix() const {
@@ -21,55 +34,70 @@ namespace Blink {
     }
 
     void Camera::onUpdate(double timestep) {
-        auto deltaTime = static_cast<float>(timestep);
+        processKeyboardInput((float) timestep);
+        updateCameraVectors();
+        BL_LOG_DEBUG("position [{}, {}, {}]", position.x, position.y, position.z);
+    }
+
+    void Camera::processKeyboardInput(float deltaTime) {
         GLFWwindow* glfwWindow = window->getGlfwWindow();
 
-        glm::vec3 rotate{ 0.0f, 0.0f, 0.0f };
-        if (glfwGetKey(glfwWindow, GLFW_KEY_UP) == GLFW_PRESS) {
-            rotate.x += 1.0f;
-        }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            rotate.x -= 1.0f;
-        }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            rotate.y += 1.0f;
-        }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            rotate.y -= 1.0f;
-        }
-        if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon()) {
-            rotation += lookSpeed * deltaTime * glm::normalize(rotate);
-        }
-        BL_LOG_DEBUG("rotation [{}, {}, {}]", rotation.x, rotation.y, rotation.z);
-
-        yaw = rotation.y;
-        forwardDirection = glm::vec3{ sin(yaw), 0.f, cos(yaw) };
-        BL_LOG_DEBUG("forwardDirection [{}, {}, {}]", rotation.x, rotation.y, rotation.z);
-        rightDirection = glm::vec3{ forwardDirection.z, 0.f, -forwardDirection.x };
-        BL_LOG_DEBUG("rightDirection [{}, {}, {}]", rotation.x, rotation.y, rotation.z);
-
-        glm::vec3 moveDirection{ 0.0f, 0.0f, 0.0f };
+        float velocity = moveSpeed * deltaTime;
         if (glfwGetKey(glfwWindow, GLFW_KEY_W) == GLFW_PRESS) {
-            moveDirection += forwardDirection;
+            position += frontDirection * velocity;
         }
         if (glfwGetKey(glfwWindow, GLFW_KEY_S) == GLFW_PRESS) {
-            moveDirection -= forwardDirection;
+            position -= frontDirection * velocity;
         }
         if (glfwGetKey(glfwWindow, GLFW_KEY_A) == GLFW_PRESS) {
-            moveDirection -= rightDirection;
+            position -= rightDirection * velocity;
         }
         if (glfwGetKey(glfwWindow, GLFW_KEY_D) == GLFW_PRESS) {
-            moveDirection += rightDirection;
+            position += rightDirection * velocity;
+        }
+        if (glfwGetKey(glfwWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            position += worldUpDirection * velocity;
+        }
+        if (glfwGetKey(glfwWindow, GLFW_KEY_C) == GLFW_PRESS) {
+            position -= worldUpDirection * velocity;
+        }
+
+        if (glfwGetKey(glfwWindow, GLFW_KEY_UP) == GLFW_PRESS) {
+            pitch += lookSpeed;
+        }
+        if (glfwGetKey(glfwWindow, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            pitch -= lookSpeed;
+        }
+        if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            yaw -= lookSpeed;
+        }
+        if (glfwGetKey(glfwWindow, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            yaw += lookSpeed;
         }
         if (glfwGetKey(glfwWindow, GLFW_KEY_Q) == GLFW_PRESS) {
-            moveDirection += worldUpDirection;
+            roll += lookSpeed;
         }
         if (glfwGetKey(glfwWindow, GLFW_KEY_E) == GLFW_PRESS) {
-            moveDirection -= worldUpDirection;
+            roll -= lookSpeed;
         }
-        if (glm::dot(moveDirection, moveDirection) > std::numeric_limits<float>::epsilon()) {
-            translation += moveSpeed * deltaTime * glm::normalize(moveDirection);
+        // Clamp pitch to prevent camera flipping
+        if (pitch > 89.0f) {
+            pitch = 89.0f;
         }
-        BL_LOG_DEBUG("translation [{}, {}, {}]", translation.x, translation.y, translation.z);
+        if (pitch < -89.0f) {
+            pitch = -89.0f;
+        }
+    }
+
+    void Camera::updateCameraVectors() {
+        // Calculate the new front vector
+        frontDirection.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        frontDirection.y = sin(glm::radians(pitch));
+        frontDirection.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        frontDirection = glm::normalize(frontDirection);
+
+        // Recalculate the right and up vectors
+        rightDirection = glm::normalize(glm::cross(frontDirection, worldUpDirection));
+        upDirection = glm::normalize(glm::cross(rightDirection, frontDirection));
     }
 }
