@@ -34,9 +34,9 @@ namespace Blink {
 
         void onUpdate(double timestep);
 
-        void processKeyboardInput(float deltaTime);
+        void processKeyboardInput(float timestep);
 
-        void updateCameraVectors();
+        void updateDirections();
 
         void logState() const;
     };

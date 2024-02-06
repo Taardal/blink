@@ -7,7 +7,7 @@
 
 namespace Blink {
     Camera::Camera(Window* window) : window(window) {
-        updateCameraVectors();
+        updateDirections();
     }
 
     bool Camera::initialize() {
@@ -26,14 +26,14 @@ namespace Blink {
 
     void Camera::onUpdate(double timestep) {
         processKeyboardInput((float) timestep);
-        updateCameraVectors();
+        updateDirections();
         logState();
     }
 
-    void Camera::processKeyboardInput(float deltaTime) {
+    void Camera::processKeyboardInput(float timestep) {
         GLFWwindow* glfwWindow = window->getGlfwWindow();
 
-        float velocity = moveSpeed * deltaTime;
+        float velocity = moveSpeed * timestep;
         if (glfwGetKey(glfwWindow, GLFW_KEY_W) == GLFW_PRESS) {
             position += frontDirection * velocity;
         }
@@ -80,7 +80,7 @@ namespace Blink {
         }
     }
 
-    void Camera::updateCameraVectors() {
+    void Camera::updateDirections() {
         // Calculate the new front direction vector
         frontDirection.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
         frontDirection.y = sin(glm::radians(pitch));
