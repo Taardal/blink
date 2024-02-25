@@ -1,16 +1,15 @@
+#include "pch.h"
 #include "GraphicsModule.h"
-#include "system/Log.h"
 
 namespace Blink {
     GraphicsModule::GraphicsModule(SystemModule* systemModule, WindowModule* windowModule)
-            : systemModule(systemModule),
-              vulkan(new Vulkan(windowModule->getWindow())),
+            : vulkan(new Vulkan(windowModule->window)),
               physicalDevice(new VulkanPhysicalDevice(vulkan)),
               device(new VulkanDevice(physicalDevice)),
-              swapChain(new VulkanSwapChain(device, physicalDevice, vulkan, windowModule->getWindow())),
+              swapChain(new VulkanSwapChain(device, physicalDevice, vulkan, windowModule->window)),
               renderPass(new VulkanRenderPass(swapChain, device)),
               commandPool(new VulkanCommandPool(device, physicalDevice)),
-              renderer(new Renderer(systemModule->getFileSystem(), windowModule->getWindow(), physicalDevice, device, swapChain, renderPass, commandPool)) {
+              renderer(new Renderer(systemModule->fileSystem, windowModule->window, physicalDevice, device, swapChain, renderPass, commandPool)) {
     }
 
     GraphicsModule::~GraphicsModule() {
@@ -21,10 +20,6 @@ namespace Blink {
         delete device;
         delete physicalDevice;
         delete vulkan;
-    }
-
-    Renderer* GraphicsModule::getRenderer() const {
-        return renderer;
     }
 
     bool GraphicsModule::initialize(const AppConfig& appConfig) {

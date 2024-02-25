@@ -33,8 +33,6 @@ add_executable(
         ${SRC_DIR}/game/Game.h
         ${SRC_DIR}/game/GameModule.cpp
         ${SRC_DIR}/game/GameModule.h
-        ${SRC_DIR}/game/Keyboard.cpp
-        ${SRC_DIR}/game/Keyboard.h
         ${SRC_DIR}/game/Scene.cpp
         ${SRC_DIR}/game/Scene.h
         ${SRC_DIR}/graphics/GraphicsModule.cpp
@@ -81,6 +79,8 @@ add_executable(
         ${SRC_DIR}/system/SystemModule.cpp
         ${SRC_DIR}/system/SystemModule.h
         ${SRC_DIR}/utils/size.h
+        ${SRC_DIR}/window/Keyboard.cpp
+        ${SRC_DIR}/window/Keyboard.h
         ${SRC_DIR}/window/Window.cpp
         ${SRC_DIR}/window/Window.h
         ${SRC_DIR}/window/WindowModule.cpp

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "window/Window.h"
+#include "Window.h"
 
 namespace Blink {
     enum class Key {

@@ -1,35 +1,22 @@
+#include "pch.h"
 #include "GameModule.h"
-
-#include <utility>
 
 namespace Blink {
     GameModule::GameModule(
-        const AppConfig& appConfig,
         WindowModule* windowModule,
         GraphicsModule* graphicsModule
-    ) : appConfig(appConfig),
-        keyboard(new Keyboard(windowModule->getWindow())),
-        camera(new Camera(windowModule->getWindow(), keyboard)),
-        scene(new Scene(keyboard)),
-        game(new Game(scene, camera, windowModule->getWindow(), graphicsModule->getRenderer())) {
+    ) : camera(new Camera(windowModule->window, windowModule->keyboard)),
+        scene(new Scene(windowModule->keyboard)),
+        game(new Game(scene, camera, windowModule->window, graphicsModule->renderer)) {
     }
 
     GameModule::~GameModule() {
         delete game;
         delete scene;
         delete camera;
-        delete keyboard;
     }
 
-    Game* GameModule::getGame() const {
-        return game;
-    }
-
-    bool GameModule::initialize(const AppConfig& appConfig) const {
-        if (!keyboard->initialize()) {
-            BL_LOG_ERROR("Could not initialize keyboard");
-            return false;
-        }
+    bool GameModule::initialize() const {
         if (!camera->initialize()) {
             BL_LOG_ERROR("Could not initialize camera");
             return false;
@@ -49,6 +36,5 @@ namespace Blink {
         game->terminate();
         scene->terminate();
         camera->terminate();
-        keyboard->terminate();
     }
 }

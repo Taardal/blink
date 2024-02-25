@@ -4,16 +4,12 @@
 #include "FileSystem.h"
 
 namespace Blink {
-    class SystemModule {
-    private:
+    struct SystemModule {
         FileSystem* fileSystem;
 
-    public:
         SystemModule();
 
         ~SystemModule();
-
-        FileSystem* getFileSystem() const;
 
         bool initialize(const AppConfig& appConfig) const;
 

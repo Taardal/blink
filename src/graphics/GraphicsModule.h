@@ -11,23 +11,22 @@
 #include "window/WindowModule.h"
 
 namespace Blink {
-    class GraphicsModule {
+    struct GraphicsModule {
     private:
-        SystemModule* systemModule;
         Vulkan* vulkan;
         VulkanPhysicalDevice* physicalDevice;
         VulkanDevice* device;
         VulkanSwapChain* swapChain;
         VulkanRenderPass* renderPass;
         VulkanCommandPool* commandPool;
-        Renderer *renderer;
+
+    public:
+        Renderer* renderer;
 
     public:
         GraphicsModule(SystemModule* systemModule, WindowModule* windowModule);
 
         ~GraphicsModule();
-
-        Renderer *getRenderer() const;
 
         bool initialize(const AppConfig& appConfig);
 

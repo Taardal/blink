@@ -8,22 +8,16 @@
 
 
 namespace Blink {
-    class GameModule {
-    private:
-        AppConfig appConfig;
-        Keyboard* keyboard;
+    struct GameModule {
         Camera* camera;
         Scene* scene;
         Game* game;
 
-    public:
-        GameModule(const AppConfig& appConfig, WindowModule* windowModule, GraphicsModule* graphicsModule);
+        GameModule(WindowModule* windowModule, GraphicsModule* graphicsModule);
 
         ~GameModule();
 
-        Game* getGame() const;
-
-        bool initialize(const AppConfig& appConfig) const;
+        bool initialize() const;
 
         void terminate() const;
     };

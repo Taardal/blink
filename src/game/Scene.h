@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/Keyboard.h"
+#include "../window/Keyboard.h"
 
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>

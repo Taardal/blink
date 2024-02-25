@@ -1,14 +1,12 @@
 #include "App.h"
 
-#include <utility>
-
 namespace Blink {
     App::App(AppConfig appConfig)
             : appConfig(std::move(appConfig)),
               systemModule(new SystemModule()),
               windowModule(new WindowModule()),
               graphicsModule(new GraphicsModule(systemModule, windowModule)),
-              gameModule(new GameModule(appConfig, windowModule, graphicsModule)) {
+              gameModule(new GameModule(windowModule, graphicsModule)) {
     }
 
     App::~App() {
@@ -23,7 +21,7 @@ namespace Blink {
             BL_LOG_CRITICAL("Could not initialize app");
             return;
         }
-        Game* game = gameModule->getGame();
+        Game* game = gameModule->game;
         try {
             game->run();
         } catch (std::exception& e) {
@@ -45,7 +43,7 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize graphics module");
             return false;
         }
-        if (!gameModule->initialize(appConfig)) {
+        if (!gameModule->initialize()) {
             BL_LOG_ERROR("Could not initialize game module");
             return false;
         }

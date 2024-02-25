@@ -2,14 +2,12 @@
 
 namespace Blink {
     WindowModule::WindowModule()
-            : window(new Window()) {}
-
-    WindowModule::~WindowModule() {
-        delete window;
+        : window(new Window()), keyboard(new Keyboard(window)) {
     }
 
-    Window* WindowModule::getWindow() const {
-        return window;
+    WindowModule::~WindowModule() {
+        delete keyboard;
+        delete window;
     }
 
     bool WindowModule::initialize(const AppConfig& appConfig) const {
@@ -17,10 +15,15 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize window");
             return false;
         }
+        if (!keyboard->initialize()) {
+            BL_LOG_ERROR("Could not initialize keyboard");
+            return false;
+        }
         return true;
     }
 
     void WindowModule::terminate() const {
+        keyboard->terminate();
         window->terminate();
     }
 }

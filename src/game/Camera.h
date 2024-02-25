@@ -1,7 +1,7 @@
 #pragma once
 
 #include "window/Window.h"
-#include "game/Keyboard.h"
+#include "../window/Keyboard.h"
 
 #include <glm/glm.hpp>
 
