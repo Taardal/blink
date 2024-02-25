@@ -33,6 +33,10 @@ add_executable(
         ${SRC_DIR}/game/Game.h
         ${SRC_DIR}/game/GameModule.cpp
         ${SRC_DIR}/game/GameModule.h
+        ${SRC_DIR}/game/Keyboard.cpp
+        ${SRC_DIR}/game/Keyboard.h
+        ${SRC_DIR}/game/Scene.cpp
+        ${SRC_DIR}/game/Scene.h
         ${SRC_DIR}/graphics/GraphicsModule.cpp
         ${SRC_DIR}/graphics/GraphicsModule.h
         ${SRC_DIR}/graphics/Quad.h
@@ -94,6 +98,11 @@ set_target_properties(
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
 target_precompile_headers(${PROJECT_NAME} PUBLIC ${SRC_DIR}/pch.h)
+
+set(ENTT_DIR ${LIB_DIR}/entt)
+add_subdirectory(${ENTT_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${ENTT_DIR})
+target_link_libraries(${PROJECT_NAME} EnTT::EnTT)
 
 set(GLFW_DIR ${LIB_DIR}/glfw-3.3)
 set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL Build the GLFW example programs)

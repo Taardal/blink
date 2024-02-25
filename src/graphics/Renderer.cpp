@@ -45,6 +45,12 @@ namespace Blink {
     }
 
     bool Renderer::initialize() {
+        window->setResizeListener([this](uint32_t width, uint32_t height) {
+            framebufferResized = true;
+        });
+        window->setMinimizeListener([this](bool minimized) {
+            framebufferResized = true;
+        });
         if (!vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv"))) {
             BL_LOG_ERROR("Could not initialize vertex shader");
             return false;
@@ -89,6 +95,7 @@ namespace Blink {
     }
 
     void Renderer::terminate() {
+        device->waitUntilIdle();
         terminateSyncObjects();
         terminateFramebuffers();
         indexBuffer->terminate();
@@ -108,12 +115,8 @@ namespace Blink {
         this->framebufferResized = true;
     };
 
-    void Renderer::onRender(const Frame& frame) {
+    void Renderer::render(const Frame& frame) {
         drawFrame(frame);
-    }
-
-    void Renderer::onComplete() {
-        device->waitUntilIdle();
     }
 
     void Renderer::submitQuad(Quad& quad) {
