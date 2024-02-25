@@ -18,16 +18,16 @@ namespace Blink {
 
         static float moveSpeed = 5.0f;
         float velocity = moveSpeed * timestep;
-        if (keyboard->isPressed(Key::H)) {
+        if (keyboard->isPressed(Key::Numpad_4)) {
             position.x -= velocity;
         }
-        if (keyboard->isPressed(Key::L)) {
+        if (keyboard->isPressed(Key::Numpad_6)) {
             position.x += velocity;
         }
-        if (keyboard->isPressed(Key::J)) {
+        if (keyboard->isPressed(Key::Numpad_5)) {
             position.y -= velocity;
         }
-        if (keyboard->isPressed(Key::K)) {
+        if (keyboard->isPressed(Key::Numpad_8)) {
             position.y += velocity;
         }
 

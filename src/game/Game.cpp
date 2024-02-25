@@ -1,5 +1,4 @@
 #include "Game.h"
-#include <chrono>
 
 namespace Blink {
     Game::Game(
