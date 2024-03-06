@@ -1,15 +1,11 @@
 #pragma once
 
-#include "../window/Keyboard.h"
+#include "window/Keyboard.h"
 
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 
 namespace Blink {
-    struct TransformComponent {
-        glm::vec3 position = { 0.0f, 0.0f, 0.0f };
-    };
-
     class Scene {
     private:
         Keyboard* keyboard;

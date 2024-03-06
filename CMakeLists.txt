@@ -20,15 +20,16 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
-        ${SRC_DIR}/LuaClient.cpp
-        ${SRC_DIR}/LuaClient.h
-        ${SRC_DIR}/LuaEngine.cpp
-        ${SRC_DIR}/LuaEngine.h
-        ${SRC_DIR}/LuaEngineListener.h
-        ${SRC_DIR}/LuaGraphicsEngine.cpp
-        ${SRC_DIR}/LuaGraphicsEngine.h
+#        ${SRC_DIR}/LuaClient.cpp
+#        ${SRC_DIR}/LuaClient.h
+#        ${SRC_DIR}/LuaEngine.cpp
+#        ${SRC_DIR}/LuaEngine.h
+#        ${SRC_DIR}/LuaEngineListener.h
+#        ${SRC_DIR}/LuaGraphicsEngine.cpp
+#        ${SRC_DIR}/LuaGraphicsEngine.h
         ${SRC_DIR}/game/Camera.cpp
         ${SRC_DIR}/game/Camera.h
+        ${SRC_DIR}/game/Components.h
         ${SRC_DIR}/game/Game.cpp
         ${SRC_DIR}/game/Game.h
         ${SRC_DIR}/game/GameModule.cpp
@@ -70,14 +71,25 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanUniformBuffer.h
         ${SRC_DIR}/graphics/VulkanVertexBuffer.cpp
         ${SRC_DIR}/graphics/VulkanVertexBuffer.h
+        ${SRC_DIR}/lua/LuaEngine.cpp
+        ${SRC_DIR}/lua/LuaEngine.h
+        ${SRC_DIR}/lua/LuaFunction.cpp
+        ${SRC_DIR}/lua/LuaFunction.h
+        ${SRC_DIR}/lua/LuaModule.cpp
+        ${SRC_DIR}/lua/LuaModule.h
+        ${SRC_DIR}/lua/printLua.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/FileSystem.cpp
         ${SRC_DIR}/system/FileSystem.h
         ${SRC_DIR}/system/Log.cpp
         ${SRC_DIR}/system/Log.h
+        ${SRC_DIR}/system/Random.cpp
+        ${SRC_DIR}/system/Random.h
         ${SRC_DIR}/system/SystemModule.cpp
         ${SRC_DIR}/system/SystemModule.h
+        ${SRC_DIR}/system/Uuid.cpp
+        ${SRC_DIR}/system/Uuid.h
         ${SRC_DIR}/utils/size.h
         ${SRC_DIR}/window/Keyboard.cpp
         ${SRC_DIR}/window/Keyboard.h

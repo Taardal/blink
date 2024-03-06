@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Scene.h"
+#include "Components.h"
 
 namespace Blink {
     Scene::Scene(Keyboard* keyboard) : keyboard(keyboard), player(registry.create()) {
@@ -7,10 +8,13 @@ namespace Blink {
 
     bool Scene::initialize() {
         registry.emplace<TransformComponent>(player);
+        registry.emplace<IdComponent>(player);
+        registry.emplace<ScriptComponent>(player, "Player");
         return true;
     }
 
     void Scene::terminate() const {
+
     }
 
     glm::mat4 Scene::update(double timestep) {

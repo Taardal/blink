@@ -2,15 +2,17 @@
 
 namespace Blink {
     App::App(AppConfig appConfig)
-            : appConfig(std::move(appConfig)),
-              systemModule(new SystemModule()),
-              windowModule(new WindowModule()),
-              graphicsModule(new GraphicsModule(systemModule, windowModule)),
-              gameModule(new GameModule(windowModule, graphicsModule)) {
+        : appConfig(std::move(appConfig)),
+          systemModule(new SystemModule()),
+          windowModule(new WindowModule()),
+          graphicsModule(new GraphicsModule(systemModule, windowModule)),
+          luaModule(new LuaModule()),
+          gameModule(new GameModule(windowModule, graphicsModule)) {
     }
 
     App::~App() {
         delete gameModule;
+        delete luaModule;
         delete graphicsModule;
         delete windowModule;
         delete systemModule;
@@ -43,6 +45,10 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize graphics module");
             return false;
         }
+        if (!luaModule->initialize()) {
+            BL_LOG_ERROR("Could not initialize lua module");
+            return false;
+        }
         if (!gameModule->initialize()) {
             BL_LOG_ERROR("Could not initialize game module");
             return false;
@@ -52,6 +58,7 @@ namespace Blink {
 
     void App::terminate() const {
         gameModule->terminate();
+        luaModule->terminate();
         graphicsModule->terminate();
         windowModule->terminate();
         systemModule->terminate();
