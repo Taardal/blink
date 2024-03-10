@@ -5,6 +5,7 @@
 #include "Game.h"
 #include "window/WindowModule.h"
 #include "graphics/GraphicsModule.h"
+#include "lua/LuaModule.h"
 
 
 namespace Blink {
@@ -13,7 +14,11 @@ namespace Blink {
         Scene* scene;
         Game* game;
 
-        GameModule(WindowModule* windowModule, GraphicsModule* graphicsModule);
+        GameModule(
+            WindowModule* windowModule,
+            GraphicsModule* graphicsModule,
+            LuaModule* luaModule
+        );
 
         ~GameModule();
 

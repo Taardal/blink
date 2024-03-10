@@ -4,9 +4,10 @@
 namespace Blink {
     GameModule::GameModule(
         WindowModule* windowModule,
-        GraphicsModule* graphicsModule
+        GraphicsModule* graphicsModule,
+        LuaModule* luaModule
     ) : camera(new Camera(windowModule->window, windowModule->keyboard)),
-        scene(new Scene(windowModule->keyboard)),
+        scene(new Scene(windowModule->keyboard, luaModule->luaEngine)),
         game(new Game(scene, camera, windowModule->window, graphicsModule->renderer)) {
     }
 

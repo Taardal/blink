@@ -19,8 +19,6 @@ namespace Blink {
 
     struct ScriptComponent {
         std::string type;
-
-        ScriptComponent(const std::string& type) : type(type) {
-        }
+        std::string path;
     };
 }

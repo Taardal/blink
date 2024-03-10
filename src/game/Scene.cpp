@@ -3,22 +3,39 @@
 #include "Components.h"
 
 namespace Blink {
-    Scene::Scene(Keyboard* keyboard) : keyboard(keyboard), player(registry.create()) {
+    Scene::Scene(
+        Keyboard* keyboard,
+        LuaEngine* luaEngine
+    ) : keyboard(keyboard),
+        luaEngine(luaEngine),
+        player(registry.create()) {
     }
 
     bool Scene::initialize() {
         registry.emplace<TransformComponent>(player);
-        registry.emplace<IdComponent>(player);
-        registry.emplace<ScriptComponent>(player, "Player");
+
+        registry.emplace<ScriptComponent>(player);
+        registry.patch<ScriptComponent>(player, [](ScriptComponent& scriptComponent) {
+            scriptComponent.type = "Player";
+            scriptComponent.path = "lua/player.out";
+        });
+        auto& scripComponent = registry.get<ScriptComponent>(player);
+        if (!luaEngine->loadFile(scripComponent.path)) {
+            BL_LOG_ERROR("Could not load file [{}]", scripComponent.path);
+            return false;
+        }
         return true;
     }
 
     void Scene::terminate() const {
-
     }
 
     glm::mat4 Scene::update(double timestep) {
-        auto& position = registry.get<TransformComponent>(player).position;
+
+        auto& scriptComponent = registry.get<ScriptComponent>(player);
+        luaEngine->update(scriptComponent.type);
+
+        auto& [position] = registry.get<TransformComponent>(player);
 
         static float moveSpeed = 5.0f;
         float velocity = moveSpeed * timestep;

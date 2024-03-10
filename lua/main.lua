@@ -1,5 +1,5 @@
-package.path = './?.lua;' .. package.path
-package.path = './?.out;' .. package.path
+--package.path = './?.lua;' .. package.path
+--package.path = './?.out;' .. package.path
 
 local Player = require("player")
 --local Camera = require("camera")

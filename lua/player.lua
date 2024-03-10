@@ -1,4 +1,4 @@
-local Player = {}
+Player = {}
 
 function Player.onUpdate()
   print("Hello Player")
