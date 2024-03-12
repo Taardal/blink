@@ -71,12 +71,19 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanUniformBuffer.h
         ${SRC_DIR}/graphics/VulkanVertexBuffer.cpp
         ${SRC_DIR}/graphics/VulkanVertexBuffer.h
+        ${SRC_DIR}/lua/EntityLuaBinding.cpp
+        ${SRC_DIR}/lua/EntityLuaBinding.h
+        ${SRC_DIR}/lua/EntityBinding.cpp
+        ${SRC_DIR}/lua/EntityBinding.h
+        ${SRC_DIR}/lua/LuaBinding.cpp
+        ${SRC_DIR}/lua/LuaBinding.h
         ${SRC_DIR}/lua/LuaEngine.cpp
         ${SRC_DIR}/lua/LuaEngine.h
         ${SRC_DIR}/lua/LuaFunction.cpp
         ${SRC_DIR}/lua/LuaFunction.h
         ${SRC_DIR}/lua/LuaModule.cpp
         ${SRC_DIR}/lua/LuaModule.h
+        ${SRC_DIR}/lua/printLua.cpp
         ${SRC_DIR}/lua/printLua.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
@@ -117,10 +124,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${ENTT_DIR})
 target_link_libraries(${PROJECT_NAME} EnTT::EnTT)
 
 set(GLFW_DIR ${LIB_DIR}/glfw-3.3)
-set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL Build the GLFW example programs)
-set(GLFW_BUILD_TESTS OFF CACHE INTERNAL Build the GLFW test programs)
-set(GLFW_BUILD_DOCS OFF CACHE INTERNAL Build the GLFW documentation)
-set(GLFW_INSTALL OFF CACHE INTERNAL Generate installation target)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${GLFW_DIR})
 target_compile_definitions(${PROJECT_NAME} PUBLIC GLFW_INCLUDE_NONE)
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_DIR}/include)

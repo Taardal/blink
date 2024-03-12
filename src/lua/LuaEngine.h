@@ -1,10 +1,9 @@
 #pragma once
 
+#include "EntityLuaBinding.h"
 #include <lua/lua.hpp>
 
 namespace Blink {
-    struct EntityBinding {};
-
     class LuaEngine {
     private:
         lua_State* L;
@@ -18,8 +17,14 @@ namespace Blink {
 
         void terminate();
 
+        void clearStack();
+
         bool loadFile(const std::string& path);
 
-        void update(const std::string& tableName);
+        void createEntityType(const std::string& typeName);
+
+        void createEntityBinding(entt::registry* entityRegistry);
+
+        void update(const std::string& tableName, double timestep, entt::entity entity);
     };
 }

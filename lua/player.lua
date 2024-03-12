@@ -1,7 +1,13 @@
-Player = {}
-
-function Player.onUpdate()
+function Player.onUpdate(timestep, entityId)
   print("Hello Player")
-end
+  print("-- timestep [" .. timestep .. "]")
+  print("-- entityId [" .. entityId .. "]")
 
-return Player
+  Entity:sayHello()
+
+  local foo = Entity.sayFoo()
+  print("-- foo [" .. foo .. "]")
+
+  local uuid = Entity:getUUID(entityId)
+  print("-- uuid [" .. uuid .. "]")
+end

@@ -13,17 +13,17 @@ namespace Blink {
 
     bool Scene::initialize() {
         registry.emplace<TransformComponent>(player);
+        registry.emplace<IdComponent>(player);
 
-        registry.emplace<ScriptComponent>(player);
-        registry.patch<ScriptComponent>(player, [](ScriptComponent& scriptComponent) {
-            scriptComponent.type = "Player";
-            scriptComponent.path = "lua/player.out";
-        });
-        auto& scripComponent = registry.get<ScriptComponent>(player);
-        if (!luaEngine->loadFile(scripComponent.path)) {
-            BL_LOG_ERROR("Could not load file [{}]", scripComponent.path);
-            return false;
-        }
+        std::string luaFilepath = "lua/player.out";
+        std::string luaTableName = "Player";
+
+        luaEngine->createEntityType(luaTableName);
+        luaEngine->loadFile(luaFilepath);
+
+        luaEngine->createEntityBinding(&registry);
+
+        registry.emplace<LuaComponent>(player, luaFilepath, luaTableName);
         return true;
     }
 
@@ -32,8 +32,8 @@ namespace Blink {
 
     glm::mat4 Scene::update(double timestep) {
 
-        auto& scriptComponent = registry.get<ScriptComponent>(player);
-        luaEngine->update(scriptComponent.type);
+        auto& luaComponent = registry.get<LuaComponent>(player);
+        luaEngine->update(luaComponent.luaTableName, timestep, player);
 
         auto& [position] = registry.get<TransformComponent>(player);
 

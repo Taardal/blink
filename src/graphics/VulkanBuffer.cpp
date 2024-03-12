@@ -65,7 +65,7 @@ namespace Blink {
             VulkanDevice* device,
             VulkanCommandPool* commandPool
     ) {
-        BL_ASSERT(sourceBuffer.config.size == destinationBuffer.config.size);
+        BL_ASSERT(sourceBuffer->config.size == destinationBuffer->config.size);
 
         VkCommandBuffer commandBuffer;
         commandPool->allocateCommandBuffers(1, &commandBuffer);

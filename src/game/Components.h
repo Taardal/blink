@@ -1,9 +1,9 @@
 #pragma once
 
+#include "system/Uuid.h"
+
 #include <glm/glm.hpp>
 #include <string>
-
-#include "system/Uuid.h"
 
 namespace Blink {
     struct TransformComponent {
@@ -17,8 +17,8 @@ namespace Blink {
         }
     };
 
-    struct ScriptComponent {
-        std::string type;
-        std::string path;
+    struct LuaComponent {
+        std::string filepath;
+        std::string luaTableName;
     };
 }

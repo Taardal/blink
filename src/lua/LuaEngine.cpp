@@ -1,9 +1,11 @@
 #include "pch.h"
 #include "LuaEngine.h"
-#include "printLua.h"
 
 #include <lua.hpp>
 #include <iostream>
+
+#include "EntityBinding.h"
+#include "printLua.h"
 
 namespace Blink {
     LuaEngine::LuaEngine() : L(luaL_newstate()) {
@@ -47,6 +49,14 @@ namespace Blink {
     }
 
     void LuaEngine::terminate() {
+
+    }
+
+    void LuaEngine::clearStack() {
+        int i = lua_gettop(L);
+        if (i > 0) {
+            lua_pop(L, i);
+        }
     }
 
     bool LuaEngine::loadFile(const std::string& path) {
@@ -58,13 +68,50 @@ namespace Blink {
         return true;
     }
 
-    void LuaEngine::update(const std::string& tableName) {
+    void LuaEngine::createEntityType(const std::string& typeName) {
+        lua_newtable(L);
+        lua_setglobal(L, typeName.c_str());
+    }
+
+    void LuaEngine::createEntityBinding(entt::registry* entityRegistry) {
+        EntityBinding::create(L, entityRegistry);
+    }
+
+    void LuaEngine::update(const std::string& tableName, double timestep, entt::entity entity) {
         const char* functionName = "onUpdate";
+
         lua_getglobal(L, tableName.c_str());
+
+        // - [-1] table     {tableName}
+
         lua_getfield(L, -1, functionName);
-        if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+
+        // - [-1] function  {onUpdate}
+        // - [-2] table     {tableName}
+
+        lua_pushnumber(L, timestep);
+
+        // - [-1] number    {timestep}
+        // - [-2] function  {onUpdate}
+        // - [-3] table     {tableName}
+
+        lua_pushnumber(L, (uint32_t) entity);
+
+        // - [-1] number    {entity}
+        // - [-2] number    {timestep}
+        // - [-3] function  {onUpdate}
+        // - [-4] table     {tableName}
+
+        constexpr int argumentCount = 2;
+        constexpr int returnValueCount = 0;
+        constexpr int messageHandlerIndex = 0;
+        if (lua_pcall(L, argumentCount, returnValueCount, messageHandlerIndex) != LUA_OK) {
             BL_LOG_ERROR("Could not invoke function [{}]: {}", functionName, lua_tostring(L, -1));
             throw std::runtime_error("no worky");
         }
+
+        // - [-1] table     {tableName}
+
+        clearStack();
     }
 }
