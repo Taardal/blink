@@ -19,13 +19,11 @@ namespace Blink {
 
         bool initialize();
 
-        void terminate() const;
+        void terminate();
 
         glm::mat4 update(double timestep);
 
     private:
-        entt::entity createEntity();
-
-        void destroyEntity(entt::entity entity);
+        void initializeEntityComponents();
     };
 }

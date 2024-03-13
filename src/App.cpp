@@ -6,7 +6,7 @@ namespace Blink {
           systemModule(new SystemModule()),
           windowModule(new WindowModule()),
           graphicsModule(new GraphicsModule(systemModule, windowModule)),
-          luaModule(new LuaModule()),
+          luaModule(new LuaModule(windowModule)),
           gameModule(new GameModule(windowModule, graphicsModule, luaModule)) {
     }
 

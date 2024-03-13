@@ -1,7 +1,8 @@
 #include "LuaModule.h"
 
 namespace Blink {
-    LuaModule::LuaModule() : luaEngine(new LuaEngine()) {
+    LuaModule::LuaModule(WindowModule* windowModule)
+        : luaEngine(new LuaEngine(windowModule->keyboard)) {
     }
 
     LuaModule::~LuaModule() {

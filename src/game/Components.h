@@ -7,18 +7,15 @@
 
 namespace Blink {
     struct TransformComponent {
-        glm::vec3 position = { 0.0f, 0.0f, 0.0f };
+        glm::vec3 position;
     };
 
-    struct IdComponent {
-        std::string id;
-
-        IdComponent() : id(Uuid::create()) {
-        }
+    struct TagComponent {
+        std::string tag;
     };
 
     struct LuaComponent {
+        std::string type;
         std::string filepath;
-        std::string luaTableName;
     };
 }

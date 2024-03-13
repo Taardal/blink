@@ -6,7 +6,7 @@ namespace Blink {
     KeyboardLuaBinding::KeyboardLuaBinding(Keyboard* keyboard): keyboard(keyboard) {
     }
 
-    void KeyboardLuaBinding::create(lua_State* L, Keyboard* keyboard) {
+    void KeyboardLuaBinding::initialize(lua_State* L, Keyboard* keyboard) {
         createKeyboardTable(L, keyboard);
         createKeyTable(L, keyboard);
     }
@@ -63,18 +63,18 @@ namespace Blink {
         lua_setglobal(L, "Key");
     }
 
-    LuaReturnValueCount KeyboardLuaBinding::destroy(lua_State* L) {
-        // Lua stack
-        // - [-1] userdata  Binding object
+    // Lua stack
+    // - [-1] userdata  Binding object
+    int KeyboardLuaBinding::destroy(lua_State* L) {
         auto* binding = (KeyboardLuaBinding*) lua_touserdata(L, -1);
         binding->~KeyboardLuaBinding();
         return 0;
     }
 
-    LuaReturnValueCount KeyboardLuaBinding::index(lua_State* L) {
-        // Lua stack
-        // - [-1] string    Name of the index being accessed
-        // - [-2] userdata  Binding object
+    // Lua stack
+    // - [-1] string    Name of the index being accessed
+    // - [-2] userdata  Binding object
+    int KeyboardLuaBinding::index(lua_State* L) {
         std::string indexName = lua_tostring(L, -1);
         if (indexName == "isPressed") {
             lua_pushcfunction(L, KeyboardLuaBinding::isPressed);
@@ -83,19 +83,17 @@ namespace Blink {
         return 0;
     }
 
-    LuaReturnValueCount KeyboardLuaBinding::isPressed(lua_State* L) {
-        // Lua stack
-        // - [-1] number/string Function parameter: 'key'
-        // - [-2] userdata      Binding object
+    // Lua stack
+    // - [-1] number/string Key to check, given by either value or name
+    // - [-2] userdata      Binding object
+    int KeyboardLuaBinding::isPressed(lua_State* L) {
         auto* binding = (KeyboardLuaBinding*) lua_touserdata(L, -2);
         bool pressed;
         if (lua_type(L, -1) == LUA_TSTRING) {
             std::string key = lua_tostring(L, -1);
-            printf("IS PRESSED STRING [%s]: [%d]\n", key.c_str(), binding->keyboard->isPressed(key));
             pressed = binding->keyboard->isPressed(key);
         } else {
             uint16_t key = lua_tonumber(L, -1);
-            printf("IS PRESSED NUMBER [%d]: [%d]\n", key, binding->keyboard->isPressed(key));
             pressed = binding->keyboard->isPressed(key);
         }
         lua_pushboolean(L, pressed);

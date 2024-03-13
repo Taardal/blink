@@ -45,7 +45,7 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata  {EntityBinding}
+    // - [-1] userdata  EntityBinding
     int EntityLuaBinding::destroy(lua_State* L) {
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -1);
         binding->~EntityLuaBinding();

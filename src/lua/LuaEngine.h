@@ -9,28 +9,21 @@ namespace Blink {
     class LuaEngine {
     private:
         lua_State* L;
+        Keyboard* keyboard;
 
     public:
-        LuaEngine();
+        explicit LuaEngine(Keyboard* keyboard);
 
-        ~LuaEngine();
+        bool initialize() const;
 
-        bool initialize();
+        void terminate() const;
 
-        void terminate();
+        void createEntityBindings(entt::registry* entityRegistry) const;
 
-        bool loadFile(const std::string& path);
-
-        void createEntityType(const std::string& typeName);
-
-        void createEntityBinding(entt::registry* entityRegistry);
-
-        void update(const std::string& tableName, double timestep, entt::entity entity);
-
-        void createKeyboardBinding(Keyboard* keyboard) const;
+        void updateEntityBindings(entt::registry* entityRegistry, double timestep) const;
 
     private:
-        void clearStack() const;
+        void createGlobalBindings() const;
 
         static int luaPrint(lua_State* L);
     };

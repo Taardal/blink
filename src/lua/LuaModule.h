@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LuaEngine.h"
+#include "window/WindowModule.h"
 
 namespace Blink {
     struct LuaModule {
@@ -8,7 +9,7 @@ namespace Blink {
         LuaEngine* luaEngine = nullptr;
 
     public:
-        LuaModule();
+        explicit LuaModule(WindowModule* windowModule);
 
         ~LuaModule();
 
