@@ -54,29 +54,27 @@ namespace Blink {
     }
 
     void KeyboardLuaBinding::createKeyTable(lua_State* L, Keyboard* keyboard) {
-        // Create Lua object
         lua_newtable(L);
-
-        // Add all keys to the Lua table
         for (std::pair<const std::string&, Key> keyPair : keyboard->getKeysByName()) {
             lua_pushstring(L, keyPair.first.c_str());
             lua_pushnumber(L, (uint16_t) keyPair.second);
             lua_settable(L, -3);
         }
-
-        // Create a global Lua variable and assign the table to it
         lua_setglobal(L, "Key");
     }
 
     LuaReturnValueCount KeyboardLuaBinding::destroy(lua_State* L) {
-        // Get the C++ object associated to the userdata and destroy it by explicitly calling its destructor
+        // Lua stack
+        // - [-1] userdata  Binding object
         auto* binding = (KeyboardLuaBinding*) lua_touserdata(L, -1);
         binding->~KeyboardLuaBinding();
         return 0;
     }
 
     LuaReturnValueCount KeyboardLuaBinding::index(lua_State* L) {
-        // Get the name of the index being accessed
+        // Lua stack
+        // - [-1] string    Name of the index being accessed
+        // - [-2] userdata  Binding object
         std::string indexName = lua_tostring(L, -1);
         if (indexName == "isPressed") {
             lua_pushcfunction(L, KeyboardLuaBinding::isPressed);
@@ -86,6 +84,9 @@ namespace Blink {
     }
 
     LuaReturnValueCount KeyboardLuaBinding::isPressed(lua_State* L) {
+        // Lua stack
+        // - [-1] number/string Function parameter: 'key'
+        // - [-2] userdata      Binding object
         auto* binding = (KeyboardLuaBinding*) lua_touserdata(L, -2);
         bool pressed;
         if (lua_type(L, -1) == LUA_TSTRING) {
