@@ -1,36 +1,28 @@
 #pragma once
 
-#include "LuaBinding.h"
-
 #include <entt/entt.hpp>
 #include <lua/lua.hpp>
 
 namespace Blink {
-    struct EntityLuaBindingConfig {
-        lua_State* L;
-        std::string tableName;
-        entt::registry* registry;
-        entt::entity entity;
-    };
-
-    class EntityLuaBinding : public LuaBinding {
+    class EntityLuaBinding {
     private:
         entt::registry* registry;
-        entt::entity entity;
 
-    public:
-        explicit EntityLuaBinding(const EntityLuaBindingConfig& config);
+    private:
+        EntityLuaBinding(entt::registry* registry);
 
         ~EntityLuaBinding() = default;
 
-        static void createType(lua_State* L, const std::string& typeName, entt::registry* registry);
+    public:
+        static void create(lua_State* L, entt::registry* entityRegistry);
 
-        static int createInstance(lua_State* L);
+        static void sayHello();
 
+        static int sayHello1(lua_State* L);
+
+    private:
         static int destroy(lua_State* L);
 
         static int index(lua_State* L);
-
-        static int newIndex(lua_State* L);
     };
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "EntityLuaBinding.h"
+#include "window/Keyboard.h"
+
 #include <lua/lua.hpp>
 
 namespace Blink {
@@ -17,8 +19,6 @@ namespace Blink {
 
         void terminate();
 
-        void clearStack();
-
         bool loadFile(const std::string& path);
 
         void createEntityType(const std::string& typeName);
@@ -26,5 +26,12 @@ namespace Blink {
         void createEntityBinding(entt::registry* entityRegistry);
 
         void update(const std::string& tableName, double timestep, entt::entity entity);
+
+        void createKeyboardBinding(Keyboard* keyboard);
+
+    private:
+        void clearStack();
+
+        static int luaPrint(lua_State* L);
     };
 }

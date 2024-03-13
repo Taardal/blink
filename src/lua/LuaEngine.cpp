@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "LuaEngine.h"
+#include "printLua.h"
+#include "EntityLuaBinding.h"
+#include "KeyboardLuaBinding.h"
 
 #include <lua.hpp>
 #include <iostream>
-
-#include "EntityBinding.h"
-#include "printLua.h"
 
 namespace Blink {
     LuaEngine::LuaEngine() : L(luaL_newstate()) {
@@ -16,47 +16,21 @@ namespace Blink {
     }
 
     bool LuaEngine::initialize() {
+        // Enable Lua standard libraries
         luaL_openlibs(L);
 
         // Add compiled lua files as paths to be searched when requiring files
         luaL_dostring(L, "package.path = './?.out;' .. package.path");
         luaL_dostring(L, "package.path = './lua/?.out;' .. package.path");
 
-        // Load lua scripts
-        // auto luafile = "lua/main.out";
-        // if (luaL_loadfile(L, luafile) != LUA_OK) {
-        //     BL_LOG_ERROR("Could not load file [{}]: {}", luafile, lua_tostring(L, -1));
-        //     return false;
-        // }
-        // BL_LOG_INFO("Loaded file [{}] successfully", luafile);
-
-        // Run file lua scripts
-        // if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
-        //     BL_LOG_ERROR("Could not execute file [{}]: {}", luafile, lua_tostring(L, -1));
-        //     return false;
-        // }
-        // BL_LOG_INFO("Executed file [{}] successfully", luafile);
-
-        // Call main function
-        // auto mainFn = "main";
-        // lua_getglobal(L, mainFn);
-        // if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
-        //     BL_LOG_ERROR("Could not invoke function [{}]: {}", "main", lua_tostring(L, -1));
-        //     return false;
-        // }
+        // Override Lua 'print' function with custom logger
+        lua_pushcfunction(L, LuaEngine::luaPrint);
+        lua_setglobal(L, "print");
 
         return true;
     }
 
     void LuaEngine::terminate() {
-
-    }
-
-    void LuaEngine::clearStack() {
-        int i = lua_gettop(L);
-        if (i > 0) {
-            lua_pop(L, i);
-        }
     }
 
     bool LuaEngine::loadFile(const std::string& path) {
@@ -74,7 +48,7 @@ namespace Blink {
     }
 
     void LuaEngine::createEntityBinding(entt::registry* entityRegistry) {
-        EntityBinding::create(L, entityRegistry);
+        EntityLuaBinding::create(L, entityRegistry);
     }
 
     void LuaEngine::update(const std::string& tableName, double timestep, entt::entity entity) {
@@ -113,5 +87,22 @@ namespace Blink {
         // - [-1] table     {tableName}
 
         clearStack();
+    }
+
+    void LuaEngine::createKeyboardBinding(Keyboard* keyboard) {
+        KeyboardLuaBinding::create(L, keyboard);
+    }
+
+    void LuaEngine::clearStack() {
+        int i = lua_gettop(L);
+        if (i > 0) {
+            lua_pop(L, i);
+        }
+    }
+
+    int LuaEngine::luaPrint(lua_State* L) {
+        const char* msg = lua_tostring(L, -1);
+        BL_LOG_INFO("[Lua] {}", msg);
+        return 0;
     }
 }

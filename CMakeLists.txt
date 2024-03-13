@@ -73,10 +73,8 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanVertexBuffer.h
         ${SRC_DIR}/lua/EntityLuaBinding.cpp
         ${SRC_DIR}/lua/EntityLuaBinding.h
-        ${SRC_DIR}/lua/EntityBinding.cpp
-        ${SRC_DIR}/lua/EntityBinding.h
-        ${SRC_DIR}/lua/LuaBinding.cpp
-        ${SRC_DIR}/lua/LuaBinding.h
+        ${SRC_DIR}/lua/KeyboardLuaBinding.cpp
+        ${SRC_DIR}/lua/KeyboardLuaBinding.h
         ${SRC_DIR}/lua/LuaEngine.cpp
         ${SRC_DIR}/lua/LuaEngine.h
         ${SRC_DIR}/lua/LuaFunction.cpp

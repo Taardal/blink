@@ -22,6 +22,7 @@ namespace Blink {
         luaEngine->loadFile(luaFilepath);
 
         luaEngine->createEntityBinding(&registry);
+        luaEngine->createKeyboardBinding(keyboard);
 
         registry.emplace<LuaComponent>(player, luaFilepath, luaTableName);
         return true;
