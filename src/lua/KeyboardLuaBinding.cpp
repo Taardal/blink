@@ -1,6 +1,6 @@
 #include "KeyboardLuaBinding.h"
 
-#include "printLua.h"
+#include "luaUtils.h"
 
 namespace Blink {
     KeyboardLuaBinding::KeyboardLuaBinding(Keyboard* keyboard): keyboard(keyboard) {

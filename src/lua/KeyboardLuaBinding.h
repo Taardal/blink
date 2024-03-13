@@ -1,10 +1,9 @@
 #pragma once
 
+#include "luaUtils.h"
 #include "window/Keyboard.h"
 
 #include <lua/lua.hpp>
-
-typedef int LuaReturnValueCount;
 
 namespace Blink {
     class KeyboardLuaBinding {

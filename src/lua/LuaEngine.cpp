@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "LuaEngine.h"
-#include "printLua.h"
+#include "luaUtils.h"
 #include "EntityLuaBinding.h"
 #include "KeyboardLuaBinding.h"
 
@@ -55,26 +55,9 @@ namespace Blink {
         const char* functionName = "onUpdate";
 
         lua_getglobal(L, tableName.c_str());
-
-        // - [-1] table     {tableName}
-
         lua_getfield(L, -1, functionName);
-
-        // - [-1] function  {onUpdate}
-        // - [-2] table     {tableName}
-
         lua_pushnumber(L, timestep);
-
-        // - [-1] number    {timestep}
-        // - [-2] function  {onUpdate}
-        // - [-3] table     {tableName}
-
         lua_pushnumber(L, (uint32_t) entity);
-
-        // - [-1] number    {entity}
-        // - [-2] number    {timestep}
-        // - [-3] function  {onUpdate}
-        // - [-4] table     {tableName}
 
         constexpr int argumentCount = 2;
         constexpr int returnValueCount = 0;
@@ -84,16 +67,14 @@ namespace Blink {
             throw std::runtime_error("no worky");
         }
 
-        // - [-1] table     {tableName}
-
         clearStack();
     }
 
-    void LuaEngine::createKeyboardBinding(Keyboard* keyboard) {
+    void LuaEngine::createKeyboardBinding(Keyboard* keyboard) const {
         KeyboardLuaBinding::create(L, keyboard);
     }
 
-    void LuaEngine::clearStack() {
+    void LuaEngine::clearStack() const {
         int i = lua_gettop(L);
         if (i > 0) {
             lua_pop(L, i);

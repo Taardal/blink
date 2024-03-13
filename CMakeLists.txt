@@ -81,8 +81,8 @@ add_executable(
         ${SRC_DIR}/lua/LuaFunction.h
         ${SRC_DIR}/lua/LuaModule.cpp
         ${SRC_DIR}/lua/LuaModule.h
-        ${SRC_DIR}/lua/printLua.cpp
-        ${SRC_DIR}/lua/printLua.h
+        ${SRC_DIR}/lua/luaUtils.cpp
+        ${SRC_DIR}/lua/luaUtils.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/FileSystem.cpp

@@ -27,10 +27,10 @@ namespace Blink {
 
         void update(const std::string& tableName, double timestep, entt::entity entity);
 
-        void createKeyboardBinding(Keyboard* keyboard);
+        void createKeyboardBinding(Keyboard* keyboard) const;
 
     private:
-        void clearStack();
+        void clearStack() const;
 
         static int luaPrint(lua_State* L);
     };
