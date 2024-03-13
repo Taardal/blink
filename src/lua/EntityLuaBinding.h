@@ -6,23 +6,23 @@
 namespace Blink {
     class EntityLuaBinding {
     private:
-        entt::registry* registry;
+        entt::registry* entityRegistry;
 
     private:
-        EntityLuaBinding(entt::registry* registry);
+        EntityLuaBinding(entt::registry* entityRegistry);
 
         ~EntityLuaBinding() = default;
 
     public:
-        static void create(lua_State* L, entt::registry* entityRegistry);
-
-        static void sayHello();
-
-        static int sayHello1(lua_State* L);
+        static void initialize(lua_State* L, entt::registry* entityRegistry);
 
     private:
         static int destroy(lua_State* L);
 
         static int index(lua_State* L);
+
+        static int getPosition(lua_State* L);
+
+        static int setPosition(lua_State* L);
     };
 }

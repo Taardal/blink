@@ -91,9 +91,11 @@ namespace Blink {
         bool pressed;
         if (lua_type(L, -1) == LUA_TSTRING) {
             std::string key = lua_tostring(L, -1);
+            printf("IS PRESSED STRING [%s]: [%d]\n", key.c_str(), binding->keyboard->isPressed(key));
             pressed = binding->keyboard->isPressed(key);
         } else {
             uint16_t key = lua_tonumber(L, -1);
+            printf("IS PRESSED NUMBER [%d]: [%d]\n", key, binding->keyboard->isPressed(key));
             pressed = binding->keyboard->isPressed(key);
         }
         lua_pushboolean(L, pressed);

@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "LuaEngine.h"
+#include "LuaFunction.h"
 #include "luaUtils.h"
 #include "EntityLuaBinding.h"
 #include "KeyboardLuaBinding.h"
 
 #include <lua.hpp>
-#include <iostream>
 
 namespace Blink {
     LuaEngine::LuaEngine() : L(luaL_newstate()) {
@@ -34,6 +34,7 @@ namespace Blink {
     }
 
     bool LuaEngine::loadFile(const std::string& path) {
+        // Load and execute Lua script to add it the Lua state
         if (luaL_dofile(L, path.c_str()) != LUA_OK) {
             BL_LOG_ERROR("Could not load file [{}]: {}", path, lua_tostring(L, -1));
             return false;
@@ -48,11 +49,15 @@ namespace Blink {
     }
 
     void LuaEngine::createEntityBinding(entt::registry* entityRegistry) {
-        EntityLuaBinding::create(L, entityRegistry);
+        EntityLuaBinding::initialize(L, entityRegistry);
+    }
+
+    void LuaEngine::createKeyboardBinding(Keyboard* keyboard) const {
+        KeyboardLuaBinding::create(L, keyboard);
     }
 
     void LuaEngine::update(const std::string& tableName, double timestep, entt::entity entity) {
-        const char* functionName = "onUpdate";
+        static const char* functionName = "onUpdate";
 
         lua_getglobal(L, tableName.c_str());
         lua_getfield(L, -1, functionName);
@@ -63,22 +68,15 @@ namespace Blink {
         constexpr int returnValueCount = 0;
         constexpr int messageHandlerIndex = 0;
         if (lua_pcall(L, argumentCount, returnValueCount, messageHandlerIndex) != LUA_OK) {
-            BL_LOG_ERROR("Could not invoke function [{}]: {}", functionName, lua_tostring(L, -1));
-            throw std::runtime_error("no worky");
+            BL_LOG_ERROR("Could not invoke Lua function [{}] on Lua table [{}]: {}", functionName, tableName, lua_tostring(L, -1));
+            throw std::runtime_error("Could not invoke Lua function");
         }
 
         clearStack();
     }
 
-    void LuaEngine::createKeyboardBinding(Keyboard* keyboard) const {
-        KeyboardLuaBinding::create(L, keyboard);
-    }
-
     void LuaEngine::clearStack() const {
-        int i = lua_gettop(L);
-        if (i > 0) {
-            lua_pop(L, i);
-        }
+        lua_pop(L, lua_gettop(L));
     }
 
     int LuaEngine::luaPrint(lua_State* L) {
