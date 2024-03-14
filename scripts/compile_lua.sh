@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#cd lua
-
 # Directory containing Lua files
 lua_dir="lua"
 

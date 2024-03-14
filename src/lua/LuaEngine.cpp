@@ -28,11 +28,17 @@ namespace Blink {
         // Initialize global Lua script bindings
         createGlobalBindings();
 
+
         return true;
     }
 
     void LuaEngine::terminate() const {
         lua_close(L);
+    }
+
+    void LuaEngine::recreateEntityBindings(entt::registry* entityRegistry) {
+        std::system("cmake -D LUA_DIR=../../lua -D OUTPUT_DIR=./lua -P ../../cmake/compile_lua.cmake");
+        createEntityBindings(entityRegistry);
     }
 
     void LuaEngine::updateEntityBindings(entt::registry* entityRegistry, double timestep) const {
@@ -91,7 +97,7 @@ namespace Blink {
 
     int LuaEngine::luaPrint(lua_State* L) {
         const char* msg = lua_tostring(L, -1);
-        BL_LOG_INFO("[LUA] {}", msg);
+        BL_LOG_INFO("[LUA] - {}", msg);
         return 0;
     }
 }

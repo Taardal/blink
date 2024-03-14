@@ -18,6 +18,8 @@ namespace Blink {
 
         void terminate() const;
 
+        void recreateEntityBindings(entt::registry* entityRegistry);
+
         void createEntityBindings(entt::registry* entityRegistry) const;
 
         void updateEntityBindings(entt::registry* entityRegistry, double timestep) const;

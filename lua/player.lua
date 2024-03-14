@@ -19,6 +19,7 @@ function Player.onUpdate(entityId, timestep)
   if (Keyboard:isPressed(Key.Numpad_8)) then
       position.y = position.y + velocity
   end
-  print("-- position [" .. position.x .. ", " .. position.y .. ", " .. position.z .. "]")
   Entity:setPosition(entityId, position)
+
+  print("-- position [" .. position.x .. ", " .. position.y .. ", " .. position.z .. "]")
 end

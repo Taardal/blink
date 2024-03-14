@@ -113,6 +113,29 @@ set_target_properties(
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_DIR}/release
 )
 
+add_custom_command(
+        TARGET ${PROJECT_NAME}
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_DIR}/pre_build.cmake
+)
+
+add_custom_command(
+        TARGET ${PROJECT_NAME}
+        PRE_LINK
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_DIR}/pre_link.cmake
+)
+
+add_custom_command(
+        TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_DIR}/post_build.cmake
+)
+
+install(
+        TARGETS ${PROJECT_NAME}
+        DESTINATION ${BIN_DIR}
+)
+
 target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
 target_precompile_headers(${PROJECT_NAME} PUBLIC ${SRC_DIR}/pch.h)
 
@@ -145,4 +168,3 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${SPD_LOG_DIR}/include)
 find_package(Vulkan REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
-
