@@ -1,18 +1,18 @@
 #include "App.h"
 
-#include <utility>
-
 namespace Blink {
     App::App(AppConfig appConfig)
-            : appConfig(std::move(appConfig)),
-              systemModule(new SystemModule()),
-              windowModule(new WindowModule()),
-              graphicsModule(new GraphicsModule(systemModule, windowModule)),
-              gameModule(new GameModule(appConfig, windowModule, graphicsModule)) {
+        : appConfig(std::move(appConfig)),
+          systemModule(new SystemModule()),
+          windowModule(new WindowModule()),
+          graphicsModule(new GraphicsModule(systemModule, windowModule)),
+          luaModule(new LuaModule(windowModule)),
+          gameModule(new GameModule(windowModule, graphicsModule, luaModule)) {
     }
 
     App::~App() {
         delete gameModule;
+        delete luaModule;
         delete graphicsModule;
         delete windowModule;
         delete systemModule;
@@ -23,7 +23,7 @@ namespace Blink {
             BL_LOG_CRITICAL("Could not initialize app");
             return;
         }
-        Game* game = gameModule->getGame();
+        Game* game = gameModule->game;
         try {
             game->run();
         } catch (std::exception& e) {
@@ -45,7 +45,11 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize graphics module");
             return false;
         }
-        if (!gameModule->initialize(appConfig)) {
+        if (!luaModule->initialize()) {
+            BL_LOG_ERROR("Could not initialize lua module");
+            return false;
+        }
+        if (!gameModule->initialize()) {
             BL_LOG_ERROR("Could not initialize game module");
             return false;
         }
@@ -54,6 +58,7 @@ namespace Blink {
 
     void App::terminate() const {
         gameModule->terminate();
+        luaModule->terminate();
         graphicsModule->terminate();
         windowModule->terminate();
         systemModule->terminate();

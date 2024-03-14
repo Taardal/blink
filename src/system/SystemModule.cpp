@@ -1,5 +1,4 @@
 #include "SystemModule.h"
-#include "Log.h"
 
 namespace Blink {
     SystemModule::SystemModule()
@@ -7,10 +6,6 @@ namespace Blink {
 
     SystemModule::~SystemModule() {
         delete fileSystem;
-    }
-
-    FileSystem* SystemModule::getFileSystem() const {
-        return fileSystem;
     }
 
     bool SystemModule::initialize(const AppConfig& appConfig) const {

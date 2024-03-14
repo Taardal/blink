@@ -20,19 +20,22 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
-        ${SRC_DIR}/LuaClient.cpp
-        ${SRC_DIR}/LuaClient.h
-        ${SRC_DIR}/LuaEngine.cpp
-        ${SRC_DIR}/LuaEngine.h
-        ${SRC_DIR}/LuaEngineListener.h
-        ${SRC_DIR}/LuaGraphicsEngine.cpp
-        ${SRC_DIR}/LuaGraphicsEngine.h
+#        ${SRC_DIR}/LuaClient.cpp
+#        ${SRC_DIR}/LuaClient.h
+#        ${SRC_DIR}/LuaEngine.cpp
+#        ${SRC_DIR}/LuaEngine.h
+#        ${SRC_DIR}/LuaEngineListener.h
+#        ${SRC_DIR}/LuaGraphicsEngine.cpp
+#        ${SRC_DIR}/LuaGraphicsEngine.h
         ${SRC_DIR}/game/Camera.cpp
         ${SRC_DIR}/game/Camera.h
+        ${SRC_DIR}/game/Components.h
         ${SRC_DIR}/game/Game.cpp
         ${SRC_DIR}/game/Game.h
         ${SRC_DIR}/game/GameModule.cpp
         ${SRC_DIR}/game/GameModule.h
+        ${SRC_DIR}/game/Scene.cpp
+        ${SRC_DIR}/game/Scene.h
         ${SRC_DIR}/graphics/GraphicsModule.cpp
         ${SRC_DIR}/graphics/GraphicsModule.h
         ${SRC_DIR}/graphics/Quad.h
@@ -68,15 +71,33 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanUniformBuffer.h
         ${SRC_DIR}/graphics/VulkanVertexBuffer.cpp
         ${SRC_DIR}/graphics/VulkanVertexBuffer.h
+        ${SRC_DIR}/lua/EntityLuaBinding.cpp
+        ${SRC_DIR}/lua/EntityLuaBinding.h
+        ${SRC_DIR}/lua/KeyboardLuaBinding.cpp
+        ${SRC_DIR}/lua/KeyboardLuaBinding.h
+        ${SRC_DIR}/lua/LuaEngine.cpp
+        ${SRC_DIR}/lua/LuaEngine.h
+        ${SRC_DIR}/lua/LuaFunction.cpp
+        ${SRC_DIR}/lua/LuaFunction.h
+        ${SRC_DIR}/lua/LuaModule.cpp
+        ${SRC_DIR}/lua/LuaModule.h
+        ${SRC_DIR}/lua/luaUtils.cpp
+        ${SRC_DIR}/lua/luaUtils.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/FileSystem.cpp
         ${SRC_DIR}/system/FileSystem.h
         ${SRC_DIR}/system/Log.cpp
         ${SRC_DIR}/system/Log.h
+        ${SRC_DIR}/system/Random.cpp
+        ${SRC_DIR}/system/Random.h
         ${SRC_DIR}/system/SystemModule.cpp
         ${SRC_DIR}/system/SystemModule.h
+        ${SRC_DIR}/system/Uuid.cpp
+        ${SRC_DIR}/system/Uuid.h
         ${SRC_DIR}/utils/size.h
+        ${SRC_DIR}/window/Keyboard.cpp
+        ${SRC_DIR}/window/Keyboard.h
         ${SRC_DIR}/window/Window.cpp
         ${SRC_DIR}/window/Window.h
         ${SRC_DIR}/window/WindowModule.cpp
@@ -92,14 +113,41 @@ set_target_properties(
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_DIR}/release
 )
 
+add_custom_command(
+        TARGET ${PROJECT_NAME}
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_DIR}/pre_build.cmake
+)
+
+add_custom_command(
+        TARGET ${PROJECT_NAME}
+        PRE_LINK
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_DIR}/pre_link.cmake
+)
+
+add_custom_command(
+        TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_DIR}/post_build.cmake
+)
+
+install(
+        TARGETS ${PROJECT_NAME}
+        DESTINATION ${BIN_DIR}
+)
+
 target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
 target_precompile_headers(${PROJECT_NAME} PUBLIC ${SRC_DIR}/pch.h)
 
+set(ENTT_DIR ${LIB_DIR}/entt)
+add_subdirectory(${ENTT_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${ENTT_DIR})
+target_link_libraries(${PROJECT_NAME} EnTT::EnTT)
+
 set(GLFW_DIR ${LIB_DIR}/glfw-3.3)
-set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL Build the GLFW example programs)
-set(GLFW_BUILD_TESTS OFF CACHE INTERNAL Build the GLFW test programs)
-set(GLFW_BUILD_DOCS OFF CACHE INTERNAL Build the GLFW documentation)
-set(GLFW_INSTALL OFF CACHE INTERNAL Generate installation target)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${GLFW_DIR})
 target_compile_definitions(${PROJECT_NAME} PUBLIC GLFW_INCLUDE_NONE)
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_DIR}/include)
@@ -120,4 +168,3 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${SPD_LOG_DIR}/include)
 find_package(Vulkan REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
-

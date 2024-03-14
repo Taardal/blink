@@ -1,27 +1,29 @@
 #pragma once
 
 #include "Camera.h"
+#include "Scene.h"
 #include "Game.h"
 #include "window/WindowModule.h"
 #include "graphics/GraphicsModule.h"
+#include "lua/LuaModule.h"
 
 
 namespace Blink {
-    class GameModule {
-    private:
-        AppConfig appConfig;
+    struct GameModule {
         Camera* camera;
+        Scene* scene;
         Game* game;
 
-    public:
-        GameModule(const AppConfig& appConfig, WindowModule* windowModule, GraphicsModule* graphicsModule);
+        GameModule(
+            WindowModule* windowModule,
+            GraphicsModule* graphicsModule,
+            LuaModule* luaModule
+        );
 
         ~GameModule();
 
-        Game* getGame() const;
+        bool initialize() const;
 
-        bool initialize(const AppConfig& appConfig);
-
-        void terminate();
+        void terminate() const;
     };
 }

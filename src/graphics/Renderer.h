@@ -111,9 +111,7 @@ namespace Blink {
 
         void onMinimize(bool minimized);
 
-        void onRender(const Frame& frame);
-
-        void onComplete();
+        void render(const Frame& frame);
 
         void submitQuad(Quad& quad);
 

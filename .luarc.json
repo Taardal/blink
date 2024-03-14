@@ -1,0 +1,7 @@
+{
+    "diagnostics.globals": [
+        "Player",
+        "Entity",
+        "Keyboard"
+    ]
+}

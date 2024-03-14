@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AppConfig.h"
-#include <string>
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 
@@ -21,6 +20,7 @@ namespace Blink {
     private:
         GLFWwindow* glfwWindow = nullptr;
         CallbackData callbackData;
+        double lastFrameTime = 0.0;
 
     public:
         GLFWwindow* getGlfwWindow() const;
@@ -37,13 +37,15 @@ namespace Blink {
 
         void terminate() const;
 
-        void onUpdate() const;
+        double update();
 
         bool shouldClose() const;
 
         void waitUntilNotMinimized() const;
 
         bool isVulkanSupported() const;
+
+        bool isKeyPressed(uint16_t key) const;
 
         std::vector<const char*> getRequiredVulkanExtensions() const;
 

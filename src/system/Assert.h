@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/Environment.h"
+
 #ifdef BL_DEBUG
     #define BL_ENABLE_BREAK
     #define BL_ENABLE_ASSERT
@@ -28,7 +30,7 @@
         {} \
         else \
         { \
-            BL_LOG_ERROR("Could not assert [{0}]", #expression); \
+            BL_LOG_CRITICAL("Could not assert [{0}]", #expression); \
             BL_BREAK(); \
         }
 #else

@@ -23,8 +23,10 @@
 #endif
 
 #if defined(NDEBUG)
+    #define BL_RELEASE
     #define BL_BUILD_RELEASE
 #else
+    #define BL_DEBUG
     #define BL_BUILD_DEBUG
 #endif
 

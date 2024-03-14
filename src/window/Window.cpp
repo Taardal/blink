@@ -73,9 +73,12 @@ namespace Blink {
         BL_LOG_INFO("Terminated GLFW");
     }
 
-    void Window::onUpdate() const {
+    double Window::update() {
         glfwPollEvents();
-        //glfwSwapBuffers(glfwWindow);
+        double time = glfwGetTime();
+        double timestep = time - lastFrameTime;
+        lastFrameTime = time;
+        return timestep;
     }
 
     bool Window::shouldClose() const {
@@ -84,6 +87,10 @@ namespace Blink {
 
     bool Window::isVulkanSupported() const {
         return glfwVulkanSupported() == GLFW_TRUE;
+    }
+
+    bool Window::isKeyPressed(uint16_t key) const {
+        return glfwGetKey(glfwWindow, key) == GLFW_PRESS;
     }
 
     std::vector<const char*> Window::getRequiredVulkanExtensions() const {

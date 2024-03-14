@@ -1,19 +1,17 @@
 #pragma once
 
 #include "AppConfig.h"
+#include "Keyboard.h"
 #include "Window.h"
 
 namespace Blink {
-    class WindowModule {
-    private:
+    struct WindowModule {
         Window* window;
+        Keyboard* keyboard;
 
-    public:
         WindowModule();
 
         ~WindowModule();
-
-        Window* getWindow() const;
 
         bool initialize(const AppConfig& appConfig) const;
 

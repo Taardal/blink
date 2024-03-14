@@ -1,12 +1,8 @@
+#include "pch.h"
 #include "Camera.h"
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 namespace Blink {
-    Camera::Camera(Window* window) : window(window) {
+    Camera::Camera(Window* window, Keyboard* keyboard) : window(window), keyboard(keyboard) {
         updateDirections();
     }
 
@@ -14,6 +10,9 @@ namespace Blink {
         WindowSize windowSize = window->getSizeInPixels();
         aspectRatio = (float) windowSize.width / (float) windowSize.height;
         return true;
+    }
+
+    void Camera::terminate() {
     }
 
     glm::mat4 Camera::getViewMatrix() const {
@@ -24,51 +23,49 @@ namespace Blink {
         return glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
     }
 
-    void Camera::onUpdate(double timestep) {
+    void Camera::update(double timestep) {
         processKeyboardInput((float) timestep);
         updateDirections();
-        logState();
+        //logState();
     }
 
     void Camera::processKeyboardInput(float timestep) {
-        GLFWwindow* glfwWindow = window->getGlfwWindow();
-
         float velocity = moveSpeed * timestep;
-        if (glfwGetKey(glfwWindow, GLFW_KEY_W) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::W)) {
             position += frontDirection * velocity;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_S) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::S)) {
             position -= frontDirection * velocity;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_A) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::A)) {
             position -= rightDirection * velocity;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_D) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::D)) {
             position += rightDirection * velocity;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::Space)) {
             position += worldUpDirection * velocity;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_C) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::C)) {
             position -= worldUpDirection * velocity;
         }
 
-        if (glfwGetKey(glfwWindow, GLFW_KEY_UP) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::Up)) {
             pitch += lookSpeed;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::Down)) {
             pitch -= lookSpeed;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::Left)) {
             yaw -= lookSpeed;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::Right)) {
             yaw += lookSpeed;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_Q) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::Q)) {
             roll += lookSpeed;
         }
-        if (glfwGetKey(glfwWindow, GLFW_KEY_E) == GLFW_PRESS) {
+        if (keyboard->isPressed(Key::E)) {
             roll -= lookSpeed;
         }
         // Clamp pitch to prevent camera flipping

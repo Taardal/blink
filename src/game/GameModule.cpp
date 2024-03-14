@@ -1,34 +1,41 @@
+#include "pch.h"
 #include "GameModule.h"
-
-#include <utility>
 
 namespace Blink {
     GameModule::GameModule(
-        const AppConfig& appConfig,
         WindowModule* windowModule,
-        GraphicsModule* graphicsModule
-    ) : appConfig(appConfig),
-        camera(new Camera(windowModule->getWindow())),
-        game(new Game(camera, windowModule->getWindow(), graphicsModule->getRenderer())) {
+        GraphicsModule* graphicsModule,
+        LuaModule* luaModule
+    ) : camera(new Camera(windowModule->window, windowModule->keyboard)),
+        scene(new Scene(windowModule->keyboard, luaModule->luaEngine)),
+        game(new Game(scene, camera, windowModule->window, graphicsModule->renderer)) {
     }
 
     GameModule::~GameModule() {
         delete game;
+        delete scene;
         delete camera;
     }
 
-    Game* GameModule::getGame() const {
-        return game;
-    }
-
-    bool GameModule::initialize(const AppConfig& appConfig) {
+    bool GameModule::initialize() const {
         if (!camera->initialize()) {
             BL_LOG_ERROR("Could not initialize camera");
+            return false;
+        }
+        if (!scene->initialize()) {
+            BL_LOG_ERROR("Could not initialize scene");
+            return false;
+        }
+        if (!game->initialize()) {
+            BL_LOG_ERROR("Could not initialize game");
             return false;
         }
         return true;
     }
 
-    void GameModule::terminate() {
+    void GameModule::terminate() const {
+        game->terminate();
+        scene->terminate();
+        camera->terminate();
     }
 }

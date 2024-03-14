@@ -1,6 +1,7 @@
 #pragma once
 
 #include "window/Window.h"
+#include "window/Keyboard.h"
 
 #include <glm/glm.hpp>
 
@@ -8,7 +9,8 @@ namespace Blink {
     class Camera {
     private:
         Window* window;
-        glm::vec3 position = {0.0f, 0.0f, 0.0f};
+        Keyboard* keyboard;
+        glm::vec3 position = {0.0f, 0.0f, 2.0f};
         glm::vec3 frontDirection = {0.0f, 0.0f, 0.0f};
         glm::vec3 upDirection = {0.0f, 0.0f, 0.0f};
         glm::vec3 worldUpDirection = {0.0f, 1.0f, 0.0f};
@@ -24,7 +26,7 @@ namespace Blink {
         float farClip = 10.0f;
 
     public:
-        explicit Camera(Window* window);
+        Camera(Window* window, Keyboard* keyboard);
 
         glm::mat4 getViewMatrix() const;
 
@@ -32,7 +34,9 @@ namespace Blink {
 
         bool initialize();
 
-        void onUpdate(double timestep);
+        void terminate();
+
+        void update(double timestep);
 
         void processKeyboardInput(float timestep);
 
