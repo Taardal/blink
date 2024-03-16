@@ -1,9 +1,10 @@
-local moveSpeed = 5.0
+local moveSpeed = 2.0
 
 function Player.onUpdate(entityId, timestep)
   print("Player.onUpdate")
-  print("-- entityId [" .. entityId .. "]")
-  print("-- timestep [" .. timestep .. "]")
+  print("entityId [" .. entityId .. "]")
+  print("timestep [" .. timestep .. "]")
+  print("moveSpeed [" .. moveSpeed .. "]")
 
   local position = Entity:getPosition(entityId)
   local velocity = moveSpeed * timestep
@@ -21,5 +22,5 @@ function Player.onUpdate(entityId, timestep)
   end
   Entity:setPosition(entityId, position)
 
-  print("-- position [" .. position.x .. ", " .. position.y .. ", " .. position.z .. "]")
+  print("position [" .. position.x .. ", " .. position.y .. ", " .. position.z .. "]")
 end

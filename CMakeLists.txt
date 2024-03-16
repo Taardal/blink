@@ -3,15 +3,22 @@ project(blink)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
-set(RES_DIR ${PROJECT_SOURCE_DIR}/res)
-set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
 set(BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake)
+set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
+set(LUA_DIR ${PROJECT_SOURCE_DIR}/lua)
+set(RES_DIR ${PROJECT_SOURCE_DIR}/res)
+set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
     set(CMAKE_BUILD_TYPE Debug)
 endif ()
+
+string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_DIR_NAME)
+
+#########################################
+# Main target                           #
+#########################################
 
 add_executable(
         ${PROJECT_NAME}
@@ -113,57 +120,69 @@ set_target_properties(
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_DIR}/release
 )
 
-add_custom_command(
-        TARGET ${PROJECT_NAME}
-        PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_DIR}/pre_build.cmake
+#########################################
+# Custom targets                        #
+#########################################
+
+set(LUA_SOURCE_DIR ${PROJECT_SOURCE_DIR}/lua)
+set(LUA_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/lua)
+add_custom_target(
+        CompileLua
+        COMMAND ${CMAKE_COMMAND} -D LUA_SOURCE_DIR=${LUA_SOURCE_DIR} -D LUA_OUTPUT_DIR=${LUA_OUTPUT_DIR} -P ${CMAKE_DIR}/compile_lua.cmake
+        COMMENT "Compiling Lua"
 )
 
-add_custom_command(
-        TARGET ${PROJECT_NAME}
-        PRE_LINK
-        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_DIR}/pre_link.cmake
+set(SHADERS_SOURCE_DIR ${PROJECT_SOURCE_DIR}/res/shaders)
+set(SHADERS_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/shaders)
+add_custom_target(
+        CompileShaders
+        COMMAND ${CMAKE_COMMAND} -D SHADERS_SOURCE_DIR=${SHADERS_SOURCE_DIR} -D SHADERS_OUTPUT_DIR=${SHADERS_OUTPUT_DIR} -P ${CMAKE_DIR}/compile_shaders.cmake
+        COMMENT "Compiling shaders"
 )
 
-add_custom_command(
-        TARGET ${PROJECT_NAME}
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_DIR}/post_build.cmake
-)
+add_dependencies(${PROJECT_NAME} CompileLua CompileShaders)
 
-install(
-        TARGETS ${PROJECT_NAME}
-        DESTINATION ${BIN_DIR}
-)
+#########################################
+# Preprocessor macros (used in C++)     #
+#########################################
+
+add_definitions(-DCMAKE_SCRIPTS_DIR="${CMAKE_DIR}")
+add_definitions(-DCMAKE_LUA_SOURCE_DIR="${LUA_SOURCE_DIR}")
+add_definitions(-DCMAKE_LUA_OUTPUT_DIR="${LUA_OUTPUT_DIR}")
+add_definitions(-DCMAKE_SHADERS_SOURCE_DIR="${SHADERS_SOURCE_DIR}")
+add_definitions(-DCMAKE_SHADERS_OUTPUT_DIR="${SHADERS_OUTPUT_DIR}")
+
+#########################################
+# Dependencies                          #
+#########################################
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
 target_precompile_headers(${PROJECT_NAME} PUBLIC ${SRC_DIR}/pch.h)
 
-set(ENTT_DIR ${LIB_DIR}/entt)
-add_subdirectory(${ENTT_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${ENTT_DIR})
+set(ENTT_LIB_DIR ${LIB_DIR}/entt)
+add_subdirectory(${ENTT_LIB_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${ENTT_LIB_DIR})
 target_link_libraries(${PROJECT_NAME} EnTT::EnTT)
 
-set(GLFW_DIR ${LIB_DIR}/glfw-3.3)
+set(GLFW_LIB_DIR ${LIB_DIR}/glfw-3.3)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-add_subdirectory(${GLFW_DIR})
+add_subdirectory(${GLFW_LIB_DIR})
 target_compile_definitions(${PROJECT_NAME} PUBLIC GLFW_INCLUDE_NONE)
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_DIR}/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_LIB_DIR}/include)
 target_link_libraries(${PROJECT_NAME} glfw ${GLFW_LIBRARIES})
 
-set(GLM_DIR ${LIB_DIR}/glm-0.9.9.6)
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_DIR})
+set(GLM_LIB_DIR ${LIB_DIR}/glm-0.9.9.6)
+target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_LIB_DIR})
 
-set(LUA_NAME lua)
-set(LUA_DIR lib/lua-5.4.0)
-add_subdirectory(${LUA_DIR})
-target_include_directories(${PROJECT_NAME} PRIVATE ${LUA_DIR}/include)
-target_link_libraries(${PROJECT_NAME} ${LUA_NAME})
+set(LUA_LIB_DIR lib/lua-5.4.0)
+add_subdirectory(${LUA_LIB_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${LUA_LIB_DIR}/include)
+target_link_libraries(${PROJECT_NAME} lua)
 
-set(SPD_LOG_DIR ${LIB_DIR}/spdlog-1.4.2)
-target_include_directories(${PROJECT_NAME} PUBLIC ${SPD_LOG_DIR}/include)
+set(SPDLOG_LIB_DIR ${LIB_DIR}/spdlog-1.4.2)
+target_include_directories(${PROJECT_NAME} PUBLIC ${SPDLOG_LIB_DIR}/include)
 
 find_package(Vulkan REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})

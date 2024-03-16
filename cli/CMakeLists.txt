@@ -7,6 +7,10 @@ set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
 set(BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+    set(CMAKE_BUILD_TYPE Debug)
+endif ()
+
 add_executable(
         ${PROJECT_NAME}
         ${SRC_DIR}/main.cpp
@@ -28,11 +32,19 @@ set_target_properties(
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_DIR}/release
 )
 
+# Set install command working directory to CLI project root (blink/cli/)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
+
+# Install binary to parent project (blink/)
 install(
-        TARGETS ${PROJECT_NAME}
+        FILES $<TARGET_FILE:${PROJECT_NAME}>
         DESTINATION ..
+        RENAME bl
 )
+
+#########################################
+# Dependencies                          #
+#########################################
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
 target_precompile_headers(${PROJECT_NAME} PUBLIC ${SRC_DIR}/pch.h)
