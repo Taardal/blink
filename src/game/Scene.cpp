@@ -24,7 +24,7 @@ namespace Blink {
     glm::mat4 Scene::update(double timestep) {
 
         if (keyboard->isPressed(Key::R)) {
-            luaEngine->recreateEntityBindings(&registry);
+            luaEngine->reload(&registry);
             BL_LOG_INFO("Recreated entity bindings");
         }
         luaEngine->updateEntityBindings(&registry, timestep);

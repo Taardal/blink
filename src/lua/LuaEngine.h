@@ -18,7 +18,7 @@ namespace Blink {
 
         void terminate() const;
 
-        void recreateEntityBindings(entt::registry* entityRegistry);
+        void reload(entt::registry* entityRegistry) const;
 
         void createEntityBindings(entt::registry* entityRegistry) const;
 
@@ -26,6 +26,8 @@ namespace Blink {
 
     private:
         void createGlobalBindings() const;
+
+        static void compileLuaFiles();
 
         static int luaPrint(lua_State* L);
     };

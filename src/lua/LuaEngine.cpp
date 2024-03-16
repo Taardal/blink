@@ -4,10 +4,9 @@
 #include "luaUtils.h"
 #include "EntityLuaBinding.h"
 #include "KeyboardLuaBinding.h"
+#include "game/Components.h"
 
 #include <lua.hpp>
-
-#include "game/Components.h"
 
 namespace Blink {
     LuaEngine::LuaEngine(Keyboard* keyboard) : L(luaL_newstate()), keyboard(keyboard) {
@@ -18,7 +17,6 @@ namespace Blink {
         luaL_openlibs(L);
 
         // Add paths to be searched for lua files
-        luaL_dostring(L, "package.path = './?.out;' .. package.path");
         luaL_dostring(L, "package.path = './lua/?.out;' .. package.path");
 
         // Override Lua 'print' function with custom logger
@@ -28,7 +26,6 @@ namespace Blink {
         // Initialize global Lua script bindings
         createGlobalBindings();
 
-
         return true;
     }
 
@@ -36,9 +33,34 @@ namespace Blink {
         lua_close(L);
     }
 
-    void LuaEngine::recreateEntityBindings(entt::registry* entityRegistry) {
-        std::system("cmake -D LUA_DIR=../../lua -D OUTPUT_DIR=./lua -P ../../cmake/compile_lua.cmake");
+    void LuaEngine::reload(entt::registry* entityRegistry) const {
+        compileLuaFiles();
         createEntityBindings(entityRegistry);
+    }
+
+    void LuaEngine::createEntityBindings(entt::registry* entityRegistry) const {
+        EntityLuaBinding::initialize(L, entityRegistry);
+        for (entt::entity entity : entityRegistry->view<LuaComponent>()) {
+            const LuaComponent& luaComponent = entityRegistry->get<LuaComponent>(entity);
+            const std::string& tableName = luaComponent.type;
+            const std::string& filepath = luaComponent.filepath;
+            lua_newtable(L);
+            lua_setglobal(L, tableName.c_str());
+            if (luaL_dofile(L, filepath.c_str()) != LUA_OK) {
+                BL_LOG_ERROR(
+                    "Could not load Lua script [{}] for entity of type [{}]: {}",
+                    filepath,
+                    tableName,
+                    lua_tostring(L, -1)
+                );
+                throw std::runtime_error("Could not load Lua script");
+            }
+            BL_LOG_INFO(
+                "Loaded Lua script [{}] for entity of type [{}]",
+                filepath,
+                tableName
+            );
+        }
     }
 
     void LuaEngine::updateEntityBindings(entt::registry* entityRegistry, double timestep) const {
@@ -70,29 +92,18 @@ namespace Blink {
         }
     }
 
-    void LuaEngine::createEntityBindings(entt::registry* entityRegistry) const {
-        EntityLuaBinding::initialize(L, entityRegistry);
-        for (entt::entity entity : entityRegistry->view<LuaComponent>()) {
-            const LuaComponent& luaComponent = entityRegistry->get<LuaComponent>(entity);
-            const std::string& tableName = luaComponent.type;
-            const std::string& filepath = luaComponent.filepath;
-            lua_newtable(L);
-            lua_setglobal(L, tableName.c_str());
-            if (luaL_dofile(L, filepath.c_str()) != LUA_OK) {
-                BL_LOG_ERROR(
-                    "Could not load Lua script [{}] for entity [{}] of type [{}]: {}",
-                    filepath,
-                    entity,
-                    tableName,
-                    lua_tostring(L, -1)
-                );
-            }
-            BL_LOG_INFO("Loaded Lua script [{}] for entity [{}] of type [{}] successfully", filepath);
-        }
-    }
-
     void LuaEngine::createGlobalBindings() const {
         KeyboardLuaBinding::initialize(L, keyboard);
+    }
+
+    void LuaEngine::compileLuaFiles() {
+        std::stringstream ss;
+        ss << "cmake";
+        ss << " -D LUA_SOURCE_DIR=" << CMAKE_LUA_SOURCE_DIR;
+        ss << " -D LUA_OUTPUT_DIR=" << CMAKE_LUA_OUTPUT_DIR;
+        ss << " -P " << CMAKE_SCRIPTS_DIR << "/compile_lua.cmake";
+        std::string command = ss.str();
+        std::system(command.c_str());
     }
 
     int LuaEngine::luaPrint(lua_State* L) {
