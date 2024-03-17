@@ -3,8 +3,9 @@
 #include <cli.h>
 
 namespace BlinkCLI {
-    CLI::Command build();
     CLI::Command generate();
+    CLI::Command build();
     CLI::Command run();
-    CLI::Command shaders();
+    CLI::Command compileLua();
+    CLI::Command compileShaders();
 }

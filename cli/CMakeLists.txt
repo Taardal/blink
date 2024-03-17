@@ -17,20 +17,24 @@ add_executable(
         ${SRC_DIR}/pch.cpp
         ${SRC_DIR}/pch.h
         ${SRC_DIR}/commands/commands.h
-        ${SRC_DIR}/commands/build.cpp
         ${SRC_DIR}/commands/generate.cpp
+        ${SRC_DIR}/commands/build.cpp
         ${SRC_DIR}/commands/run.cpp
-        ${SRC_DIR}/commands/shaders.cpp
+        ${SRC_DIR}/commands/compileLua.cpp
+        ${SRC_DIR}/commands/compileShaders.cpp
 )
 
 set_target_properties(
         ${PROJECT_NAME}
         PROPERTIES
-        RUNTIME_OUTPUT_NAME blink
+        RUNTIME_OUTPUT_NAME bl
         RUNTIME_OUTPUT_DIRECTORY ${BIN_DIR}
         RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BIN_DIR}/debug
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_DIR}/release
 )
+
+get_target_property(BINARY_NAME ${PROJECT_NAME} RUNTIME_OUTPUT_NAME)
+add_definitions(-DCMAKE_BINARY_NAME="${BINARY_NAME}")
 
 # Set install command working directory to CLI project root (blink/cli/)
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
@@ -39,7 +43,7 @@ set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 install(
         FILES $<TARGET_FILE:${PROJECT_NAME}>
         DESTINATION ..
-        RENAME bl
+        RENAME ${BINARY_NAME}
 )
 
 #########################################
