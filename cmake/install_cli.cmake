@@ -1,27 +1,18 @@
 message("
 #######################################
-#  Setting up...                      #
+# Setting up...                       #
 #######################################
 ")
 
-option(RELEASE "Use Release as the CMake build type" OFF)
-option(NINJA "Use Ninja as the CMake generator" OFF)
-
-# CMake build type (default: Debug)
-if (RELEASE)
-    set(CMAKE_BUILD_TYPE "Release")
-else ()
-    set(CMAKE_BUILD_TYPE "Debug")
-endif ()
-message("-- Using CMake build type [${CMAKE_BUILD_TYPE}]")
-
-# CMake generator (default: System detect)
-if (NINJA)
-    set(GENERATOR "Ninja")
-endif ()
+option(GENERATOR "Which CMake generator to use" OFF)
 if (GENERATOR)
     message("-- Using CMake generator [${GENERATOR}]")
 endif ()
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+    set(CMAKE_BUILD_TYPE Debug)
+endif ()
+message("-- Using CMake build type [${CMAKE_BUILD_TYPE}]")
 
 # Work from the CLI directory (`<project root>/cli`)
 if ("${CMAKE_CURRENT_SOURCE_DIR}" MATCHES "/cmake$")
@@ -40,7 +31,7 @@ message("-- Using CMake build directory [${BUILD_DIRECTORY}]")
 
 message("
 #######################################
-#  Generating build files...          #
+# Generating build files...           #
 #######################################
 ")
 
@@ -58,7 +49,7 @@ execute_process(
 
 message("
 #######################################
-#  Building binary...                 #
+# Building binary...                  #
 #######################################
 ")
 
@@ -66,7 +57,7 @@ execute_process(COMMAND cmake --build "${BUILD_DIRECTORY}" --config "${CMAKE_BUI
 
 message("
 #######################################
-#  Installing binary...               #
+# Installing binary...                #
 #######################################
 ")
 

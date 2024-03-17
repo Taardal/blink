@@ -2,36 +2,47 @@
 #include "commands.h"
 
 namespace BlinkCLI {
-
     CLI::Command build() {
-        CLI::Option buildDirectoryOption;
-        buildDirectoryOption.Name = "buildDirectory";
-        buildDirectoryOption.Usage = "Where to store build files generated with CMake";
-        buildDirectoryOption.DefaultValue = "build";
-        buildDirectoryOption.Aliases = {"d", "dir"};
+        CLI::Option buildTypeOption;
+        buildTypeOption.name = "buildType";
+        buildTypeOption.usage = "Which CMake build type to use";
+        buildTypeOption.aliases = { "t" };
+        buildTypeOption.defaultValue = "Debug";
 
-        CLI::Option releaseOption;
-        releaseOption.Name = "release";
-        releaseOption.Usage = "Use Release mode";
-        releaseOption.Aliases = {"r"};
+        CLI::Option useReleaseBuildTypeOption;
+        useReleaseBuildTypeOption.name = "release";
+        useReleaseBuildTypeOption.usage = "Use Release as CMake build type. Overrides 'buildType' option.";
+        useReleaseBuildTypeOption.aliases = { "r" };
 
         CLI::Command command;
-        command.Name = "build";
-        command.Usage = "Build project";
-        command.Options = {
-                buildDirectoryOption,
-                releaseOption
+        command.name = "build";
+        command.usage = "Build project";
+        command.options = {
+            buildTypeOption,
+            useReleaseBuildTypeOption,
         };
-        command.Action = [](const CLI::Context& context) -> void {
-            std::string_view buildType = context.hasOption("release") ? "Release" : "Debug";
-            std::string_view buildDirectory = context.Command->getOptionValue("buildDirectory");
+        command.action = [](const CLI::Context& context) -> void {
+            std::string buildType;
+            if (context.hasOption("release")) {
+                buildType = "Release";
+            } else if (context.hasOption("buildType")) {
+                buildType = context.getOption("buildType")->value;
+            } else {
+                buildType = context.command->getOption("buildType")->defaultValue;
+            }
+            std::string buildTypeDirectoryName;
+            buildTypeDirectoryName.reserve(buildType.size());
+            for (char character : buildType) {
+                buildTypeDirectoryName.push_back(std::tolower(character));
+            }
 
             std::stringstream ss;
-            ss << "cmake --build " << buildDirectory << " --config " << buildType;
+            ss << "cmake";
+            ss << " --build build/" << buildTypeDirectoryName;
+            ss << " --config " << buildType;
 
-            std::string command = ss.str();
-            printf("%s\n", command.c_str());
-            std::system(command.c_str());
+            std::string systemCommand = ss.str();
+            std::system(systemCommand.c_str());
         };
         return command;
     }

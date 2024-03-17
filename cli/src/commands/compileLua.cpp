@@ -2,36 +2,26 @@
 #include "commands.h"
 
 namespace BlinkCLI {
-    CLI::Command run() {
-        CLI::Option buildOption;
-        buildOption.name = "build";
-        buildOption.usage = "Also run 'build' command to build binary using CMake.";
-        buildOption.aliases = { "b" };
-
+    CLI::Command compileLua() {
         CLI::Option buildTypeOption;
         buildTypeOption.name = "buildType";
-        buildTypeOption.usage = "Which CMake build type to use. Used with 'build' option.";
+        buildTypeOption.usage = "Which CMake build type to use";
         buildTypeOption.aliases = { "t" };
         buildTypeOption.defaultValue = "Debug";
 
         CLI::Option useReleaseBuildTypeOption;
         useReleaseBuildTypeOption.name = "release";
-        useReleaseBuildTypeOption.usage = "Use Release as CMake build type. Used with 'build' option. Overrides 'buildType' option.";
+        useReleaseBuildTypeOption.usage = "Use Release as CMake build type. Overrides 'buildType' option.";
         useReleaseBuildTypeOption.aliases = { "r" };
 
         CLI::Command command;
-        command.name = "run";
-        command.usage = "Run project";
+        command.name = "compile:lua";
+        command.usage = "Compile lua";
         command.options = {
-            buildOption,
             buildTypeOption,
-            useReleaseBuildTypeOption,
+            useReleaseBuildTypeOption
         };
         command.action = [](const CLI::Context& context) -> void {
-            if (context.hasOption("build")) {
-                context.app->runCommand("build", context);
-            }
-
             std::string buildType;
             if (context.hasOption("release")) {
                 buildType = "Release";
@@ -46,15 +36,12 @@ namespace BlinkCLI {
                 buildTypeDirectoryName.push_back(std::tolower(character));
             }
 
-            std::string blinkRootDirectory = std::filesystem::current_path();
-            std::filesystem::current_path(blinkRootDirectory + "/bin/" + buildTypeDirectoryName);
-
             std::stringstream ss;
-#ifdef _WIN32
-            ss << "start blink.exe"; // Windows
-#else
-            ss << "./blink"; // Linux and macOS
-#endif
+            ss << "cmake";
+            ss << " -D LUA_SOURCE_DIR=lua";
+            ss << " -D LUA_OUTPUT_DIR=bin/" << buildTypeDirectoryName << "/lua";
+            ss << " -P cmake/compile_lua.cmake";
+
             std::string systemCommand = ss.str();
             std::system(systemCommand.c_str());
         };

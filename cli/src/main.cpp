@@ -3,14 +3,15 @@
 
 int main(int argc, char* argv[]) {
     CLI::App app;
-    app.Name = "blink";
-    app.Usage = "Blink CLI";
-    app.Commands = {
-            BlinkCLI::build(),
+    app.name = "blink";
+    app.usage = "Blink CLI";
+    app.commands = {
             BlinkCLI::generate(),
+            BlinkCLI::build(),
             BlinkCLI::run(),
-            BlinkCLI::shaders(),
+            BlinkCLI::compileLua(),
+            BlinkCLI::compileShaders(),
     };
-    app.Run(argc, argv);
+    app.run(argc, argv);
     return 0;
 }

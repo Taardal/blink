@@ -3,53 +3,69 @@
 
 namespace BlinkCLI {
     CLI::Command generate() {
-        CLI::Option generatorOption;
-        generatorOption.Name = "generator";
-        generatorOption.Usage = "Which CMake generator to use";
-        generatorOption.Aliases = { "g" };
-
-        CLI::Option useNinjaGeneratorOption;
-        useNinjaGeneratorOption.Name = "ninja";
-        useNinjaGeneratorOption.Usage = "Use Ninja as CMake generator (overrides 'generator' option)";
-        useNinjaGeneratorOption.Aliases = { "n" };
-
         CLI::Option buildTypeOption;
-        buildTypeOption.Name = "buildType";
-        buildTypeOption.Usage = "Which CMake build type to use";
-        buildTypeOption.DefaultValue = "Debug";
-        buildTypeOption.Aliases = { "t" };
+        buildTypeOption.name = "buildType";
+        buildTypeOption.usage = "Which CMake build type to use.";
+        buildTypeOption.aliases = { "t" };
+        buildTypeOption.defaultValue = "Debug";
 
         CLI::Option useReleaseBuildTypeOption;
-        useReleaseBuildTypeOption.Name = "release";
-        useReleaseBuildTypeOption.Usage = "Use Release as CMake build type (overrides 'buildType' option)";
-        useReleaseBuildTypeOption.Aliases = { "r" };
+        useReleaseBuildTypeOption.name = "release";
+        useReleaseBuildTypeOption.usage = "Use Release as CMake build type. Overrides 'buildType' option.";
+        useReleaseBuildTypeOption.aliases = { "r" };
+
+        CLI::Option generatorOption;
+        generatorOption.name = "generator";
+        generatorOption.usage = "Which CMake generator to use.";
+        generatorOption.aliases = { "g" };
+
+        CLI::Option useNinjaGeneratorOption;
+        useNinjaGeneratorOption.name = "ninja";
+        useNinjaGeneratorOption.usage = "Use Ninja as CMake generator. Overrides 'generator' option.";
+        useNinjaGeneratorOption.aliases = { "n" };
 
         CLI::Command command;
-        command.Name = "generate";
-        command.Usage = "Generate project files using CMake";
-        command.Aliases = { "gen" };
-        command.Options = {
-            generatorOption,
-            useNinjaGeneratorOption,
+        command.name = "generate";
+        command.usage = "Generate project files using CMake";
+        command.aliases = { "gen" };
+        command.options = {
             buildTypeOption,
-            useReleaseBuildTypeOption
+            useReleaseBuildTypeOption,
+            generatorOption,
+            useNinjaGeneratorOption
         };
-        command.Action = [](const CLI::Context& context) -> void {
-            const CLI::Option* generatorOption = context.Command->getOption("generator");
-            const std::string_view generator = context.hasOption("ninja") ? "Ninja" : generatorOption->getValueOrDefault();
+        command.action = [](const CLI::Context& context) -> void {
+            std::string generator;
+            if (context.hasOption("ninja")) {
+                generator = "Ninja";
+            } else if (context.hasOption("generator")) {
+                generator = context.getOption("generator")->value;
+            }
 
-            const CLI::Option* buildTypeOption = context.Command->getOption("buildType");
-            const std::string_view buildType = context.hasOption("release") ? "Release" : buildTypeOption->getValueOrDefault();
+            std::string buildType;
+            if (context.hasOption("release")) {
+                buildType = "Release";
+            } else if (context.hasOption("buildType")) {
+                buildType = context.getOption("buildType")->value;
+            } else {
+                buildType = context.command->getOption("buildType")->defaultValue;
+            }
+            std::string buildTypeDirectoryName;
+            buildTypeDirectoryName.reserve(buildType.size());
+            for (char character : buildType) {
+                buildTypeDirectoryName.push_back(std::tolower(character));
+            }
 
             std::stringstream ss;
             ss << "cmake";
+            ss << " -D CMAKE_EXPORT_COMPILE_COMMANDS=1";
             ss << " -D CMAKE_BUILD_TYPE=" << buildType;
+            ss << " -S .";
+            ss << " -B build/" << buildTypeDirectoryName;
             if (generator.length() > 0) {
-                ss << " -D GENERATOR=" << generator;
+                ss << " -G " << generator;
             }
-            ss << " -P cmake/generate.cmake";
-
-            const std::string systemCommand = ss.str();
+            std::string systemCommand = ss.str();
             std::system(systemCommand.c_str());
         };
         return command;
