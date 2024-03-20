@@ -34,24 +34,6 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
-        #        ${SRC_DIR}/LuaClient.cpp
-        #        ${SRC_DIR}/LuaClient.h
-        #        ${SRC_DIR}/LuaEngine.cpp
-        #        ${SRC_DIR}/LuaEngine.h
-        #        ${SRC_DIR}/LuaEngineListener.h
-        #        ${SRC_DIR}/LuaGraphicsEngine.cpp
-        #        ${SRC_DIR}/LuaGraphicsEngine.h
-        ${SRC_DIR}/game/Camera.cpp
-        ${SRC_DIR}/game/Camera.h
-        ${SRC_DIR}/game/Components.h
-        ${SRC_DIR}/game/Game.cpp
-        ${SRC_DIR}/game/Game.h
-        ${SRC_DIR}/game/GameModule.cpp
-        ${SRC_DIR}/game/GameModule.h
-        ${SRC_DIR}/game/Scene.cpp
-        ${SRC_DIR}/game/Scene.h
-        ${SRC_DIR}/graphics/GraphicsModule.cpp
-        ${SRC_DIR}/graphics/GraphicsModule.h
         ${SRC_DIR}/graphics/Quad.h
         ${SRC_DIR}/graphics/Renderer.cpp
         ${SRC_DIR}/graphics/Renderer.h
@@ -91,12 +73,13 @@ add_executable(
         ${SRC_DIR}/lua/KeyboardLuaBinding.h
         ${SRC_DIR}/lua/LuaEngine.cpp
         ${SRC_DIR}/lua/LuaEngine.h
-        ${SRC_DIR}/lua/LuaFunction.cpp
-        ${SRC_DIR}/lua/LuaFunction.h
-        ${SRC_DIR}/lua/LuaModule.cpp
-        ${SRC_DIR}/lua/LuaModule.h
         ${SRC_DIR}/lua/luaUtils.cpp
         ${SRC_DIR}/lua/luaUtils.h
+        ${SRC_DIR}/scene/Camera.cpp
+        ${SRC_DIR}/scene/Camera.h
+        ${SRC_DIR}/scene/Components.h
+        ${SRC_DIR}/scene/Scene.cpp
+        ${SRC_DIR}/scene/Scene.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/FileSystem.cpp
@@ -105,8 +88,6 @@ add_executable(
         ${SRC_DIR}/system/Log.h
         ${SRC_DIR}/system/Random.cpp
         ${SRC_DIR}/system/Random.h
-        ${SRC_DIR}/system/SystemModule.cpp
-        ${SRC_DIR}/system/SystemModule.h
         ${SRC_DIR}/system/Uuid.cpp
         ${SRC_DIR}/system/Uuid.h
         ${SRC_DIR}/utils/size.h
@@ -114,8 +95,6 @@ add_executable(
         ${SRC_DIR}/window/Keyboard.h
         ${SRC_DIR}/window/Window.cpp
         ${SRC_DIR}/window/Window.h
-        ${SRC_DIR}/window/WindowModule.cpp
-        ${SRC_DIR}/window/WindowModule.h
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})

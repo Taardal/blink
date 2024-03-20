@@ -8,7 +8,6 @@
 #define BL_VK_ALLOCATOR nullptr
 
 namespace Blink {
-
     struct VulkanConfig {
         std::string applicationName;
         std::string engineName;
@@ -24,18 +23,21 @@ namespace Blink {
         bool validationLayersEnabled = false;
 
     public:
-        explicit Vulkan(Window* window);
+        Vulkan(const VulkanConfig& vulkanConfig, Window* window);
+
+        ~Vulkan();
 
         std::vector<VkPhysicalDevice> getPhysicalDevices() const;
 
         VkSurfaceKHR getSurface() const;
 
-        bool initialize(const VulkanConfig& vulkanConfig);
-
-        void terminate();
-
     private:
-        bool createInstance(const VulkanConfig& vulkanConfig, const std::vector<const char*>& requiredExtensions, const std::vector<const char*>& validationLayers, const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo);
+        bool createInstance(
+            const VulkanConfig& vulkanConfig,
+            const std::vector<const char*>& requiredExtensions,
+            const std::vector<const char*>& validationLayers,
+            const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo
+        );
 
         void destroyInstance();
 

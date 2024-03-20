@@ -21,6 +21,8 @@ namespace Blink {
     public:
         VulkanSwapChain(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice, Vulkan* vulkan, Window* window);
 
+        ~VulkanSwapChain();
+
         VkSwapchainKHR getSwapChain() const;
 
         const VkSurfaceFormatKHR& getSurfaceFormat() const;

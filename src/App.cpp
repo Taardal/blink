@@ -1,66 +1,78 @@
 #include "App.h"
 
 namespace Blink {
-    App::App(AppConfig appConfig)
-        : appConfig(std::move(appConfig)),
-          systemModule(new SystemModule()),
-          windowModule(new WindowModule()),
-          graphicsModule(new GraphicsModule(systemModule, windowModule)),
-          luaModule(new LuaModule(windowModule)),
-          gameModule(new GameModule(windowModule, graphicsModule, luaModule)) {
+    void runApp(const AppConfig& config) {
+        Log::SetLevel(config.logLevel);
+        App* app;
+        try {
+            app = new App(config);
+        } catch (const std::exception& e) {
+            BL_LOG_CRITICAL("Initialization error: {}", e.what());
+            return;
+        }
+        try {
+            app->run();
+        } catch (const std::exception& e) {
+            BL_LOG_CRITICAL("Runtime error: {}", e.what());
+        }
+        delete app;
+    }
+}
+
+namespace Blink {
+    App::App(const AppConfig& appConfig) {
+        fileSystem = new FileSystem();
+        window = new Window(appConfig);
+        keyboard = new Keyboard(window);
+
+        VulkanConfig vulkanConfig{};
+        vulkanConfig.applicationName = appConfig.windowTitle;
+        vulkanConfig.engineName = appConfig.windowTitle;
+        vulkanConfig.validationLayersEnabled = Environment::isDebug();
+        vulkan = new Vulkan(vulkanConfig, window);
+        physicalDevice = new VulkanPhysicalDevice(vulkan);
+        device = new VulkanDevice(physicalDevice);
+        swapChain = new VulkanSwapChain(device, physicalDevice, vulkan, window);
+        renderPass = new VulkanRenderPass(swapChain, device);
+        commandPool = new VulkanCommandPool(device, physicalDevice);
+        renderer = new Renderer(fileSystem, window, physicalDevice, device, swapChain, renderPass, commandPool);
+
+        luaEngine = new LuaEngine(keyboard);
+        camera = new Camera(window, keyboard);
+        scene = new Scene(keyboard, luaEngine);
     }
 
     App::~App() {
-        delete gameModule;
-        delete luaModule;
-        delete graphicsModule;
-        delete windowModule;
-        delete systemModule;
+        delete scene;
+        delete camera;
+        delete luaEngine;
+
+        delete renderer;
+        delete commandPool;
+        delete renderPass;
+        delete swapChain;
+        delete device;
+        delete physicalDevice;
+        delete vulkan;
+
+        delete keyboard;
+        delete window;
+        delete fileSystem;
     }
 
     void App::run() const {
-        if (!initialize()) {
-            BL_LOG_CRITICAL("Could not initialize app");
-            return;
-        }
-        Game* game = gameModule->game;
-        try {
-            game->run();
-        } catch (std::exception& e) {
-            BL_LOG_CRITICAL("Could not run game: {}", e.what());
-        }
-        terminate();
-    }
+        while (!window->shouldClose()) {
+            double timestep = window->update();
+            camera->update(timestep);
 
-    bool App::initialize() const {
-        if (!systemModule->initialize(appConfig)) {
-            BL_LOG_ERROR("Could not initialize system module");
-            return false;
-        }
-        if (!windowModule->initialize(appConfig)) {
-            BL_LOG_ERROR("Could not initialize window module");
-            return false;
-        }
-        if (!graphicsModule->initialize(appConfig)) {
-            BL_LOG_ERROR("Could not initialize graphics module");
-            return false;
-        }
-        if (!luaModule->initialize()) {
-            BL_LOG_ERROR("Could not initialize lua module");
-            return false;
-        }
-        if (!gameModule->initialize()) {
-            BL_LOG_ERROR("Could not initialize game module");
-            return false;
-        }
-        return true;
-    }
+            glm::mat4 playerModel = scene->update(timestep);
 
-    void App::terminate() const {
-        gameModule->terminate();
-        luaModule->terminate();
-        graphicsModule->terminate();
-        windowModule->terminate();
-        systemModule->terminate();
+            Frame frame{};
+            frame.model = playerModel;
+            frame.view = camera->getViewMatrix();
+            frame.projection = camera->getProjectionMatrix();
+
+            renderer->render(frame);
+        }
     }
 }

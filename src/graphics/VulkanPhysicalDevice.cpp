@@ -3,8 +3,24 @@
 
 namespace Blink {
 
-    VulkanPhysicalDevice::VulkanPhysicalDevice(Vulkan* vulkan)
-            : vulkan(vulkan) {}
+    VulkanPhysicalDevice::VulkanPhysicalDevice(Vulkan* vulkan) : vulkan(vulkan) {
+        std::vector<VkPhysicalDevice> availableDevices = vulkan->getPhysicalDevices();
+        if (availableDevices.empty()) {
+            throw std::runtime_error("Could not find any physical devices");
+        }
+        std::vector<const char*> requiredExtensions = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    };
+        if (Environment::isMacOS()) {
+            requiredExtensions.push_back("VK_KHR_portability_subset");
+        }
+        VulkanPhysicalDeviceInfo mostSuitableDeviceInfo = getMostSuitableDevice(availableDevices, requiredExtensions);
+        if (mostSuitableDeviceInfo.physicalDevice == nullptr) {
+            throw std::runtime_error("Could not get any suitable device");
+        }
+        this->deviceInfo = mostSuitableDeviceInfo;
+        BL_LOG_INFO("Using physical device [{}]", mostSuitableDeviceInfo.properties.deviceName);
+    }
 
     const std::vector<VkExtensionProperties>& VulkanPhysicalDevice::getExtensions() const {
         return deviceInfo.extensions;
@@ -20,32 +36,6 @@ namespace Blink {
 
     const SwapChainInfo& VulkanPhysicalDevice::getSwapChainInfo() const {
         return deviceInfo.swapChainInfo;
-    }
-
-    bool VulkanPhysicalDevice::initialize() {
-        std::vector<VkPhysicalDevice> availableDevices = vulkan->getPhysicalDevices();
-        if (availableDevices.empty()) {
-            BL_LOG_ERROR("Could not find any physical devices");
-            return false;
-        }
-        std::vector<const char*> requiredExtensions = {
-                VK_KHR_SWAPCHAIN_EXTENSION_NAME
-        };
-        if (Environment::isMacOS()) {
-            requiredExtensions.push_back("VK_KHR_portability_subset");
-        }
-        VulkanPhysicalDeviceInfo mostSuitableDeviceInfo = getMostSuitableDevice(availableDevices, requiredExtensions);
-        if (mostSuitableDeviceInfo.physicalDevice == nullptr) {
-            BL_LOG_ERROR("Could not get any suitable device");
-            return false;
-        }
-        this->deviceInfo = mostSuitableDeviceInfo;
-        BL_LOG_INFO("Using physical device [{}]", mostSuitableDeviceInfo.properties.deviceName);
-        return true;
-    }
-
-    void VulkanPhysicalDevice::terminate() const {
-
     }
 
     void VulkanPhysicalDevice::updateSwapChainInfo() {

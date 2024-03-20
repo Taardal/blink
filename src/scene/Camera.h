@@ -32,10 +32,6 @@ namespace Blink {
 
         glm::mat4 getProjectionMatrix() const;
 
-        bool initialize();
-
-        void terminate();
-
         void update(double timestep);
 
         void processKeyboardInput(float timestep);

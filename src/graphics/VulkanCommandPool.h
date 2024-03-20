@@ -13,9 +13,7 @@ namespace Blink {
     public:
         VulkanCommandPool(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
 
-        bool initialize();
-
-        void terminate();
+        ~VulkanCommandPool();
 
         bool allocateCommandBuffers(std::vector<VkCommandBuffer>* commandBuffers) const;
 

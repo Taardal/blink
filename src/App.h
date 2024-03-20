@@ -1,34 +1,37 @@
 #pragma once
 
 #include "AppConfig.h"
-#include "system/SystemModule.h"
-#include "window/WindowModule.h"
-#include "graphics/GraphicsModule.h"
-#include "lua/LuaModule.h"
-#include "game/GameModule.h"
+#include "window/Window.h"
+#include "graphics/Renderer.h"
+#include "scene/Camera.h"
+#include "scene/Scene.h"
+
+namespace Blink {
+    void runApp(const AppConfig& config);
+}
 
 namespace Blink {
     class App {
     private:
-        AppConfig appConfig;
-        SystemModule* systemModule;
-        WindowModule* windowModule;
-        GraphicsModule* graphicsModule;
-        LuaModule* luaModule;
-        GameModule* gameModule;
+        FileSystem* fileSystem = nullptr;
+        Window* window = nullptr;
+        Keyboard* keyboard = nullptr;
+        Vulkan* vulkan = nullptr;
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanSwapChain* swapChain = nullptr;
+        VulkanRenderPass* renderPass = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+        Renderer* renderer = nullptr;
+        LuaEngine* luaEngine = nullptr;
+        Camera* camera = nullptr;
+        Scene* scene = nullptr;
 
     public:
-        explicit App(AppConfig appConfig);
+        explicit App(const AppConfig& appConfig);
 
         ~App();
 
         void run() const;
-
-    private:
-        bool initialize() const;
-
-        void terminate() const;
     };
 }
-
-

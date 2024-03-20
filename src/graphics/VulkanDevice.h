@@ -21,13 +21,11 @@ namespace Blink {
     public:
         explicit VulkanDevice(VulkanPhysicalDevice* physicalDevice);
 
+        ~VulkanDevice();
+
         VkQueue getGraphicsQueue() const;
 
         VkQueue getPresentQueue() const;
-
-        bool initialize();
-
-        void terminate() const;
 
         void waitUntilIdle() const;
 

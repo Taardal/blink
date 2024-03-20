@@ -17,9 +17,7 @@ namespace Blink {
     public:
         Scene(Keyboard* keyboard, LuaEngine* luaEngine);
 
-        bool initialize();
-
-        void terminate();
+        ~Scene();
 
         glm::mat4 update(double timestep);
 

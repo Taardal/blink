@@ -3,34 +3,10 @@
 #include "GLFW/glfw3.h"
 
 namespace Blink {
-    GLFWwindow* Window::getGlfwWindow() const {
-        return glfwWindow;
-    }
-
-    WindowSize Window::getSizeInPixels() const {
-        int32_t width = 0;
-        int32_t height = 0;
-        getSizeInPixels(&width, &height);
-        return { width, height };
-    }
-
-    void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
-        glfwGetFramebufferSize(glfwWindow, width, height);
-    };
-
-    void Window::setResizeListener(const std::function<void(uint32_t, uint32_t)>& onResize) {
-        callbackData.onResize = onResize;
-    };
-
-    void Window::setMinimizeListener(const std::function<void(bool)>& onMinimize) {
-        callbackData.onMinimize = onMinimize;
-    };
-
-    bool Window::initialize(const AppConfig& config) {
+    Window::Window(const AppConfig& config) {
         bool glfwInitialized = glfwInit();
         if (!glfwInitialized) {
-            BL_LOG_ERROR("Could not initialize GLFW");
-            return false;
+            throw std::runtime_error("Could not initialize GLFW");
         }
         BL_LOG_INFO("Initialized GLFW");
 
@@ -53,8 +29,7 @@ namespace Blink {
                 sharedWindow
         );
         if (!glfwWindow) {
-            BL_LOG_ERROR("Could not create GLFW window");
-            return false;
+            throw std::runtime_error("Could not create GLFW window");
         }
         BL_LOG_INFO("Created GLFW window");
 
@@ -62,15 +37,36 @@ namespace Blink {
         glfwSetFramebufferSizeCallback(glfwWindow, onFramebufferSizeChange);
         glfwSetWindowIconifyCallback(glfwWindow, onWindowIconifyChange);
         glfwSetKeyCallback(glfwWindow, onKeyChange);
-
-        return true;
     }
 
-    void Window::terminate() const {
+    Window::~Window() {
         glfwDestroyWindow(glfwWindow);
         BL_LOG_INFO("Destroyed GLFW window");
         glfwTerminate();
         BL_LOG_INFO("Terminated GLFW");
+    }
+
+    GLFWwindow* Window::getGlfwWindow() const {
+        return glfwWindow;
+    }
+
+    WindowSize Window::getSizeInPixels() const {
+        int32_t width = 0;
+        int32_t height = 0;
+        getSizeInPixels(&width, &height);
+        return { width, height };
+    }
+
+    void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
+        glfwGetFramebufferSize(glfwWindow, width, height);
+    };
+
+    void Window::setResizeListener(const std::function<void(uint32_t, uint32_t)>& onResize) {
+        callbackData.onResize = onResize;
+    };
+
+    void Window::setMinimizeListener(const std::function<void(bool)>& onMinimize) {
+        callbackData.onMinimize = onMinimize;
     }
 
     double Window::update() {

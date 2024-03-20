@@ -24,8 +24,55 @@ namespace Blink {
 
 namespace Blink {
 
-    Vulkan::Vulkan(Window* window)
-        : window(window) {}
+    Vulkan::Vulkan(const VulkanConfig& vulkanConfig, Window* window) : window(window) {
+        this->validationLayersEnabled = vulkanConfig.validationLayersEnabled;
+        if (!window->isVulkanSupported()) {
+            throw std::runtime_error("Vulkan is not supported");
+        }
+        std::vector<const char*> requiredExtensions = window->getRequiredVulkanExtensions();
+        if (std::count(requiredExtensions.begin(), requiredExtensions.end(), "VK_KHR_surface") == 0) {
+            throw std::runtime_error("Vulkan surface extension is not supported");
+        }
+        if (Environment::isMacOS()) {
+            requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+        }
+        if (validationLayersEnabled) {
+            requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+        if (!hasExtensions(requiredExtensions)) {
+            throw std::runtime_error("Could not find required extensions");
+        }
+        std::vector<const char*> validationLayers;
+        VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
+        if (validationLayersEnabled) {
+            validationLayers.push_back("VK_LAYER_KHRONOS_validation");
+            if (!hasValidationLayers(validationLayers)) {
+                throw std::runtime_error("Could not find validation layers");
+            }
+            debugMessengerCreateInfo = getDebugMessengerCreateInfo();
+        }
+        if (!createInstance(vulkanConfig, requiredExtensions, validationLayers, debugMessengerCreateInfo)) {
+            throw std::runtime_error("Could not create Vulkan instance");
+        }
+        BL_LOG_INFO("Created Vulkan instance");
+        if (validationLayersEnabled) {
+            if (!createDebugMessenger(debugMessengerCreateInfo)) {
+                throw std::runtime_error("Could not create debug messenger");
+            }
+        }
+        if (!createSurface()) {
+            throw std::runtime_error("Could not create surface");
+        }
+    }
+
+    Vulkan::~Vulkan() {
+        destroySurface();
+        if (validationLayersEnabled) {
+            destroyDebugMessenger();
+        }
+        destroyInstance();
+        BL_LOG_INFO("Destroyed Vulkan instance");
+    }
 
     std::vector<VkPhysicalDevice> Vulkan::getPhysicalDevices() const {
         uint32_t deviceCount = 0;
@@ -37,64 +84,6 @@ namespace Blink {
 
     VkSurfaceKHR Vulkan::getSurface() const {
         return surface;
-    }
-
-    bool Vulkan::initialize(const VulkanConfig& vulkanConfig) {
-        this->validationLayersEnabled = vulkanConfig.validationLayersEnabled;
-        if (!window->isVulkanSupported()) {
-            BL_LOG_ERROR("Vulkan is not supported");
-            return false;
-        }
-        std::vector<const char*> requiredExtensions = window->getRequiredVulkanExtensions();
-        if (std::count(requiredExtensions.begin(), requiredExtensions.end(), "VK_KHR_surface") == 0) {
-            BL_LOG_ERROR("Vulkan surface extension is not supported");
-            return false;
-        }
-        if (Environment::isMacOS()) {
-            requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-        }
-        if (validationLayersEnabled) {
-            requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        }
-        if (!hasExtensions(requiredExtensions)) {
-            BL_LOG_ERROR("Could not find required extensions");
-            return false;
-        }
-        std::vector<const char*> validationLayers;
-        VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
-        if (validationLayersEnabled) {
-            validationLayers.push_back("VK_LAYER_KHRONOS_validation");
-            if (!hasValidationLayers(validationLayers)) {
-                BL_LOG_ERROR("Could not find validation layers");
-                return false;
-            }
-            debugMessengerCreateInfo = getDebugMessengerCreateInfo();
-        }
-        if (!createInstance(vulkanConfig, requiredExtensions, validationLayers, debugMessengerCreateInfo)) {
-            BL_LOG_ERROR("Could not create Vulkan instance");
-            return false;
-        }
-        BL_LOG_INFO("Created Vulkan instance");
-        if (validationLayersEnabled) {
-            if (!createDebugMessenger(debugMessengerCreateInfo)) {
-                BL_LOG_ERROR("Could not create debug messenger");
-                return false;
-            }
-        }
-        if (!createSurface()) {
-            BL_LOG_ERROR("Could not create surface");
-            return false;
-        }
-        return true;
-    }
-
-    void Vulkan::terminate() {
-        destroySurface();
-        if (validationLayersEnabled) {
-            destroyDebugMessenger();
-        }
-        destroyInstance();
-        BL_LOG_INFO("Destroyed Vulkan instance");
     }
 
     bool Vulkan::createInstance(

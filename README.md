@@ -72,7 +72,7 @@ blink/
     - macOS: [Clang][clang] (Bundled with [Xcode][xcode])
     - Linux: [GCC][gcc]
 
-# :rocket Getting started
+# :rocket: Getting started
 
 **Script**
 
@@ -140,7 +140,7 @@ The project defines two custom targets: `CompileLua` and `CompileShaders`.
 The main target **depends** on both custom targets to ensure that both lua and shader files are compiled every time the
 app is built, regardless if any C++ source files have changed.
 
-#### `CompileLua`
+#### CompileLua
 
 _Invokes the `cmake/compile_lua.cmake` CMake script which..._
 
@@ -153,7 +153,7 @@ The files are compiled using the [luac][lua:luac] compiler that is bundled with 
 lua/*.lua   -->   luac   -->   bin/:buildType/lua/*.out   
 ```
 
-`CompileShaders`
+#### CompileShaders
 
 _Invokes the `cmake/compile_shaders.cmake` CMake script which..._
 
@@ -170,11 +170,11 @@ res/shaders/*.frag   -->   glslc   -->   bin/:buildType/shaders/*.frag.spv
 
 ### Preprocessor macros
 
-`CMAKE_SCRIPTS_DIR`
+#### CMAKE_SCRIPTS_DIR
 
 Path to the CMake scripts directory (`./cmake`) used by the app to invoke CMake scripts at runtime.
 
-`LUA_SOURCE_DIR + LUA_OUTPUT_DIR`
+#### LUA_SOURCE_DIR + LUA_OUTPUT_DIR
 
 Paths to the Lua source directory (`./lua`) and Lua output directory (`./bin/:buildType/lua`).
 

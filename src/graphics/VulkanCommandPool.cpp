@@ -3,10 +3,13 @@
 
 namespace Blink {
 
-    VulkanCommandPool::VulkanCommandPool(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
-            : device(device), physicalDevice(physicalDevice) {}
-
-    bool VulkanCommandPool::initialize() {
+    VulkanCommandPool::VulkanCommandPool(
+        VulkanDevice* device,
+        VulkanPhysicalDevice* physicalDevice
+    )
+        : device(device),
+          physicalDevice(physicalDevice)
+    {
         const QueueFamilyIndices& queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
 
         VkCommandPoolCreateInfo commandPoolCreateInfo{};
@@ -15,13 +18,11 @@ namespace Blink {
         commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
         if (device->createCommandPool(&commandPoolCreateInfo, &commandPool) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create Vulkan command pool");
-            return false;
+            throw std::runtime_error("Could not create Vulkan command pool");
         }
-        return true;
     }
 
-    void VulkanCommandPool::terminate() {
+    VulkanCommandPool::~VulkanCommandPool() {
         device->destroyCommandPool(commandPool);
     }
 

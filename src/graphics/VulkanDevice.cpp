@@ -3,8 +3,26 @@
 
 namespace Blink {
 
-    VulkanDevice::VulkanDevice(VulkanPhysicalDevice* physicalDevice)
-            : physicalDevice(physicalDevice) {}
+    VulkanDevice::VulkanDevice(VulkanPhysicalDevice* physicalDevice) : physicalDevice(physicalDevice) {
+        const QueueFamilyIndices& queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
+        if (!createDevice(queueFamilyIndices)) {
+            throw std::runtime_error("Could not create logical device");
+        }
+        BL_LOG_INFO("Created logical device");
+        this->graphicsQueue = getDeviceQueue(queueFamilyIndices.graphicsFamily.value());
+        if (graphicsQueue == nullptr) {
+            throw std::runtime_error("Could not get graphics queue");
+        }
+        this->presentQueue = getDeviceQueue(queueFamilyIndices.presentFamily.value());
+        if (presentQueue == nullptr) {
+            throw std::runtime_error("Could not get present queue");
+        }
+    }
+
+    VulkanDevice::~VulkanDevice() {
+        destroyDevice();
+        BL_LOG_INFO("Destroyed logical device");
+    }
 
     VkQueue VulkanDevice::getGraphicsQueue() const {
         return graphicsQueue;
@@ -12,31 +30,6 @@ namespace Blink {
 
     VkQueue VulkanDevice::getPresentQueue() const {
         return presentQueue;
-    }
-
-    bool VulkanDevice::initialize() {
-        const QueueFamilyIndices& queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
-        if (!createDevice(queueFamilyIndices)) {
-            BL_LOG_ERROR("Could not create logical device");
-            return false;
-        }
-        BL_LOG_INFO("Created logical device");
-        this->graphicsQueue = getDeviceQueue(queueFamilyIndices.graphicsFamily.value());
-        if (graphicsQueue == nullptr) {
-            BL_LOG_ERROR("Could not get graphics queue");
-            return false;
-        }
-        this->presentQueue = getDeviceQueue(queueFamilyIndices.presentFamily.value());
-        if (presentQueue == nullptr) {
-            BL_LOG_ERROR("Could not get present queue");
-            return false;
-        }
-        return true;
-    }
-
-    void VulkanDevice::terminate() const {
-        destroyDevice();
-        BL_LOG_INFO("Destroyed logical device");
     }
 
     void VulkanDevice::waitUntilIdle() const {

@@ -23,6 +23,10 @@ namespace Blink {
         double lastFrameTime = 0.0;
 
     public:
+        explicit Window(const AppConfig& config);
+
+        ~Window();
+
         GLFWwindow* getGlfwWindow() const;
 
         WindowSize getSizeInPixels() const;
@@ -32,10 +36,6 @@ namespace Blink {
         void setResizeListener(const std::function<void(uint32_t, uint32_t)>& onResize);
 
         void setMinimizeListener(const std::function<void(bool)>& onMinimize);
-
-        bool initialize(const AppConfig& config);
-
-        void terminate() const;
 
         double update();
 

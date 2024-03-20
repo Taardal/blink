@@ -2,8 +2,21 @@
 
 namespace Blink {
 
-    VulkanSwapChain::VulkanSwapChain(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice, Vulkan* vulkan, Window* window)
-            : device(device), physicalDevice(physicalDevice), vulkan(vulkan), window(window) {
+    VulkanSwapChain::VulkanSwapChain(
+    VulkanDevice* device,
+    VulkanPhysicalDevice* physicalDevice,
+    Vulkan* vulkan,
+    Window* window
+    ) : device(device),
+        physicalDevice(physicalDevice),
+        vulkan(vulkan),
+        window(window)
+    {
+        initialize();
+    }
+
+    VulkanSwapChain::~VulkanSwapChain() {
+        terminate();
     }
 
     VkSwapchainKHR VulkanSwapChain::getSwapChain() const {

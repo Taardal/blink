@@ -1,18 +1,14 @@
 #include "pch.h"
 #include "LuaEngine.h"
-#include "LuaFunction.h"
 #include "luaUtils.h"
 #include "EntityLuaBinding.h"
 #include "KeyboardLuaBinding.h"
-#include "game/Components.h"
+#include "scene/Components.h"
 
 #include <lua.hpp>
 
 namespace Blink {
     LuaEngine::LuaEngine(Keyboard* keyboard) : L(luaL_newstate()), keyboard(keyboard) {
-    }
-
-    bool LuaEngine::initialize() const {
         // Enable Lua standard libraries
         luaL_openlibs(L);
 
@@ -25,11 +21,9 @@ namespace Blink {
 
         // Initialize global Lua script bindings
         createGlobalBindings();
-
-        return true;
     }
 
-    void LuaEngine::terminate() const {
+    LuaEngine::~LuaEngine() {
         lua_close(L);
     }
 
