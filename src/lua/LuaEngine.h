@@ -3,7 +3,7 @@
 #include "EntityLuaBinding.h"
 #include "window/Keyboard.h"
 
-#include <lua/lua.hpp>
+#include <lua.hpp>
 
 namespace Blink {
     class LuaEngine {

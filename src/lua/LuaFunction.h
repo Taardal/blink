@@ -1,7 +1,7 @@
 #pragma once
 
 #include "luaUtils.h"
-#include <lua/lua.hpp>
+#include <lua.hpp>
 
 namespace Blink {
     struct LuaFunction {

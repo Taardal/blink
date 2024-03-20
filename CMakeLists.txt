@@ -1,20 +1,27 @@
 cmake_minimum_required(VERSION 3.17)
 project(blink)
 
+# Set C++ version
 set(CMAKE_CXX_STANDARD 17)
 
-set(BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
-set(CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake)
-set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
-set(LUA_DIR ${PROJECT_SOURCE_DIR}/lua)
-set(RES_DIR ${PROJECT_SOURCE_DIR}/res)
-set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
+# Generates a `compile_commands.json` file that contains compilation information for every source file in the project,
+# facilitating better integration with various development tools and ensuring consistent and accurate builds across different environments.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Ensure build type is always defined
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
     set(CMAKE_BUILD_TYPE Debug)
 endif ()
-
 string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_DIR_NAME)
+
+# Project directory paths
+set(BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
+set(CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake)
+set(DIST_DIR ${PROJECT_SOURCE_DIR}/dist)
+set(INSTALL_DIR ${PROJECT_SOURCE_DIR}/install)
+set(LUA_DIR ${PROJECT_SOURCE_DIR}/lua)
+set(RES_DIR ${PROJECT_SOURCE_DIR}/res)
+set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 
 #########################################
 # Main target                           #
@@ -27,13 +34,13 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
-#        ${SRC_DIR}/LuaClient.cpp
-#        ${SRC_DIR}/LuaClient.h
-#        ${SRC_DIR}/LuaEngine.cpp
-#        ${SRC_DIR}/LuaEngine.h
-#        ${SRC_DIR}/LuaEngineListener.h
-#        ${SRC_DIR}/LuaGraphicsEngine.cpp
-#        ${SRC_DIR}/LuaGraphicsEngine.h
+        #        ${SRC_DIR}/LuaClient.cpp
+        #        ${SRC_DIR}/LuaClient.h
+        #        ${SRC_DIR}/LuaEngine.cpp
+        #        ${SRC_DIR}/LuaEngine.h
+        #        ${SRC_DIR}/LuaEngineListener.h
+        #        ${SRC_DIR}/LuaGraphicsEngine.cpp
+        #        ${SRC_DIR}/LuaGraphicsEngine.h
         ${SRC_DIR}/game/Camera.cpp
         ${SRC_DIR}/game/Camera.h
         ${SRC_DIR}/game/Components.h
@@ -111,6 +118,9 @@ add_executable(
         ${SRC_DIR}/window/WindowModule.h
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
+target_precompile_headers(${PROJECT_NAME} PUBLIC ${SRC_DIR}/pch.h)
+
 set_target_properties(
         ${PROJECT_NAME}
         PROPERTIES
@@ -156,34 +166,116 @@ add_definitions(-DCMAKE_SHADERS_OUTPUT_DIR="${SHADERS_OUTPUT_DIR}")
 # Dependencies                          #
 #########################################
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})
-target_precompile_headers(${PROJECT_NAME} PUBLIC ${SRC_DIR}/pch.h)
-
-set(ENTT_LIB_DIR ${LIB_DIR}/entt)
-add_subdirectory(${ENTT_LIB_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${ENTT_LIB_DIR})
-target_link_libraries(${PROJECT_NAME} EnTT::EnTT)
-
-set(GLFW_LIB_DIR ${LIB_DIR}/glfw-3.3)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-add_subdirectory(${GLFW_LIB_DIR})
-target_compile_definitions(${PROJECT_NAME} PUBLIC GLFW_INCLUDE_NONE)
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_LIB_DIR}/include)
-target_link_libraries(${PROJECT_NAME} glfw ${GLFW_LIBRARIES})
 
-set(GLM_LIB_DIR ${LIB_DIR}/glm-0.9.9.6)
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_LIB_DIR})
+include(FetchContent)
+FetchContent_Declare(
+        entt
+        GIT_REPOSITORY https://github.com/skypjack/entt
+        GIT_TAG v3.13.1
+)
+FetchContent_Declare(
+        glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw
+        GIT_TAG 3.4
+)
+FetchContent_Declare(
+        glm
+        GIT_REPOSITORY https://github.com/g-truc/glm
+        GIT_TAG 1.0.1
+)
+FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog
+        GIT_TAG v1.9.2
+)
+FetchContent_MakeAvailable(
+        entt
+        glfw
+        glm
+        spdlog
+)
 
-set(LUA_LIB_DIR lib/lua-5.4.0)
-add_subdirectory(${LUA_LIB_DIR})
-target_include_directories(${PROJECT_NAME} PRIVATE ${LUA_LIB_DIR}/include)
-target_link_libraries(${PROJECT_NAME} lua)
+target_link_libraries(${PROJECT_NAME} EnTT::EnTT)
+target_link_libraries(${PROJECT_NAME} glfw)
+target_link_libraries(${PROJECT_NAME} glm::glm)
+target_link_libraries(${PROJECT_NAME} spdlog::spdlog)
 
-set(SPDLOG_LIB_DIR ${LIB_DIR}/spdlog-1.4.2)
-target_include_directories(${PROJECT_NAME} PUBLIC ${SPDLOG_LIB_DIR}/include)
+find_package(Lua REQUIRED)
+target_include_directories(${PROJECT_NAME} PRIVATE ${LUA_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} ${LUA_LIBRARIES})
 
 find_package(Vulkan REQUIRED)
 target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
+target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+
+#########################################
+# Installation                          #
+#########################################
+
+# Output directory for the installed targets
+set(CMAKE_INSTALL_PREFIX ${INSTALL_DIR})
+
+if (APPLE)
+    # Set RPATH
+    # - https://en.wikipedia.org/wiki/Rpath
+    set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "@executable_path/lib")
+endif ()
+
+# Install executable
+install(TARGETS ${PROJECT_NAME} DESTINATION .)
+
+# Install resources
+install(DIRECTORY ${LUA_OUTPUT_DIR} DESTINATION .)
+install(DIRECTORY ${SHADERS_OUTPUT_DIR} DESTINATION .)
+
+# Install Lua library (dynamically linked)
+get_filename_component(LUA_LIBRARY_PATH "${LUA_LIBRARIES}" REALPATH)
+install(FILES ${LUA_LIBRARY_PATH} DESTINATION lib)
+
+# Install Vulkan library (dynamically linked)
+get_filename_component(VULKAN_LIBRARY_PATH "${Vulkan_LIBRARIES}" REALPATH)
+install(FILES ${VULKAN_LIBRARY_PATH} DESTINATION lib)
+if (APPLE)
+    # Install Vulkan library symlinks
+    # - https://vulkan.lunarg.com/doc/sdk/1.3.275.0/mac/getting_started.html
+    #   - Section "Using the Vulkan Loader"
+    get_filename_component(VULKAN_LIBRARY_NAME "${Vulkan_LIBRARIES}" NAME)
+    string(REPLACE ".dylib" "" VULKAN_LIBRARY_NAME "${VULKAN_LIBRARY_NAME}")
+    install(CODE "file(CREATE_LINK \"${VULKAN_LIBRARY_PATH}\" \"${CMAKE_INSTALL_PREFIX}/lib/${VULKAN_LIBRARY_NAME}.dylib\")")
+    install(CODE "file(CREATE_LINK \"${VULKAN_LIBRARY_PATH}\" \"${CMAKE_INSTALL_PREFIX}/lib/${VULKAN_LIBRARY_NAME}.1.dylib\")")
+endif ()
+
+#########################################
+# Packaging                             #
+#########################################
+
+# Output directory for the generated package
+set(CPACK_OUTPUT_FILE_PREFIX ${DIST_DIR})
+
+set(CPACK_PACKAGE_NAME "Blink")
+set(CPACK_PACKAGE_VENDOR "Storytime")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Proof-of-concept of a game featuring a Vulkan rendering and Lua scripts")
+set(CPACK_PACKAGE_VERSION "1.0.0")
+
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_SOURCE_GENERATOR "ZIP")
+
+# Regarding quadruple slashes (\\\\):
+# To use a single backslash in a regular expression pattern within CMake, you need to escape it with another backslash
+# However, regular expressions within CMake requires escaping backslashes so you need to escape the escape character itself.
+set(
+        CPACK_SOURCE_IGNORE_FILES
+        "/.cache/"      # clangd
+        "/.DS_Store"    # macOS
+        "/.git/"        # Git
+        "/.idea/"       # Jetbrains CLion IDE
+        "/bin/"         # CMake build output
+        "/build/"       # CMake build files
+        "/run.sh"       # Run-script
+        "/\\\\.swp$"    # Vim swap files
+)
+
+include(CPack)
