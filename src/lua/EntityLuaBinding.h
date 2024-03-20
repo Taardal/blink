@@ -1,7 +1,7 @@
 #pragma once
 
 #include <entt/entt.hpp>
-#include <lua/lua.hpp>
+#include <lua.hpp>
 
 namespace Blink {
     class EntityLuaBinding {

@@ -1,14 +1,14 @@
-# Canonical build directory
-build
-
-# Binaries
-bin
-Debug
-Release
+# Build & intermediates
+bin/
+build/
+dist/
+install/
+Debug/
+Release/
 
 # CMake
 CMakeCache.txt
-CMakeFiles
+CMakeFiles/
 CMakeScripts
 CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
@@ -19,9 +19,9 @@ cmake_uninstall.cmake
 Makefile
 
 # CLion
-.idea
-cmake-build-debug
-cmake-build-release
+.idea/
+cmake-build-debug/
+cmake-build-release/
 
 # Visual Studio Code
 .vscode
@@ -44,8 +44,3 @@ CMakeSettings.json
 
 # macOS
 .DS_Store
-
-# CLI
-blink*
-bl*
-
