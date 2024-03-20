@@ -1,39 +1,63 @@
 #include "App.h"
-#include "DependencyContainer.h"
 
 namespace Blink {
     void runApp(const AppConfig& config) {
         Log::SetLevel(config.logLevel);
-        DependencyContainer* dependencyContainer;
+        App* app;
         try {
-            dependencyContainer = new DependencyContainer(config);
+            app = new App(config);
         } catch (const std::exception& e) {
-            dependencyContainer = nullptr;
             BL_LOG_CRITICAL("Initialization error: {}", e.what());
-        }
-        if (dependencyContainer == nullptr) {
             return;
         }
-        App* app = dependencyContainer->app;
         try {
             app->run();
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Runtime error: {}", e.what());
         }
-        delete dependencyContainer;
+        delete app;
     }
 }
 
 namespace Blink {
-    App::App(
-        Window* window,
-        Renderer* renderer,
-        Camera* camera,
-        Scene* scene
-    ) : window(window),
-        renderer(renderer),
-        camera(camera),
-        scene(scene) {
+    App::App(const AppConfig& appConfig) {
+        fileSystem = new FileSystem();
+        window = new Window(appConfig);
+        keyboard = new Keyboard(window);
+
+        VulkanConfig vulkanConfig{};
+        vulkanConfig.applicationName = appConfig.windowTitle;
+        vulkanConfig.engineName = appConfig.windowTitle;
+        vulkanConfig.validationLayersEnabled = Environment::isDebug();
+        vulkan = new Vulkan(vulkanConfig, window);
+        physicalDevice = new VulkanPhysicalDevice(vulkan);
+        device = new VulkanDevice(physicalDevice);
+        swapChain = new VulkanSwapChain(device, physicalDevice, vulkan, window);
+        renderPass = new VulkanRenderPass(swapChain, device);
+        commandPool = new VulkanCommandPool(device, physicalDevice);
+        renderer = new Renderer(fileSystem, window, physicalDevice, device, swapChain, renderPass, commandPool);
+
+        luaEngine = new LuaEngine(keyboard);
+        camera = new Camera(window, keyboard);
+        scene = new Scene(keyboard, luaEngine);
+    }
+
+    App::~App() {
+        delete scene;
+        delete camera;
+        delete luaEngine;
+
+        delete renderer;
+        delete commandPool;
+        delete renderPass;
+        delete swapChain;
+        delete device;
+        delete physicalDevice;
+        delete vulkan;
+
+        delete keyboard;
+        delete window;
+        delete fileSystem;
     }
 
     void App::run() const {

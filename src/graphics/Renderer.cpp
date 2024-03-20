@@ -32,7 +32,9 @@ namespace Blink {
         vertexBuffer(new VulkanVertexBuffer(commandPool, device, physicalDevice)),
         indexBuffer(new VulkanIndexBuffer(commandPool, device, physicalDevice))
     {
-        initialize();
+        if (!initialize()) {
+            throw std::runtime_error("Could not initialize renderer");
+        }
     }
 
     bool Renderer::initialize() {

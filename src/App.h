@@ -13,18 +13,24 @@ namespace Blink {
 namespace Blink {
     class App {
     private:
-        Window* window;
-        Renderer* renderer;
-        Camera* camera;
-        Scene* scene;
+        FileSystem* fileSystem = nullptr;
+        Window* window = nullptr;
+        Keyboard* keyboard = nullptr;
+        Vulkan* vulkan = nullptr;
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanSwapChain* swapChain = nullptr;
+        VulkanRenderPass* renderPass = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+        Renderer* renderer = nullptr;
+        LuaEngine* luaEngine = nullptr;
+        Camera* camera = nullptr;
+        Scene* scene = nullptr;
 
     public:
-        App(
-            Window* window,
-            Renderer* renderer,
-            Camera* camera,
-            Scene* scene
-        );
+        App(const AppConfig& appConfig);
+
+        ~App();
 
         void run() const;
     };

@@ -34,8 +34,6 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
-        ${SRC_DIR}/AppContext.cpp
-        ${SRC_DIR}/AppContext.h
         ${SRC_DIR}/game/Camera.cpp
         ${SRC_DIR}/game/Camera.h
         ${SRC_DIR}/game/Components.h
