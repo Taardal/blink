@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "EntityLuaBinding.h"
 #include "luaUtils.h"
-#include "game/Components.h"
+#include "scene/Components.h"
 
 namespace Blink {
     EntityLuaBinding::EntityLuaBinding(entt::registry* entityRegistry): entityRegistry(entityRegistry) {

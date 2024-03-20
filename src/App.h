@@ -3,8 +3,8 @@
 #include "AppConfig.h"
 #include "window/Window.h"
 #include "graphics/Renderer.h"
-#include "game/Camera.h"
-#include "game/Scene.h"
+#include "scene/Camera.h"
+#include "scene/Scene.h"
 
 namespace Blink {
     void runApp(const AppConfig& config);
@@ -28,7 +28,7 @@ namespace Blink {
         Scene* scene = nullptr;
 
     public:
-        App(const AppConfig& appConfig);
+        explicit App(const AppConfig& appConfig);
 
         ~App();
 

@@ -1,10 +1,9 @@
 #include "pch.h"
 #include "LuaEngine.h"
-#include "LuaFunction.h"
 #include "luaUtils.h"
 #include "EntityLuaBinding.h"
 #include "KeyboardLuaBinding.h"
-#include "game/Components.h"
+#include "scene/Components.h"
 
 #include <lua.hpp>
 

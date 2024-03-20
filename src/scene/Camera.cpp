@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Camera.h"
+#include "scene/Camera.h"
 
 namespace Blink {
     Camera::Camera(Window* window, Keyboard* keyboard) : window(window), keyboard(keyboard) {
