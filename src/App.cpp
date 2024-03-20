@@ -1,66 +1,54 @@
 #include "App.h"
+#include "AppContext.h"
 
 namespace Blink {
-    App::App(AppConfig appConfig)
-        : appConfig(std::move(appConfig)),
-          systemModule(new SystemModule()),
-          windowModule(new WindowModule()),
-          graphicsModule(new GraphicsModule(systemModule, windowModule)),
-          luaModule(new LuaModule(windowModule)),
-          gameModule(new GameModule(windowModule, graphicsModule, luaModule)) {
+    void runApp(const AppConfig& appConfig) {
+        Log::SetLevel(appConfig.logLevel);
+        AppContext* appContext;
+        try {
+            appContext = new AppContext(appConfig);
+        } catch (const std::exception& e) {
+            appContext = nullptr;
+            BL_LOG_CRITICAL("Could not initialize app: {}", e.what());
+        }
+        if (appContext == nullptr) {
+            return;
+        }
+        App* app = appContext->app;
+        try {
+            app->run();
+        } catch (const std::exception& e) {
+            BL_LOG_CRITICAL("Could not run app: {}", e.what());
+        }
+        delete appContext;
     }
+}
 
-    App::~App() {
-        delete gameModule;
-        delete luaModule;
-        delete graphicsModule;
-        delete windowModule;
-        delete systemModule;
+namespace Blink {
+    App::App(
+        Window* window,
+        Renderer* renderer,
+        Camera* camera,
+        Scene* scene
+    ) : window(window),
+        renderer(renderer),
+        camera(camera),
+        scene(scene) {
     }
 
     void App::run() const {
-        if (!initialize()) {
-            BL_LOG_CRITICAL("Could not initialize app");
-            return;
-        }
-        Game* game = gameModule->game;
-        try {
-            game->run();
-        } catch (std::exception& e) {
-            BL_LOG_CRITICAL("Could not run game: {}", e.what());
-        }
-        terminate();
-    }
+        while (!window->shouldClose()) {
+            double timestep = window->update();
+            camera->update(timestep);
 
-    bool App::initialize() const {
-        if (!systemModule->initialize(appConfig)) {
-            BL_LOG_ERROR("Could not initialize system module");
-            return false;
-        }
-        if (!windowModule->initialize(appConfig)) {
-            BL_LOG_ERROR("Could not initialize window module");
-            return false;
-        }
-        if (!graphicsModule->initialize(appConfig)) {
-            BL_LOG_ERROR("Could not initialize graphics module");
-            return false;
-        }
-        if (!luaModule->initialize()) {
-            BL_LOG_ERROR("Could not initialize lua module");
-            return false;
-        }
-        if (!gameModule->initialize()) {
-            BL_LOG_ERROR("Could not initialize game module");
-            return false;
-        }
-        return true;
-    }
+            glm::mat4 playerModel = scene->update(timestep);
 
-    void App::terminate() const {
-        gameModule->terminate();
-        luaModule->terminate();
-        graphicsModule->terminate();
-        windowModule->terminate();
-        systemModule->terminate();
+            Frame frame{};
+            frame.model = playerModel;
+            frame.view = camera->getViewMatrix();
+            frame.projection = camera->getProjectionMatrix();
+
+            renderer->render(frame);
+        }
     }
 }

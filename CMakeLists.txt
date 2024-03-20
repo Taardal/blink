@@ -34,6 +34,8 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
+        ${SRC_DIR}/AppContext.cpp
+        ${SRC_DIR}/AppContext.h
         #        ${SRC_DIR}/LuaClient.cpp
         #        ${SRC_DIR}/LuaClient.h
         #        ${SRC_DIR}/LuaEngine.cpp
