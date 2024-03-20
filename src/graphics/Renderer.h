@@ -101,11 +101,7 @@ namespace Blink {
             VulkanCommandPool* commandPool
         );
 
-        virtual ~Renderer();
-
-        bool initialize();
-
-        void terminate();
+        ~Renderer();
 
         void onResize(uint32_t width, uint32_t height);
 
@@ -116,6 +112,10 @@ namespace Blink {
         void submitQuad(Quad& quad);
 
     private:
+        bool initialize();
+
+        void terminate();
+
         bool initializeDescriptorObjects();
 
         void terminateDescriptorObjects();

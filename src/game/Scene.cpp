@@ -8,16 +8,13 @@ namespace Blink {
         LuaEngine* luaEngine
     ) : keyboard(keyboard),
         luaEngine(luaEngine),
-        player(registry.create()) {
-    }
-
-    bool Scene::initialize() {
+        player(registry.create())
+    {
         initializeEntityComponents();
         luaEngine->createEntityBindings(&registry);
-        return true;
     }
 
-    void Scene::terminate() {
+    Scene::~Scene() {
         registry.clear();
     }
 

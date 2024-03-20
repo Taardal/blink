@@ -125,10 +125,6 @@ namespace Blink {
     public:
         Keyboard(Window* window);
 
-        bool initialize();
-
-        void terminate() const;
-
         bool isPressed(Key key) const;
 
         bool isPressed(uint16_t key) const;

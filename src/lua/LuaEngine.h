@@ -14,9 +14,7 @@ namespace Blink {
     public:
         explicit LuaEngine(Keyboard* keyboard);
 
-        bool initialize() const;
-
-        void terminate() const;
+        ~LuaEngine();
 
         void reload(entt::registry* entityRegistry) const;
 

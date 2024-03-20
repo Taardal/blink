@@ -31,17 +31,8 @@ namespace Blink {
         graphicsPipeline(new VulkanGraphicsPipeline(vertexShader, fragmentShader, renderPass, swapChain, device)),
         vertexBuffer(new VulkanVertexBuffer(commandPool, device, physicalDevice)),
         indexBuffer(new VulkanIndexBuffer(commandPool, device, physicalDevice))
-    {}
-
-    Renderer::~Renderer() {
-        for (VulkanUniformBuffer* uniformBuffer : uniformBuffers) {
-            delete uniformBuffer;
-        }
-        delete indexBuffer;
-        delete vertexBuffer;
-        delete graphicsPipeline;
-        delete fragmentShader;
-        delete vertexShader;
+    {
+        initialize();
     }
 
     bool Renderer::initialize() {
@@ -105,6 +96,18 @@ namespace Blink {
         terminateUniformBuffers();
         fragmentShader->terminate();
         vertexShader->terminate();
+    }
+
+    Renderer::~Renderer() {
+        terminate();
+        for (VulkanUniformBuffer* uniformBuffer : uniformBuffers) {
+            delete uniformBuffer;
+        }
+        delete indexBuffer;
+        delete vertexBuffer;
+        delete graphicsPipeline;
+        delete fragmentShader;
+        delete vertexShader;
     }
 
     void Renderer::onResize(uint32_t width, uint32_t height) {

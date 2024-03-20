@@ -15,11 +15,9 @@ namespace Blink {
     public:
         VulkanRenderPass(VulkanSwapChain* swapChain, VulkanDevice* device);
 
+        ~VulkanRenderPass();
+
         VkRenderPass getRenderPass() const;
-
-        bool initialize();
-
-        void terminate();
 
         void begin(VkCommandBuffer commandBuffer, VkFramebuffer framebuffer) const;
 

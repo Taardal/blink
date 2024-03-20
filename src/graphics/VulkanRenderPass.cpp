@@ -2,14 +2,12 @@
 
 namespace Blink {
 
-    VulkanRenderPass::VulkanRenderPass(VulkanSwapChain* swapChain, VulkanDevice* device)
-        : swapChain(swapChain), device(device) {}
-
-    VkRenderPass VulkanRenderPass::getRenderPass() const {
-        return renderPass;
-    }
-
-    bool VulkanRenderPass::initialize() {
+    VulkanRenderPass::VulkanRenderPass(
+        VulkanSwapChain* swapChain,
+        VulkanDevice* device
+    ) : swapChain(swapChain),
+        device(device)
+    {
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = swapChain->getSurfaceFormat().format;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -49,15 +47,16 @@ namespace Blink {
         renderPassCreateInfo.pDependencies = &subpassDependency;
 
         if (device->createRenderPass(&renderPassCreateInfo, &renderPass) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create render pass");
-            return false;
+            throw std::runtime_error("Could not create render pass");
         }
-
-        return true;
     }
 
-    void VulkanRenderPass::terminate() {
+    VulkanRenderPass::~VulkanRenderPass() {
         device->destroyRenderPass(renderPass);
+    }
+
+    VkRenderPass VulkanRenderPass::getRenderPass() const {
+        return renderPass;
     }
 
     void VulkanRenderPass::begin(VkCommandBuffer commandBuffer, VkFramebuffer framebuffer) const {

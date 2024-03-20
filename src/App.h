@@ -7,7 +7,7 @@
 #include "game/Scene.h"
 
 namespace Blink {
-    void runApp(const AppConfig& appConfig);
+    void runApp(const AppConfig& config);
 }
 
 namespace Blink {

@@ -1,26 +1,26 @@
 #include "App.h"
-#include "AppContext.h"
+#include "DependencyContainer.h"
 
 namespace Blink {
-    void runApp(const AppConfig& appConfig) {
-        Log::SetLevel(appConfig.logLevel);
-        AppContext* appContext;
+    void runApp(const AppConfig& config) {
+        Log::SetLevel(config.logLevel);
+        DependencyContainer* dependencyContainer;
         try {
-            appContext = new AppContext(appConfig);
+            dependencyContainer = new DependencyContainer(config);
         } catch (const std::exception& e) {
-            appContext = nullptr;
-            BL_LOG_CRITICAL("Could not initialize app: {}", e.what());
+            dependencyContainer = nullptr;
+            BL_LOG_CRITICAL("Initialization error: {}", e.what());
         }
-        if (appContext == nullptr) {
+        if (dependencyContainer == nullptr) {
             return;
         }
-        App* app = appContext->app;
+        App* app = dependencyContainer->app;
         try {
             app->run();
         } catch (const std::exception& e) {
-            BL_LOG_CRITICAL("Could not run app: {}", e.what());
+            BL_LOG_CRITICAL("Runtime error: {}", e.what());
         }
-        delete appContext;
+        delete dependencyContainer;
     }
 }
 

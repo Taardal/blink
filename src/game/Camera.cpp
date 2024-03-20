@@ -3,16 +3,9 @@
 
 namespace Blink {
     Camera::Camera(Window* window, Keyboard* keyboard) : window(window), keyboard(keyboard) {
-        updateDirections();
-    }
-
-    bool Camera::initialize() {
         WindowSize windowSize = window->getSizeInPixels();
         aspectRatio = (float) windowSize.width / (float) windowSize.height;
-        return true;
-    }
-
-    void Camera::terminate() {
+        updateDirections();
     }
 
     glm::mat4 Camera::getViewMatrix() const {
