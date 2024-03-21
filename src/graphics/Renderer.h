@@ -103,9 +103,7 @@ namespace Blink {
 
         ~Renderer();
 
-        void onResize(uint32_t width, uint32_t height);
-
-        void onMinimize(bool minimized);
+        void onEvent(Event& event);
 
         void render(const Frame& frame);
 

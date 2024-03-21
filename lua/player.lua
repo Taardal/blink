@@ -1,11 +1,6 @@
 local moveSpeed = 5.0
 
 function Player.onUpdate(entityId, timestep)
-  print("Player.onUpdate")
-  print("entityId [" .. entityId .. "]")
-  print("timestep [" .. timestep .. "]")
-  print("moveSpeed [" .. moveSpeed .. "]")
-
   local position = Entity:getPosition(entityId)
   local velocity = moveSpeed * timestep
   if (Keyboard:isPressed(Key.H) or Keyboard:isPressed(Key.Numpad_4)) then
@@ -21,6 +16,4 @@ function Player.onUpdate(entityId, timestep)
       position.y = position.y + velocity
   end
   Entity:setPosition(entityId, position)
-
-  print("position [" .. position.x .. ", " .. position.y .. ", " .. position.z .. "]")
 end

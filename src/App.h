@@ -1,10 +1,20 @@
 #pragma once
 
 #include "AppConfig.h"
+#include "system/FileSystem.h"
 #include "window/Window.h"
+#include "window/Keyboard.h"
+#include "graphics/Vulkan.h"
+#include "graphics/VulkanPhysicalDevice.h"
+#include "graphics/VulkanDevice.h"
+#include "graphics/VulkanSwapChain.h"
+#include "graphics/VulkanRenderPass.h"
+#include "graphics/VulkanCommandPool.h"
 #include "graphics/Renderer.h"
+#include "lua/LuaEngine.h"
 #include "scene/Camera.h"
 #include "scene/Scene.h"
+#include "window/Event.h"
 
 namespace Blink {
     void runApp(const AppConfig& config);
@@ -13,6 +23,7 @@ namespace Blink {
 namespace Blink {
     class App {
     private:
+        bool running = false;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;
@@ -32,6 +43,11 @@ namespace Blink {
 
         ~App();
 
-        void run() const;
+        void run();
+
+    private:
+        void stop();
+
+        void onEvent(Event& event);
     };
 }

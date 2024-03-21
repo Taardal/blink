@@ -1,8 +1,10 @@
 #pragma once
 
 #include "AppConfig.h"
-#include <vulkan/vulkan.h>
+#include "Event.h"
+
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 
 namespace Blink {
     struct WindowSize {
@@ -12,44 +14,39 @@ namespace Blink {
 
     class Window {
     private:
-        struct CallbackData {
-            std::function<void(uint32_t, uint32_t)> onResize;
-            std::function<void(bool)> onMinimize;
+        struct UserPointer {
+            std::function<void(Event&)> onEvent;
         };
 
     private:
         GLFWwindow* glfwWindow = nullptr;
-        CallbackData callbackData;
-        double lastFrameTime = 0.0;
+        UserPointer userPointer;
+        double lastTime = 0.0;
 
     public:
         explicit Window(const AppConfig& config);
 
         ~Window();
 
-        GLFWwindow* getGlfwWindow() const;
-
-        WindowSize getSizeInPixels() const;
-
-        void getSizeInPixels(int32_t* width, int32_t* height) const;
-
-        void setResizeListener(const std::function<void(uint32_t, uint32_t)>& onResize);
-
-        void setMinimizeListener(const std::function<void(bool)>& onMinimize);
+        void setEventListener(const std::function<void(Event&)>& onEvent);
 
         double update();
 
         bool shouldClose() const;
 
-        void waitUntilNotMinimized() const;
+        bool isKeyPressed(uint16_t key) const;
+
+        WindowSize getSizeInPixels() const;
+
+        void getSizeInPixels(int32_t* width, int32_t* height) const;
 
         bool isVulkanSupported() const;
-
-        bool isKeyPressed(uint16_t key) const;
 
         std::vector<const char*> getRequiredVulkanExtensions() const;
 
         VkResult createVulkanSurface(VkInstance vulkanInstance, VkSurfaceKHR* surface, VkAllocationCallbacks* allocator = nullptr) const;
+
+        void waitUntilNotMinimized() const;
 
     private:
         bool isIconified() const;
@@ -58,8 +55,14 @@ namespace Blink {
 
         static void onKeyChange(GLFWwindow* glfwWindow, int32_t key, int32_t scanCode, int32_t action, int32_t mods);
 
-        static void onFramebufferSizeChange(GLFWwindow* glfWwindow, int width, int height);
+        static void onMouseButtonChange(GLFWwindow* glfwWindow, int32_t button, int32_t action, int32_t mods);
 
-        static void onWindowIconifyChange(GLFWwindow* glfWwindow, int iconified);
+        static void onWindowCloseChange(GLFWwindow* glfwWindow);
+
+        static void onWindowIconifyChange(GLFWwindow* glfwWindow, int iconified);
+
+        static void onFramebufferSizeChange(GLFWwindow* glfwWindow, int width, int height);
+
+        static void sendEvent(Event& event, GLFWwindow* glfwWindow);
     };
 }

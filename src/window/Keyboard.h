@@ -6,6 +6,10 @@ namespace Blink {
     enum class Key {
         None = 0,
         Space = GLFW_KEY_SPACE,
+        Escape = GLFW_KEY_ESCAPE,
+        Enter = GLFW_KEY_ENTER,
+        Tab = GLFW_KEY_TAB,
+        Backspace = GLFW_KEY_BACKSPACE,
         Up = GLFW_KEY_UP,
         Down = GLFW_KEY_DOWN,
         Left = GLFW_KEY_LEFT,
@@ -44,92 +48,13 @@ namespace Blink {
 
     class Keyboard {
     private:
-        std::vector<Key> keys = {
-            Key::Space,
-            Key::Up,
-            Key::Down,
-            Key::Left,
-            Key::Right,
-            Key::Q,
-            Key::W,
-            Key::E,
-            Key::R,
-            Key::A,
-            Key::S,
-            Key::D,
-            Key::H,
-            Key::J,
-            Key::K,
-            Key::L,
-            Key::C,
-            Key::Num_1,
-            Key::Num_2,
-            Key::Num_3,
-            Key::Num_4,
-            Key::Num_5,
-            Key::Num_6,
-            Key::Num_7,
-            Key::Num_8,
-            Key::Num_9,
-            Key::Numpad_1,
-            Key::Numpad_2,
-            Key::Numpad_3,
-            Key::Numpad_4,
-            Key::Numpad_5,
-            Key::Numpad_6,
-            Key::Numpad_7,
-            Key::Numpad_8,
-            Key::Numpad_9,
-        };
-        std::unordered_map<std::string, Key> keysByName = {
-            { "Space", Key::Space },
-            { "Up", Key::Up },
-            { "Down", Key::Down },
-            { "Left", Key::Left },
-            { "Right", Key::Right },
-            { "Q", Key::Q },
-            { "W", Key::W },
-            { "E", Key::E },
-            { "R", Key::R },
-            { "A", Key::A },
-            { "S", Key::S },
-            { "D", Key::D },
-            { "H", Key::H },
-            { "J", Key::J },
-            { "K", Key::K },
-            { "L", Key::L },
-            { "C", Key::C },
-            { "Num_1", Key::Num_1 },
-            { "Num_2", Key::Num_2 },
-            { "Num_3", Key::Num_3 },
-            { "Num_4", Key::Num_4 },
-            { "Num_5", Key::Num_5 },
-            { "Num_6", Key::Num_6 },
-            { "Num_7", Key::Num_7 },
-            { "Num_8", Key::Num_8 },
-            { "Num_9", Key::Num_9 },
-            { "Numpad_1", Key::Numpad_1 },
-            { "Numpad_2", Key::Numpad_2 },
-            { "Numpad_3", Key::Numpad_3 },
-            { "Numpad_4", Key::Numpad_4 },
-            { "Numpad_5", Key::Numpad_5 },
-            { "Numpad_6", Key::Numpad_6 },
-            { "Numpad_7", Key::Numpad_7 },
-            { "Numpad_8", Key::Numpad_8 },
-            { "Numpad_9", Key::Numpad_9 },
-        };
-
-    private:
         Window* window;
+        std::vector<Key> keys;
+        std::unordered_map<std::string, Key> keysByName;
+        std::unordered_map<Key, std::string> namesByKey;
 
     public:
-        Keyboard(Window* window);
-
-        bool isPressed(Key key) const;
-
-        bool isPressed(uint16_t key) const;
-
-        bool isPressed(const std::string& keyName) const;
+        explicit Keyboard(Window* window);
 
         const std::vector<Key>& getKeys() const {
             return keys;
@@ -138,5 +63,30 @@ namespace Blink {
         const std::unordered_map<std::string, Key>& getKeysByName() const {
             return keysByName;
         }
+
+        std::unordered_map<Key, std::string> getNamesByKey() const {
+            return namesByKey;
+        }
+
+        bool isPressed(Key key) const;
+
+        bool isPressed(uint16_t key) const;
+
+        bool isPressed(const std::string& keyName) const;
+
+        std::string getName(Key key) const;
+
+        std::string getName(uint16_t key) const;
+
+        static std::string getKeyName(Key key);
+
+        static std::string getKeyName(uint16_t key);
+
+    private:
+        static std::vector<Key> createKeys();
+
+        static std::unordered_map<std::string, Key> createKeysByName();
+
+        static std::unordered_map<Key, std::string> createNamesByKey();
     };
 }
