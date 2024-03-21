@@ -91,10 +91,18 @@ add_executable(
         ${SRC_DIR}/system/Uuid.cpp
         ${SRC_DIR}/system/Uuid.h
         ${SRC_DIR}/utils/size.h
+        ${SRC_DIR}/window/Event.cpp
+        ${SRC_DIR}/window/Event.h
         ${SRC_DIR}/window/Keyboard.cpp
         ${SRC_DIR}/window/Keyboard.h
+        ${SRC_DIR}/window/KeyEvent.cpp
+        ${SRC_DIR}/window/KeyEvent.h
+        ${SRC_DIR}/window/MouseEvent.cpp
+        ${SRC_DIR}/window/MouseEvent.h
         ${SRC_DIR}/window/Window.cpp
         ${SRC_DIR}/window/Window.h
+        ${SRC_DIR}/window/WindowEvent.cpp
+        ${SRC_DIR}/window/WindowEvent.h
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${SRC_DIR})

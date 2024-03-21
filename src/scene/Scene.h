@@ -21,6 +21,8 @@ namespace Blink {
 
         glm::mat4 update(double timestep);
 
+        void onEvent(Event& event);
+
     private:
         void initializeEntityComponents();
     };

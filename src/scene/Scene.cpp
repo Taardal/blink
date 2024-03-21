@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Scene.h"
 #include "Components.h"
+#include "window/KeyEvent.h"
 
 namespace Blink {
     Scene::Scene(
@@ -19,11 +20,6 @@ namespace Blink {
     }
 
     glm::mat4 Scene::update(double timestep) {
-
-        if (keyboard->isPressed(Key::R)) {
-            luaEngine->reload(&registry);
-            BL_LOG_INFO("Recreated entity bindings");
-        }
         luaEngine->updateEntityBindings(&registry, timestep);
 
         // TRANSLATION
@@ -42,6 +38,16 @@ namespace Blink {
         glm::mat4 scale = glm::mat4(1.0f);
 
         return translation * rotation * scale;
+    }
+
+    void Scene::onEvent(Event& event) {
+        if (event.type != EventType::KeyPressed) {
+            return;
+        }
+        if (event.as<KeyPressedEvent>().key == Key::R) {
+            luaEngine->reload(&registry);
+            BL_LOG_INFO("Recreated entity bindings");
+        }
     }
 
     void Scene::initializeEntityComponents() {

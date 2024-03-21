@@ -38,12 +38,6 @@ namespace Blink {
     }
 
     bool Renderer::initialize() {
-        window->setResizeListener([this](uint32_t width, uint32_t height) {
-            framebufferResized = true;
-        });
-        window->setMinimizeListener([this](bool minimized) {
-            framebufferResized = true;
-        });
         if (!vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv"))) {
             BL_LOG_ERROR("Could not initialize vertex shader");
             return false;
@@ -112,13 +106,11 @@ namespace Blink {
         delete vertexShader;
     }
 
-    void Renderer::onResize(uint32_t width, uint32_t height) {
-        this->framebufferResized = true;
-    };
-
-    void Renderer::onMinimize(bool minimized) {
-        this->framebufferResized = true;
-    };
+    void Renderer::onEvent(Event& event) {
+        if (event.type == EventType::WindowResize || event.type == EventType::WindowMinimize) {
+            this->framebufferResized = true;
+        }
+    }
 
     void Renderer::render(const Frame& frame) {
         drawFrame(frame);

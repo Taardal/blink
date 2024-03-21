@@ -1,4 +1,8 @@
 #include "Window.h"
+
+#include "KeyEvent.h"
+#include "MouseEvent.h"
+#include "WindowEvent.h"
 #include "system/Log.h"
 #include "GLFW/glfw3.h"
 
@@ -12,8 +16,8 @@ namespace Blink {
 
         glfwSetErrorCallback(onGlfwError);
 
-        // Because GLFW was originally designed to create an OpenGL context,
-        // we need to tell it to not create an OpenGL context
+        // Because GLFW was originally designed to create an OpenGL context, and we're using Vulkan,
+        // we need to tell it to _not_ create an OpenGL context
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         glfwWindowHint(GLFW_RESIZABLE, config.windowResizable);
@@ -22,21 +26,23 @@ namespace Blink {
         GLFWmonitor* fullscreenMonitor = nullptr;
         GLFWwindow* sharedWindow = nullptr;
         glfwWindow = glfwCreateWindow(
-                (int32_t) config.windowWidth,
-                (int32_t) config.windowHeight,
-                config.windowTitle.c_str(),
-                fullscreenMonitor,
-                sharedWindow
+            config.windowWidth,
+            config.windowHeight,
+            config.windowTitle.c_str(),
+            fullscreenMonitor,
+            sharedWindow
         );
         if (!glfwWindow) {
             throw std::runtime_error("Could not create GLFW window");
         }
         BL_LOG_INFO("Created GLFW window");
 
-        glfwSetWindowUserPointer(glfwWindow, &callbackData);
-        glfwSetFramebufferSizeCallback(glfwWindow, onFramebufferSizeChange);
-        glfwSetWindowIconifyCallback(glfwWindow, onWindowIconifyChange);
+        glfwSetWindowUserPointer(glfwWindow, &userPointer);
         glfwSetKeyCallback(glfwWindow, onKeyChange);
+        glfwSetMouseButtonCallback(glfwWindow, onMouseButtonChange);
+        glfwSetWindowCloseCallback(glfwWindow, onWindowCloseChange);
+        glfwSetWindowIconifyCallback(glfwWindow, onWindowIconifyChange);
+        glfwSetFramebufferSizeCallback(glfwWindow, onFramebufferSizeChange);
     }
 
     Window::~Window() {
@@ -46,8 +52,28 @@ namespace Blink {
         BL_LOG_INFO("Terminated GLFW");
     }
 
-    GLFWwindow* Window::getGlfwWindow() const {
-        return glfwWindow;
+    void Window::setEventListener(const std::function<void(Event&)>& onEvent) {
+        userPointer.onEvent = onEvent;
+    }
+
+    double Window::update() {
+        glfwPollEvents();
+        double time = glfwGetTime();
+        double timestep = time - lastTime;
+        lastTime = time;
+        return timestep;
+    }
+
+    bool Window::shouldClose() const {
+        return glfwWindowShouldClose(glfwWindow);
+    }
+
+    bool Window::isKeyPressed(uint16_t key) const {
+        return glfwGetKey(glfwWindow, key) == GLFW_PRESS;
+    }
+
+    void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
+        glfwGetFramebufferSize(glfwWindow, width, height);
     }
 
     WindowSize Window::getSizeInPixels() const {
@@ -57,36 +83,8 @@ namespace Blink {
         return { width, height };
     }
 
-    void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
-        glfwGetFramebufferSize(glfwWindow, width, height);
-    };
-
-    void Window::setResizeListener(const std::function<void(uint32_t, uint32_t)>& onResize) {
-        callbackData.onResize = onResize;
-    };
-
-    void Window::setMinimizeListener(const std::function<void(bool)>& onMinimize) {
-        callbackData.onMinimize = onMinimize;
-    }
-
-    double Window::update() {
-        glfwPollEvents();
-        double time = glfwGetTime();
-        double timestep = time - lastFrameTime;
-        lastFrameTime = time;
-        return timestep;
-    }
-
-    bool Window::shouldClose() const {
-        return glfwWindowShouldClose(glfwWindow);
-    }
-
     bool Window::isVulkanSupported() const {
         return glfwVulkanSupported() == GLFW_TRUE;
-    }
-
-    bool Window::isKeyPressed(uint16_t key) const {
-        return glfwGetKey(glfwWindow, key) == GLFW_PRESS;
     }
 
     std::vector<const char*> Window::getRequiredVulkanExtensions() const {
@@ -100,18 +98,12 @@ namespace Blink {
         return extensions;
     }
 
-    VkResult Window::createVulkanSurface(VkInstance vulkanInstance, VkSurfaceKHR* surface, VkAllocationCallbacks* allocator) const {
+    VkResult Window::createVulkanSurface(
+        VkInstance vulkanInstance,
+        VkSurfaceKHR* surface,
+        VkAllocationCallbacks* allocator
+    ) const {
         return glfwCreateWindowSurface(vulkanInstance, glfwWindow, allocator, surface);
-    }
-
-    void Window::onGlfwError(int32_t error, const char *description) {
-        BL_LOG_ERROR("GLFW error [{0}: {1}]", error, description);
-    }
-
-    void Window::onKeyChange(GLFWwindow* glfwWindow, int32_t key, int32_t scanCode, int32_t action, int32_t mods) {
-        if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
-            glfwSetWindowShouldClose(glfwWindow, true);
-        }
     }
 
     void Window::waitUntilNotMinimized() const {
@@ -132,14 +124,53 @@ namespace Blink {
         return glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED) == 1;
     }
 
-    void Window::onFramebufferSizeChange(GLFWwindow* glfWwindow, int width, int height) {
-        auto userPointer = (CallbackData*) glfwGetWindowUserPointer(glfWwindow);
-        userPointer->onResize(width, height);
+    void Window::onGlfwError(int32_t error, const char* description) {
+        BL_LOG_ERROR("GLFW error [{0}: {1}]", error, description);
     }
 
-    void Window::onWindowIconifyChange(GLFWwindow* glfWwindow, int iconified) {
-        auto userPointer = (CallbackData*) glfwGetWindowUserPointer(glfWwindow);
+    void Window::onKeyChange(GLFWwindow* glfwWindow, int32_t key, int32_t scanCode, int32_t action, int32_t mods) {
+        if (action == GLFW_PRESS) {
+            KeyPressedEvent event(key, mods, scanCode);
+            sendEvent(event, glfwWindow);
+        } else if (action == GLFW_RELEASE) {
+            KeyReleasedEvent event(key, mods, scanCode);
+            sendEvent(event, glfwWindow);
+        } else if (action == GLFW_REPEAT) {
+            KeyRepeatedEvent event(key, mods, scanCode);
+            sendEvent(event, glfwWindow);
+        }
+    }
+
+    void Window::onMouseButtonChange(GLFWwindow* glfwWindow, int32_t button, int32_t action, int32_t mods) {
+        if (action == GLFW_PRESS) {
+            MouseButtonPressedEvent event(button);
+            sendEvent(event, glfwWindow);
+        }
+        if (action == GLFW_RELEASE) {
+            MouseButtonReleasedEvent event(button);
+            sendEvent(event, glfwWindow);
+        }
+    }
+
+    void Window::onWindowCloseChange(GLFWwindow* glfwWindow) {
+        WindowCloseEvent event{};
+        sendEvent(event, glfwWindow);
+    }
+
+    void Window::onFramebufferSizeChange(GLFWwindow* glfwWindow, int width, int height) {
+        WindowResizeEvent event(width, height);
+        sendEvent(event, glfwWindow);
+    }
+
+    void Window::onWindowIconifyChange(GLFWwindow* glfwWindow, int iconified) {
         bool minimized = iconified == 1;
-        userPointer->onMinimize(minimized);
+        WindowMinimizeEvent event(minimized);
+        sendEvent(event, glfwWindow);
+    }
+
+    void Window::sendEvent(Event& event, GLFWwindow* glfwWindow) {
+        BL_LOG_DEBUG(event.toString());
+        auto userPointer = (UserPointer*) glfwGetWindowUserPointer(glfwWindow);
+        userPointer->onEvent(event);
     }
 }
