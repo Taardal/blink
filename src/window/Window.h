@@ -34,6 +34,8 @@ namespace Blink {
 
         bool shouldClose() const;
 
+        void setShouldClose(bool shouldClose) const;
+
         bool isKeyPressed(uint16_t key) const;
 
         WindowSize getSizeInPixels() const;

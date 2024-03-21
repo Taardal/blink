@@ -68,6 +68,10 @@ namespace Blink {
         return glfwWindowShouldClose(glfwWindow);
     }
 
+    void Window::setShouldClose(bool shouldClose) const {
+        glfwSetWindowShouldClose(glfwWindow, shouldClose);
+    }
+
     bool Window::isKeyPressed(uint16_t key) const {
         return glfwGetKey(glfwWindow, key) == GLFW_PRESS;
     }

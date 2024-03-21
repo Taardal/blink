@@ -114,13 +114,17 @@ namespace Blink {
 
         void terminate();
 
-        bool initializeDescriptorObjects();
-
-        void terminateDescriptorObjects();
-
         bool initializeUniformBuffers();
 
-        void terminateUniformBuffers();
+        void terminateUniformBuffers() const;
+
+        bool initializeDescriptorObjects();
+
+        void terminateDescriptorObjects() const;
+
+        bool initializeGraphicsPipelineObjects() const;
+
+        void terminateGraphicsPipelineObjects() const;
 
         bool initializeFramebuffers();
 
@@ -130,7 +134,7 @@ namespace Blink {
 
         bool initializeSyncObjects();
 
-        void terminateSyncObjects();
+        void terminateSyncObjects() const;
 
         bool recreateSwapChain();
 
@@ -140,9 +144,11 @@ namespace Blink {
 
         void drawFrame(const Frame& frame);
 
-        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
 
-        void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame);
+        static void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame);
+
+        static void compileShaders();
     };
 }
 
