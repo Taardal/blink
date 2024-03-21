@@ -9,6 +9,8 @@
 
 #include <chrono>
 
+#include "window/KeyEvent.h"
+
 namespace Blink {
 
     Renderer::Renderer(
@@ -38,14 +40,6 @@ namespace Blink {
     }
 
     bool Renderer::initialize() {
-        if (!vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv"))) {
-            BL_LOG_ERROR("Could not initialize vertex shader");
-            return false;
-        }
-        if (!fragmentShader->initialize(fileSystem->readBytes("shaders/shader.frag.spv"))) {
-            BL_LOG_ERROR("Could not initialize fragment shader");
-            return false;
-        }
         if (!initializeUniformBuffers()) {
             BL_LOG_ERROR("Could not initialize uniform buffers");
             return false;
@@ -54,8 +48,8 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize descriptor objects");
             return false;
         }
-        if (!graphicsPipeline->initialize(descriptorSetLayout)) {
-            BL_LOG_ERROR("Could not initialize graphics pipeline");
+        if (!initializeGraphicsPipelineObjects()) {
+            BL_LOG_ERROR("Could not initialize graphics pipeline objects");
             return false;
         }
         if (!vertexBuffer->initialize(vertices)) {
@@ -82,19 +76,17 @@ namespace Blink {
     }
 
     void Renderer::terminate() {
-        device->waitUntilIdle();
         terminateSyncObjects();
         terminateFramebuffers();
         indexBuffer->terminate();
         vertexBuffer->terminate();
-        graphicsPipeline->terminate();
+        terminateGraphicsPipelineObjects();
         terminateDescriptorObjects();
         terminateUniformBuffers();
-        fragmentShader->terminate();
-        vertexShader->terminate();
     }
 
     Renderer::~Renderer() {
+        device->waitUntilIdle();
         terminate();
         for (VulkanUniformBuffer* uniformBuffer : uniformBuffers) {
             delete uniformBuffer;
@@ -109,6 +101,13 @@ namespace Blink {
     void Renderer::onEvent(Event& event) {
         if (event.type == EventType::WindowResize || event.type == EventType::WindowMinimize) {
             this->framebufferResized = true;
+        }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Q) {
+            compileShaders();
+            terminateGraphicsPipelineObjects();
+            if (!initializeGraphicsPipelineObjects()) {
+                throw std::runtime_error("Could not initialize graphics pipeline objects");
+            }
         }
     }
 
@@ -131,8 +130,13 @@ namespace Blink {
         return true;
     }
 
-    bool Renderer::initializeDescriptorObjects() {
+    void Renderer::terminateUniformBuffers() const {
+        for (VulkanUniformBuffer* uniformBuffer : uniformBuffers) {
+            uniformBuffer->terminate();
+        }
+    }
 
+    bool Renderer::initializeDescriptorObjects() {
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -197,15 +201,31 @@ namespace Blink {
         return true;
     }
 
-    void Renderer::terminateDescriptorObjects() {
+    void Renderer::terminateDescriptorObjects() const {
         device->destroyDescriptorPool(descriptorPool);
         device->destroyDescriptorSetLayout(descriptorSetLayout);
     }
 
-    void Renderer::terminateUniformBuffers() {
-        for (VulkanUniformBuffer* uniformBuffer : uniformBuffers) {
-            uniformBuffer->terminate();
+    bool Renderer::initializeGraphicsPipelineObjects() const {
+        if (!vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv"))) {
+            BL_LOG_ERROR("Could not initialize vertex shader");
+            return false;
         }
+        if (!fragmentShader->initialize(fileSystem->readBytes("shaders/shader.frag.spv"))) {
+            BL_LOG_ERROR("Could not initialize fragment shader");
+            return false;
+        }
+        if (!graphicsPipeline->initialize(descriptorSetLayout)) {
+            BL_LOG_ERROR("Could not initialize graphics pipeline");
+            return false;
+        }
+        return true;
+    }
+
+    void Renderer::terminateGraphicsPipelineObjects() const {
+        graphicsPipeline->terminate();
+        fragmentShader->terminate();
+        vertexShader->terminate();
     }
 
     bool Renderer::initializeFramebuffers() {
@@ -275,7 +295,7 @@ namespace Blink {
         return true;
     }
 
-    void Renderer::terminateSyncObjects() {
+    void Renderer::terminateSyncObjects() const {
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             device->destroySemaphore(imageAvailableSemaphores[i]);
             device->destroySemaphore(renderFinishedSemaphores[i]);
@@ -404,7 +424,7 @@ namespace Blink {
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
-    void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+    void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -477,6 +497,16 @@ namespace Blink {
         ubo.proj[1][1] *= -1;
 
         uniformBuffer->setData(&ubo);
+    }
+
+    void Renderer::compileShaders() {
+        std::stringstream ss;
+        ss << "cmake";
+        ss << " -D SHADERS_SOURCE_DIR=" << CMAKE_SHADERS_SOURCE_DIR;
+        ss << " -D SHADERS_OUTPUT_DIR=" << CMAKE_SHADERS_OUTPUT_DIR;
+        ss << " -P " << CMAKE_SCRIPTS_DIR << "/compile_shaders.cmake";
+        std::string command = ss.str();
+        std::system(command.c_str());
     }
 }
 

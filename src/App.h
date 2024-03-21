@@ -23,7 +23,6 @@ namespace Blink {
 namespace Blink {
     class App {
     private:
-        bool running = false;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;
@@ -43,11 +42,9 @@ namespace Blink {
 
         ~App();
 
-        void run();
+        void run() const;
 
     private:
-        void stop();
-
-        void onEvent(Event& event);
+        void onEvent(Event& event) const;
     };
 }

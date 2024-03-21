@@ -7,16 +7,19 @@ namespace Blink {
         Log::SetLevel(config.logLevel);
         App* app;
         try {
+            BL_LOG_INFO("Initializing app...");
             app = new App(config);
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Initialization error: {}", e.what());
             return;
         }
         try {
+            BL_LOG_INFO("Running app...");
             app->run();
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Runtime error: {}", e.what());
         }
+        BL_LOG_INFO("Stopping app...");
         delete app;
     }
 }
@@ -61,10 +64,8 @@ namespace Blink {
         delete fileSystem;
     }
 
-    void App::run() {
-        BL_LOG_INFO("Running app...");
-        running = true;
-        while (running) {
+    void App::run() const {
+        while (!window->shouldClose()) {
             double timestep = window->update();
             camera->update(timestep);
 
@@ -79,21 +80,10 @@ namespace Blink {
         }
     }
 
-    void App::stop() {
-        BL_LOG_INFO("Stopping app...");
-        running = false;
-    }
-
-    void App::onEvent(Event& event) {
-        if (event.type == EventType::WindowClose) {
-            stop();
+    void App::onEvent(Event& event) const {
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Escape) {
+            window->setShouldClose(true);
             return;
-        }
-        if (event.type == EventType::KeyPressed) {
-            if (event.as<KeyPressedEvent>().key == Key::Escape) {
-                stop();
-                return;
-            }
         }
         renderer->onEvent(event);
         scene->onEvent(event);
