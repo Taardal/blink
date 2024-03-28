@@ -64,9 +64,12 @@ namespace Blink {
         delete fileSystem;
     }
 
-    void App::run() const {
+    void App::run() {
         while (!window->shouldClose()) {
-            double timestep = window->update();
+            double time = window->update();
+            double timestep = time - lastTime;
+            lastTime = time;
+
             camera->update(timestep);
 
             glm::mat4 playerModel = scene->update(timestep);
@@ -77,6 +80,14 @@ namespace Blink {
             frame.projection = camera->getProjectionMatrix();
 
             renderer->render(frame);
+
+            fps++;
+            fpsUpdateTimestep += timestep;
+            if (fpsUpdateTimestep >= 1.0) {
+                BL_LOG_DEBUG("FPS [{}]", fps);
+                fps = 0;
+                fpsUpdateTimestep = 0;
+            }
         }
     }
 

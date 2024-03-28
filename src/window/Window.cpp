@@ -56,12 +56,9 @@ namespace Blink {
         userPointer.onEvent = onEvent;
     }
 
-    double Window::update() {
+    double Window::update() const {
         glfwPollEvents();
-        double time = glfwGetTime();
-        double timestep = time - lastTime;
-        lastTime = time;
-        return timestep;
+        return glfwGetTime();
     }
 
     bool Window::shouldClose() const {

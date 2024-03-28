@@ -21,7 +21,6 @@ namespace Blink {
     private:
         GLFWwindow* glfwWindow = nullptr;
         UserPointer userPointer;
-        double lastTime = 0.0;
 
     public:
         explicit Window(const AppConfig& config);
@@ -30,7 +29,7 @@ namespace Blink {
 
         void setEventListener(const std::function<void(Event&)>& onEvent);
 
-        double update();
+        double update() const;
 
         bool shouldClose() const;
 

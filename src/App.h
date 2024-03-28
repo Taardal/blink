@@ -36,13 +36,16 @@ namespace Blink {
         LuaEngine* luaEngine = nullptr;
         Camera* camera = nullptr;
         Scene* scene = nullptr;
+        double lastTime = 0.0;
+        double fpsUpdateTimestep = 0.0;
+        uint32_t fps = 0;
 
     public:
         explicit App(const AppConfig& appConfig);
 
         ~App();
 
-        void run() const;
+        void run();
 
     private:
         void onEvent(Event& event) const;
