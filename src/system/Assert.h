@@ -1,5 +1,6 @@
 #pragma once
 
+#include "system/Log.h"
 #include "system/Environment.h"
 
 #ifdef BL_DEBUG
@@ -8,17 +9,12 @@
 #endif
 
 #ifdef BL_ENABLE_BREAK
-    #ifdef BL_PLATFORM_WINDOWS
+    #if defined(BL_COMPILER_MSVC)
         #define BL_BREAK() __debugbreak()
-    #elif __has_builtin(__builtin_debugtrap)
-        #define BL_BREAK() __builtin_debugtrap()
+    #elif defined(BL_COMPILER_CLANG) || defined(BL_COMPILER_GCC)
+        #define BL_BREAK() __builtin_trap()
     #else
-        #include <csignal>
-        #if defined(SIGTRAP)
-            #define BL_BREAK() std::raise(SIGTRAP)
-        #else
-            #define BL_BREAK() std::raise(SIGABRT)
-        #endif
+        #error "BL_BREAK() not implemented for this compiler"
     #endif
 #else
     #define BL_BREAK()
@@ -26,13 +22,19 @@
 
 #ifdef BL_ENABLE_ASSERT
     #define BL_ASSERT(expression) \
-        if (expression) \
-        {} \
-        else \
-        { \
-            BL_LOG_CRITICAL("Could not assert [{0}]", #expression); \
+        if (expression) {\
+            /* Continue */\
+        } else {\
+            BL_LOG_CRITICAL("Assertion failed: {}", #expression); \
             BL_BREAK(); \
         }
 #else
     #define BL_ASSERT(expression)
 #endif
+
+#define BL_ASSERT_THROW(expression) \
+    if (expression) {\
+        /* Continue */\
+    } else {\
+        throw std::runtime_error(BL_TAG(std::string("Assertion failed: ") + #expression));\
+    }

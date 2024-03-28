@@ -2,7 +2,6 @@
 
 #include "system/Log.h"
 #include <string>
-#include <vector>
 
 namespace Blink {
 
