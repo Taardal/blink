@@ -73,6 +73,10 @@ if [[ "${generate}" == true ]]; then
   eval "${command}"
 fi
 
+# Symlink compile commands to make it work with Clang LSP (Neovim), regardless of build type
+compileCommandsFile="${buildDirectory}/compile_commands.json" 
+echo "-- Symlinked [$(eval ln -svf "${compileCommandsFile}" "${sourceDirectory}")]"
+
 echo "
 #######################################
 # Building binary...                  #

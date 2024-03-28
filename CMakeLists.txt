@@ -158,6 +158,7 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 include(FetchContent)
+message("-- Fetching dependencies")
 FetchContent_Declare(
         entt
         GIT_REPOSITORY https://github.com/skypjack/entt
@@ -178,12 +179,15 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/gabime/spdlog
         GIT_TAG v1.9.2
 )
+message("-- Fetching dependencies - done")
+message("-- Compiling dependencies")
 FetchContent_MakeAvailable(
         entt
         glfw
         glm
         spdlog
 )
+message("-- Compiling dependencies - done")
 
 target_link_libraries(${PROJECT_NAME} EnTT::EnTT)
 target_link_libraries(${PROJECT_NAME} glfw)
