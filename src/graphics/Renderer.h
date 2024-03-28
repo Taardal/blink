@@ -107,8 +107,6 @@ namespace Blink {
 
         void render(const Frame& frame);
 
-        void submitQuad(Quad& quad);
-
     private:
         bool initialize();
 

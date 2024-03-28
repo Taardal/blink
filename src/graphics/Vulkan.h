@@ -2,10 +2,14 @@
 
 #include "AppConfig.h"
 #include "window/Window.h"
+#include "system/Log.h"
 #include <vulkan/vulkan.h>
 #include <vector>
 
-#define BL_VK_ALLOCATOR nullptr
+#define BL_VULKAN_ALLOCATOR VK_NULL_HANDLE
+
+#define BL_VULKAN_ASSERT(expression) BL_ASSERT(expression == VK_SUCCESS)
+#define BL_VULKAN_ASSERT_THROW(expression) BL_ASSERT_THROW(expression == VK_SUCCESS)
 
 namespace Blink {
     struct VulkanConfig {

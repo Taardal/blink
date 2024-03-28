@@ -1,15 +1,9 @@
+#include "pch.h"
 #include "Renderer.h"
-
 #include "UniformBufferObject.h"
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "window/KeyEvent.h"
 
 #include <chrono>
-
-#include "window/KeyEvent.h"
 
 namespace Blink {
 
@@ -115,9 +109,6 @@ namespace Blink {
         drawFrame(frame);
     }
 
-    void Renderer::submitQuad(Quad& quad) {
-    }
-
     bool Renderer::initializeUniformBuffers() {
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             auto uniformBuffer = new VulkanUniformBuffer(commandPool, device, physicalDevice);
@@ -137,6 +128,30 @@ namespace Blink {
     }
 
     bool Renderer::initializeDescriptorObjects() {
+
+        //
+        // DESCRIPTOR POOL
+        //
+
+        VkDescriptorPoolSize poolSize{};
+        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
+
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
+        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptorPoolCreateInfo.poolSizeCount = 1;
+        descriptorPoolCreateInfo.pPoolSizes = &poolSize;
+        descriptorPoolCreateInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
+
+        if (device->createDescriptorPool(&descriptorPoolCreateInfo, &descriptorPool) != VK_SUCCESS) {
+            BL_LOG_ERROR("Could not create descrptor pool");
+            return false;
+        }
+
+        //
+        // DESCRIPTOR LAYOUT
+        //
+
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -153,20 +168,9 @@ namespace Blink {
             return false;
         }
 
-        VkDescriptorPoolSize poolSize{};
-        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
-
-        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
-        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptorPoolCreateInfo.poolSizeCount = 1;
-        descriptorPoolCreateInfo.pPoolSizes = &poolSize;
-        descriptorPoolCreateInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
-
-        if (device->createDescriptorPool(&descriptorPoolCreateInfo, &descriptorPool) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create descrptor pool");
-            return false;
-        }
+        //
+        // DESCRIPTOR SETS
+        //
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
@@ -186,6 +190,13 @@ namespace Blink {
             bufferInfo.buffer = uniformBuffers[i]->getBuffer()->getBuffer();
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
+
+            vertexShader->setDescriptorLayout({
+                { 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT }
+            });
+            vertexShader->setBufferDescriptors({
+                { 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo }
+            });
 
             VkWriteDescriptorSet descriptorWrite{};
             descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

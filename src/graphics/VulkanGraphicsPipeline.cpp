@@ -14,13 +14,13 @@ namespace Blink {
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
         vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertexShaderStageCreateInfo.module = vertexShader->getModule();
+        vertexShaderStageCreateInfo.module = *vertexShader;
         vertexShaderStageCreateInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo fragmentShaderStageCreateInfo{};
         fragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragmentShaderStageCreateInfo.module = fragmentShader->getModule();
+        fragmentShaderStageCreateInfo.module = *fragmentShader;
         fragmentShaderStageCreateInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {

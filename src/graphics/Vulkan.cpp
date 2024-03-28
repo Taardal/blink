@@ -114,11 +114,11 @@ namespace Blink {
             createInfo.ppEnabledLayerNames = validationLayers.data();
         }
 
-        return vkCreateInstance(&createInfo, BL_VK_ALLOCATOR, &vulkanInstance) == VK_SUCCESS;
+        return vkCreateInstance(&createInfo, BL_VULKAN_ALLOCATOR, &vulkanInstance) == VK_SUCCESS;
     }
 
     void Vulkan::destroyInstance() {
-        vkDestroyInstance(vulkanInstance, BL_VK_ALLOCATOR);
+        vkDestroyInstance(vulkanInstance, BL_VULKAN_ALLOCATOR);
     }
 
     bool Vulkan::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) {
@@ -128,7 +128,7 @@ namespace Blink {
             BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
             return false;
         }
-        return function(vulkanInstance, &debugMessengerCreateInfo, BL_VK_ALLOCATOR, &debugMessenger) == VK_SUCCESS;
+        return function(vulkanInstance, &debugMessengerCreateInfo, BL_VULKAN_ALLOCATOR, &debugMessenger) == VK_SUCCESS;
     }
 
     void Vulkan::destroyDebugMessenger() {
@@ -138,15 +138,15 @@ namespace Blink {
             BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
             return;
         }
-        function(vulkanInstance, debugMessenger, BL_VK_ALLOCATOR);
+        function(vulkanInstance, debugMessenger, BL_VULKAN_ALLOCATOR);
     }
 
     bool Vulkan::createSurface() {
-        return window->createVulkanSurface(vulkanInstance, &surface, BL_VK_ALLOCATOR) == VK_SUCCESS;
+        return window->createVulkanSurface(vulkanInstance, &surface, BL_VULKAN_ALLOCATOR) == VK_SUCCESS;
     }
 
     void Vulkan::destroySurface() const {
-        vkDestroySurfaceKHR(vulkanInstance, surface, BL_VK_ALLOCATOR);
+        vkDestroySurfaceKHR(vulkanInstance, surface, BL_VULKAN_ALLOCATOR);
     }
 
     bool Vulkan::hasValidationLayers(const std::vector<const char*>& validationLayers) const {

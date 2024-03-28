@@ -43,7 +43,7 @@ namespace Blink {
     }
 
     VkResult VulkanPhysicalDevice::createDevice(VkDeviceCreateInfo* createInfo, VkDevice* device) const {
-        return vkCreateDevice(deviceInfo.physicalDevice, createInfo, BL_VK_ALLOCATOR, device);
+        return vkCreateDevice(deviceInfo.physicalDevice, createInfo, BL_VULKAN_ALLOCATOR, device);
     }
 
     uint32_t VulkanPhysicalDevice::getMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags memoryPropertyFlags) const {

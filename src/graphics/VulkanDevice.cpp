@@ -37,11 +37,11 @@ namespace Blink {
     }
 
     VkResult VulkanDevice::createSwapChain(VkSwapchainCreateInfoKHR* createInfo, VkSwapchainKHR* swapchain) const {
-        return vkCreateSwapchainKHR(device, createInfo, BL_VK_ALLOCATOR, swapchain);
+        return vkCreateSwapchainKHR(device, createInfo, BL_VULKAN_ALLOCATOR, swapchain);
     }
 
     void VulkanDevice::destroySwapChain(VkSwapchainKHR swapChain) const {
-        vkDestroySwapchainKHR(device, swapChain, BL_VK_ALLOCATOR);
+        vkDestroySwapchainKHR(device, swapChain, BL_VULKAN_ALLOCATOR);
     }
 
     void VulkanDevice::getSwapChainImages(uint32_t* imageCount, std::vector<VkImage>* images, VkSwapchainKHR swapChain) const {
@@ -51,61 +51,61 @@ namespace Blink {
     }
 
     VkResult VulkanDevice::createImageView(VkImageViewCreateInfo* createInfo, VkImageView* imageView) const {
-        return vkCreateImageView(device, createInfo, BL_VK_ALLOCATOR, imageView);
+        return vkCreateImageView(device, createInfo, BL_VULKAN_ALLOCATOR, imageView);
     }
 
     void VulkanDevice::destroyImageView(VkImageView imageView) const {
-        vkDestroyImageView(device, imageView, BL_VK_ALLOCATOR);
+        vkDestroyImageView(device, imageView, BL_VULKAN_ALLOCATOR);
     }
 
     VkResult VulkanDevice::createShaderModule(VkShaderModuleCreateInfo* createInfo, VkShaderModule* shaderModule) const {
-        return vkCreateShaderModule(device, createInfo, BL_VK_ALLOCATOR, shaderModule);
+        return vkCreateShaderModule(device, createInfo, BL_VULKAN_ALLOCATOR, shaderModule);
     }
 
     void VulkanDevice::destroyShaderModule(VkShaderModule shaderModule) const {
-        vkDestroyShaderModule(device, shaderModule, BL_VK_ALLOCATOR);
+        vkDestroyShaderModule(device, shaderModule, BL_VULKAN_ALLOCATOR);
     }
 
     VkResult VulkanDevice::createPipelineLayout(VkPipelineLayoutCreateInfo* createInfo, VkPipelineLayout* layout) const {
-        return vkCreatePipelineLayout(device, createInfo, BL_VK_ALLOCATOR, layout);
+        return vkCreatePipelineLayout(device, createInfo, BL_VULKAN_ALLOCATOR, layout);
     }
 
     void VulkanDevice::destroyPipelineLayout(VkPipelineLayout layout) const {
-        vkDestroyPipelineLayout(device, layout, BL_VK_ALLOCATOR);
+        vkDestroyPipelineLayout(device, layout, BL_VULKAN_ALLOCATOR);
     }
 
     VkResult VulkanDevice::createRenderPass(VkRenderPassCreateInfo* createInfo, VkRenderPass* renderPass) const {
-        return vkCreateRenderPass(device, createInfo, BL_VK_ALLOCATOR, renderPass);
+        return vkCreateRenderPass(device, createInfo, BL_VULKAN_ALLOCATOR, renderPass);
     }
 
     void VulkanDevice::destroyRenderPass(VkRenderPass renderPass) const {
-        vkDestroyRenderPass(device, renderPass, BL_VK_ALLOCATOR);
+        vkDestroyRenderPass(device, renderPass, BL_VULKAN_ALLOCATOR);
     }
 
     VkResult VulkanDevice::createGraphicsPipeline(VkGraphicsPipelineCreateInfo* createInfo, VkPipeline* pipeline) const {
         constexpr uint32_t count = 1;
         VkPipelineCache cache = VK_NULL_HANDLE;
-        return vkCreateGraphicsPipelines(device, cache, count, createInfo, BL_VK_ALLOCATOR, pipeline);
+        return vkCreateGraphicsPipelines(device, cache, count, createInfo, BL_VULKAN_ALLOCATOR, pipeline);
     };
 
     void VulkanDevice::destroyGraphicsPipeline(VkPipeline pipeline) const {
-        vkDestroyPipeline(device, pipeline, BL_VK_ALLOCATOR);
+        vkDestroyPipeline(device, pipeline, BL_VULKAN_ALLOCATOR);
     };
 
     VkResult VulkanDevice::createFramebuffer(VkFramebufferCreateInfo* createInfo, VkFramebuffer* framebuffer) const {
-        return vkCreateFramebuffer(device, createInfo, BL_VK_ALLOCATOR, framebuffer);
+        return vkCreateFramebuffer(device, createInfo, BL_VULKAN_ALLOCATOR, framebuffer);
     };
 
     void VulkanDevice::destroyFramebuffer(VkFramebuffer framebuffer) const {
-        vkDestroyFramebuffer(device, framebuffer, BL_VK_ALLOCATOR);
+        vkDestroyFramebuffer(device, framebuffer, BL_VULKAN_ALLOCATOR);
     };
 
     VkResult VulkanDevice::createCommandPool(VkCommandPoolCreateInfo* createInfo, VkCommandPool* commandPool) const {
-        return vkCreateCommandPool(device, createInfo, BL_VK_ALLOCATOR, commandPool);
+        return vkCreateCommandPool(device, createInfo, BL_VULKAN_ALLOCATOR, commandPool);
     };
 
     void VulkanDevice::destroyCommandPool(VkCommandPool commandPool) const {
-        vkDestroyCommandPool(device, commandPool, BL_VK_ALLOCATOR);
+        vkDestroyCommandPool(device, commandPool, BL_VULKAN_ALLOCATOR);
     };
 
     VkResult VulkanDevice::allocateCommandBuffers(VkCommandBufferAllocateInfo* allocateInfo, VkCommandBuffer* commandBuffers) const {
@@ -117,19 +117,19 @@ namespace Blink {
     };
 
     VkResult VulkanDevice::createSemaphore(VkSemaphoreCreateInfo* createInfo, VkSemaphore* semaphore) const {
-        return vkCreateSemaphore(device, createInfo, BL_VK_ALLOCATOR, semaphore);
+        return vkCreateSemaphore(device, createInfo, BL_VULKAN_ALLOCATOR, semaphore);
     };
 
     void VulkanDevice::destroySemaphore(VkSemaphore semaphore) const {
-        vkDestroySemaphore(device, semaphore, BL_VK_ALLOCATOR);
+        vkDestroySemaphore(device, semaphore, BL_VULKAN_ALLOCATOR);
     };
 
     VkResult VulkanDevice::createFence(VkFenceCreateInfo* createInfo, VkFence* fence) const {
-        return vkCreateFence(device, createInfo, BL_VK_ALLOCATOR, fence);
+        return vkCreateFence(device, createInfo, BL_VULKAN_ALLOCATOR, fence);
     };
 
     void VulkanDevice::destroyFence(VkFence fence) const {
-        vkDestroyFence(device, fence, BL_VK_ALLOCATOR);
+        vkDestroyFence(device, fence, BL_VULKAN_ALLOCATOR);
     };
 
     void VulkanDevice::waitForFence(VkFence* fence) const {
@@ -155,11 +155,11 @@ namespace Blink {
     };
 
     VkResult VulkanDevice::createBuffer(VkBufferCreateInfo* createInfo, VkBuffer* buffer) const {
-        return vkCreateBuffer(device, createInfo, BL_VK_ALLOCATOR, buffer);
+        return vkCreateBuffer(device, createInfo, BL_VULKAN_ALLOCATOR, buffer);
     }
 
     void VulkanDevice::destroyBuffer(VkBuffer buffer) const {
-        vkDestroyBuffer(device, buffer, BL_VK_ALLOCATOR);
+        vkDestroyBuffer(device, buffer, BL_VULKAN_ALLOCATOR);
     }
 
     VkMemoryRequirements VulkanDevice::getMemoryRequirements(VkBuffer buffer) const {
@@ -169,11 +169,11 @@ namespace Blink {
     }
 
     VkResult VulkanDevice::allocateMemory(VkMemoryAllocateInfo* allocateInfo, VkDeviceMemory* memory) const {
-        return vkAllocateMemory(device, allocateInfo, BL_VK_ALLOCATOR, memory);
+        return vkAllocateMemory(device, allocateInfo, BL_VULKAN_ALLOCATOR, memory);
     }
 
     void VulkanDevice::freeMemory(VkDeviceMemory memory) const {
-        vkFreeMemory(device, memory, BL_VK_ALLOCATOR);
+        vkFreeMemory(device, memory, BL_VULKAN_ALLOCATOR);
     }
 
     void VulkanDevice::bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const {
@@ -192,19 +192,19 @@ namespace Blink {
     }
 
     VkResult VulkanDevice::createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo* createInfo, VkDescriptorSetLayout* layout) const {
-        return vkCreateDescriptorSetLayout(device, createInfo, BL_VK_ALLOCATOR, layout);
+        return vkCreateDescriptorSetLayout(device, createInfo, BL_VULKAN_ALLOCATOR, layout);
     }
 
     void VulkanDevice::destroyDescriptorSetLayout(VkDescriptorSetLayout layout) const {
-        vkDestroyDescriptorSetLayout(device, layout, BL_VK_ALLOCATOR);
+        vkDestroyDescriptorSetLayout(device, layout, BL_VULKAN_ALLOCATOR);
     }
 
     VkResult VulkanDevice::createDescriptorPool(VkDescriptorPoolCreateInfo* createInfo, VkDescriptorPool* pool) const {
-        return vkCreateDescriptorPool(device, createInfo, BL_VK_ALLOCATOR, pool);
+        return vkCreateDescriptorPool(device, createInfo, BL_VULKAN_ALLOCATOR, pool);
     }
 
     void VulkanDevice::destroyDescriptorPool(VkDescriptorPool pool) const {
-        vkDestroyDescriptorPool(device, pool, BL_VK_ALLOCATOR);
+        vkDestroyDescriptorPool(device, pool, BL_VULKAN_ALLOCATOR);
     }
 
     VkResult VulkanDevice::allocateDescriptorSets(VkDescriptorSetAllocateInfo* allocateInfo, VkDescriptorSet* descriptorSets) const {
@@ -254,7 +254,7 @@ namespace Blink {
     }
 
     void VulkanDevice::destroyDevice() const {
-        vkDestroyDevice(device, BL_VK_ALLOCATOR);
+        vkDestroyDevice(device, BL_VULKAN_ALLOCATOR);
     }
 
     VkQueue VulkanDevice::getDeviceQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const {
