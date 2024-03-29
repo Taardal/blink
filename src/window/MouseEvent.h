@@ -12,6 +12,10 @@ namespace Blink {
         std::string toString() const override;
     };
 
+    std::ostream& operator<<(std::ostream& os, const MouseMovedEvent& event);
+}
+
+namespace Blink {
     struct MouseScrolledEvent final : Event {
         float xOffset;
         float yOffset;
@@ -21,6 +25,10 @@ namespace Blink {
         std::string toString() const override;
     };
 
+    std::ostream& operator<<(std::ostream& os, const MouseScrolledEvent& event);
+}
+
+namespace Blink {
     struct MouseButtonEvent : Event {
     public:
         int32_t button;
@@ -32,11 +40,19 @@ namespace Blink {
         std::string toString() const override;
     };
 
+    std::ostream& operator<<(std::ostream& os, const MouseButtonEvent& event);
+}
+
+namespace Blink {
     struct MouseButtonPressedEvent final : MouseButtonEvent {
         explicit MouseButtonPressedEvent(int32_t button);
     };
+}
 
+namespace Blink {
     struct MouseButtonReleasedEvent final : MouseButtonEvent {
         explicit MouseButtonReleasedEvent(int32_t button);
     };
 }
+
+
