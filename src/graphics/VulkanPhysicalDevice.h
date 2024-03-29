@@ -52,6 +52,8 @@ namespace Blink {
 
         uint32_t getMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags memoryPropertyFlags) const;
 
+        VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
+
     private:
         VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const std::vector<const char*>& requiredExtensions) const;
 

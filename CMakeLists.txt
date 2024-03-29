@@ -54,6 +54,8 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanDevice.h
         ${SRC_DIR}/graphics/VulkanGraphicsPipeline.cpp
         ${SRC_DIR}/graphics/VulkanGraphicsPipeline.h
+        ${SRC_DIR}/graphics/VulkanImage.cpp
+        ${SRC_DIR}/graphics/VulkanImage.h
         ${SRC_DIR}/graphics/VulkanIndexBuffer.cpp
         ${SRC_DIR}/graphics/VulkanIndexBuffer.h
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.cpp

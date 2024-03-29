@@ -68,6 +68,21 @@ namespace Blink {
         return -1;
     }
 
+    VkFormat VulkanPhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const {
+        for (VkFormat format : candidates) {
+            VkFormatProperties props;
+            vkGetPhysicalDeviceFormatProperties(deviceInfo.physicalDevice, format, &props);
+            if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+                return format;
+            }
+            if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+                return format;
+            }
+        }
+        BL_LOG_WARN("Could not find supported format");
+        return VK_FORMAT_UNDEFINED;
+    }
+
     VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const std::vector<const char*>& requiredExtensions) const {
         std::multimap<uint32_t , VulkanPhysicalDeviceInfo> devicesByRating;
         for (VkPhysicalDevice vkPhysicalDevice : vkPhysicalDevices) {

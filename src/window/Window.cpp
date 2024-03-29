@@ -171,9 +171,6 @@ namespace Blink {
 
     void Window::sendEvent(Event& event, GLFWwindow* glfwWindow) {
         BL_LOG_DEBUG(event.toString());
-        std::cout << "NOTICE ME" << event << std::endl;
-        std::cout << "NOTICE ME" << event << std::endl;
-        std::cout << "NOTICE ME" << event << std::endl;
         auto userPointer = (UserPointer*) glfwGetWindowUserPointer(glfwWindow);
         userPointer->onEvent(event);
     }

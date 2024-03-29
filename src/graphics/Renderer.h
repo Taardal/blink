@@ -18,6 +18,7 @@
 #include "graphics/VulkanVertexBuffer.h"
 #include "graphics/VulkanIndexBuffer.h"
 #include "graphics/VulkanUniformBuffer.h"
+#include "graphics/VulkanImage.h"
 #include "graphics/Quad.h"
 #include "graphics/Vertex.h"
 
@@ -67,20 +68,29 @@ namespace Blink {
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
 
-        VkImage textureImage;
-        VkDeviceMemory textureImageMemory;
+        VulkanImage* textureImage;
         VkImageView textureImageView;
         VkSampler textureSampler;
 
+        VulkanImage* depthImage;
+        VkImageView depthImageView;
+
     private:
         const std::vector<Vertex> vertices = {
-            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+
+            {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
         };
+
         const std::vector<uint16_t> indices = {
-            0, 1, 2, 2, 3, 0
+            0, 1, 2, 2, 3, 0,
+            4, 5, 6, 6, 7, 4
         };
 
     public:
@@ -133,6 +143,8 @@ namespace Blink {
 
         bool initializeTextureImage();
 
+        bool createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) const;
+
         void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
         void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) const;
@@ -140,5 +152,11 @@ namespace Blink {
         VkCommandBuffer beginSingleTimeCommands() const;
 
         void endSingleTimeCommands(VkCommandBuffer commandBuffer) const;
+
+        bool initializeDepthResources();
+
+        VkFormat findDepthFormat() const;
+
+        bool hasStencilComponent(VkFormat format) const;
     };
 }
