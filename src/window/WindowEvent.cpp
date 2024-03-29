@@ -5,7 +5,9 @@ namespace Blink {
     WindowCloseEvent::WindowCloseEvent()
         : Event(EventType::WindowClose) {
     }
+}
 
+namespace Blink {
     WindowMinimizeEvent::WindowMinimizeEvent(
         bool minimized
     ) : Event(EventType::WindowMinimize),
@@ -18,6 +20,13 @@ namespace Blink {
         return ss.str();
     }
 
+    std::ostream& operator<<(std::ostream& os, const WindowMinimizeEvent& event) {
+        os << event.toString();
+        return os;
+    }
+}
+
+namespace Blink {
     WindowResizeEvent::WindowResizeEvent(
         int32_t width,
         int32_t height
@@ -30,5 +39,10 @@ namespace Blink {
         std::stringstream ss;
         ss << name << "{width=" << width << ", height=" << height << "}";
         return ss.str();
+    }
+
+    std::ostream& operator<<(std::ostream& os, const WindowResizeEvent& event) {
+        os << event.toString();
+        return os;
     }
 }

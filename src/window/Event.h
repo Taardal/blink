@@ -40,4 +40,6 @@ namespace Blink {
             return *downcastedEvent;
         }
     };
+
+    std::ostream& operator<<(std::ostream& os, const Event& event);
 }

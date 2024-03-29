@@ -31,7 +31,7 @@ namespace Blink {
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
         float angle = time * glm::radians(90.0f);
-        constexpr glm::vec3 axis(0.0f, 1.0f, 0.0f);
+        constexpr glm::vec3 axis(0.0f, 0.0f, 1.0f);
         glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, axis);
 
         // SCALE
@@ -44,7 +44,7 @@ namespace Blink {
         if (event.type != EventType::KeyPressed) {
             return;
         }
-        if (event.as<KeyPressedEvent>().key == Key::R) {
+        if (event.as<KeyPressedEvent>().key == Key::P) {
             luaEngine->reload(&registry);
             BL_LOG_INFO("Recreated entity bindings");
         }
@@ -52,7 +52,7 @@ namespace Blink {
 
     void Scene::initializeEntityComponents() {
         TransformComponent transformComponent{};
-        transformComponent.position = { 0.0f, 0.0f, 0.0f };
+        transformComponent.position = { 2.0f, 2.0f, 2.0f };
         registry.emplace<TransformComponent>(player, transformComponent);
 
         TagComponent tagComponent{};

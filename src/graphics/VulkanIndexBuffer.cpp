@@ -9,6 +9,11 @@ namespace Blink {
         delete buffer;
     }
 
+    VulkanIndexBuffer::operator VkBuffer() const {
+        BL_ASSERT(buffer != nullptr);
+        return *buffer;
+    }
+
     bool VulkanIndexBuffer::initialize(const std::vector<uint16_t>& indices) {
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
@@ -48,7 +53,7 @@ namespace Blink {
     void VulkanIndexBuffer::bind(VkCommandBuffer commandBuffer) const {
         constexpr VkDeviceSize offset = 0;
         constexpr VkIndexType indexType = VK_INDEX_TYPE_UINT16;
-        vkCmdBindIndexBuffer(commandBuffer, buffer->getBuffer(), offset, indexType);
+        vkCmdBindIndexBuffer(commandBuffer, *buffer, offset, indexType);
     }
 
 }

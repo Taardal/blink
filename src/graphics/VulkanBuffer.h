@@ -26,7 +26,7 @@ namespace Blink {
     public:
         VulkanBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
 
-        VkBuffer getBuffer() const;
+        operator VkBuffer() const;
 
         bool initialize(const VulkanBufferConfig& config);
 

@@ -22,6 +22,8 @@ namespace Blink {
 
         ~VulkanVertexBuffer();
 
+        operator VkBuffer() const;
+
         bool initialize(const std::vector<Vertex>& vertices);
 
         void terminate();

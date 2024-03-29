@@ -15,6 +15,8 @@ namespace Blink {
 
         ~VulkanCommandPool();
 
+        operator VkCommandPool() const;
+
         bool allocateCommandBuffers(std::vector<VkCommandBuffer>* commandBuffers) const;
 
         bool allocateCommandBuffers(uint32_t count, VkCommandBuffer* commandBuffers) const;

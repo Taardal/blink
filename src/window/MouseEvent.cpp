@@ -11,6 +11,13 @@ namespace Blink {
         return ss.str();
     }
 
+    std::ostream& operator<<(std::ostream& os, const MouseMovedEvent& event) {
+        os << event.toString();
+        return os;
+    }
+}
+
+namespace Blink {
     MouseScrolledEvent::MouseScrolledEvent(float xOffset, float yOffset)
         : Event(EventType::MouseScrolled), xOffset(xOffset), yOffset(yOffset) {
     }
@@ -21,6 +28,13 @@ namespace Blink {
         return ss.str();
     }
 
+    std::ostream& operator<<(std::ostream& os, const MouseScrolledEvent& event) {
+        os << event.toString();
+        return os;
+    }
+}
+
+namespace Blink {
     MouseButtonEvent::MouseButtonEvent(EventType type, int32_t button) : Event(type), button(button) {
     }
 
@@ -30,10 +44,19 @@ namespace Blink {
         return ss.str();
     }
 
+    std::ostream& operator<<(std::ostream& os, const MouseButtonEvent& event) {
+        os << event.toString();
+        return os;
+    }
+}
+
+namespace Blink {
     MouseButtonPressedEvent::MouseButtonPressedEvent(int32_t button)
         : MouseButtonEvent(EventType::MouseButtonPressed, button) {
     }
+}
 
+namespace Blink {
     MouseButtonReleasedEvent::MouseButtonReleasedEvent(int32_t button)
         : MouseButtonEvent(EventType::MouseButtonReleased, button) {
     }

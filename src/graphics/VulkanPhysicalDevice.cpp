@@ -3,7 +3,7 @@
 
 namespace Blink {
 
-    VulkanPhysicalDevice::VulkanPhysicalDevice(Vulkan* vulkan) : vulkan(vulkan) {
+    VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanApp* vulkan) : vulkan(vulkan) {
         std::vector<VkPhysicalDevice> availableDevices = vulkan->getPhysicalDevices();
         if (availableDevices.empty()) {
             throw std::runtime_error("Could not find any physical devices");
@@ -34,6 +34,10 @@ namespace Blink {
         return deviceInfo.features;
     }
 
+    const VkPhysicalDeviceProperties& VulkanPhysicalDevice::getProperties() const {
+        return deviceInfo.properties;
+    }
+
     const SwapChainInfo& VulkanPhysicalDevice::getSwapChainInfo() const {
         return deviceInfo.swapChainInfo;
     }
@@ -43,7 +47,7 @@ namespace Blink {
     }
 
     VkResult VulkanPhysicalDevice::createDevice(VkDeviceCreateInfo* createInfo, VkDevice* device) const {
-        return vkCreateDevice(deviceInfo.physicalDevice, createInfo, BL_VK_ALLOCATOR, device);
+        return vkCreateDevice(deviceInfo.physicalDevice, createInfo, BL_VULKAN_ALLOCATOR, device);
     }
 
     uint32_t VulkanPhysicalDevice::getMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags memoryPropertyFlags) const {
@@ -62,6 +66,21 @@ namespace Blink {
             return memoryTypeIndex;
         }
         return -1;
+    }
+
+    VkFormat VulkanPhysicalDevice::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const {
+        for (VkFormat format : candidates) {
+            VkFormatProperties props;
+            vkGetPhysicalDeviceFormatProperties(deviceInfo.physicalDevice, format, &props);
+            if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+                return format;
+            }
+            if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+                return format;
+            }
+        }
+        BL_LOG_WARN("Could not find supported format");
+        return VK_FORMAT_UNDEFINED;
     }
 
     VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const std::vector<const char*>& requiredExtensions) const {
@@ -159,23 +178,21 @@ namespace Blink {
 
     uint32_t VulkanPhysicalDevice::getSuitabilityRating(const VulkanPhysicalDeviceInfo& deviceInfo, const std::vector<const char*>& requiredExtensions) const {
         if (!hasRequiredExtensions(requiredExtensions, deviceInfo.extensions)) {
-            BL_LOG_DEBUG("{0} does not have required device extensions", deviceInfo.properties.deviceName);
+            BL_LOG_DEBUG("[{}] does not have required device extensions", deviceInfo.properties.deviceName);
             return 0;
         }
         if (!hasRequiredQueueFamilyIndices(deviceInfo.queueFamilyIndices)) {
-            BL_LOG_DEBUG("{0} does not have required queue family indices", deviceInfo.properties.deviceName);
+            BL_LOG_DEBUG("[{}] does not have required queue family indices", deviceInfo.properties.deviceName);
             return 0;
         }
          if (!hasRequiredSwapChainSupport(deviceInfo.swapChainInfo)) {
-            BL_LOG_DEBUG("{0} does not have required swap chain info", deviceInfo.properties.deviceName);
+            BL_LOG_DEBUG("[{}] does not have required swap chain info", deviceInfo.properties.deviceName);
             return 0;
         }
-         /*
         if (!hasRequiredFeatures(deviceInfo.features)) {
-            BL_LOG_DEBUG("{0} does not have required device features", deviceInfo.properties.deviceName);
+            BL_LOG_DEBUG("[{}] does not have required device features", deviceInfo.properties.deviceName);
             return 0;
         }
-         */
         uint32_t rating = deviceInfo.properties.limits.maxImageDimension2D;
         if (deviceInfo.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             rating += 1000;

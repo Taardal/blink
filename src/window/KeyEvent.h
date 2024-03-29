@@ -16,18 +16,28 @@ namespace Blink {
         std::string toString() const override;
     };
 
+    std::ostream& operator<<(std::ostream& os, const KeyEvent& event);
+}
+
+namespace Blink {
     struct KeyPressedEvent final : KeyEvent {
         explicit KeyPressedEvent(int32_t key, int32_t mods, int32_t scanCode);
     };
+}
 
+namespace Blink {
     struct KeyReleasedEvent final : KeyEvent {
         explicit KeyReleasedEvent(int32_t key, int32_t mods, int32_t scanCode);
     };
+}
 
+namespace Blink {
     struct KeyRepeatedEvent final : KeyEvent {
         explicit KeyRepeatedEvent(int32_t key, int32_t mods, int32_t scanCode);
     };
+}
 
+namespace Blink {
     struct KeyTypedEvent final : KeyEvent {
         explicit KeyTypedEvent(int32_t key, int32_t mods, int32_t scanCode);
     };

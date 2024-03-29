@@ -37,6 +37,7 @@ CMakeSettings.json
 
 # Clangd
 .cache/
+compile_commands.json
 
 # Xcode
 *.build

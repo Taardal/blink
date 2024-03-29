@@ -10,7 +10,7 @@ namespace Blink {
     private:
         Window* window;
         Keyboard* keyboard;
-        glm::vec3 position = {0.0f, 0.0f, 2.0f};
+        glm::vec3 position = {2.0f, 2.0f, 4.0f};
         glm::vec3 frontDirection = {0.0f, 0.0f, 0.0f};
         glm::vec3 upDirection = {0.0f, 0.0f, 0.0f};
         glm::vec3 worldUpDirection = {0.0f, 1.0f, 0.0f};

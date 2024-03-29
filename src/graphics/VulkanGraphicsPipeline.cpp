@@ -2,9 +2,18 @@
 #include "Vertex.h"
 
 namespace Blink {
-
-    VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanShader* vertexShader, VulkanShader* fragmentShader, VulkanRenderPass* renderPass, VulkanSwapChain* swapChain, VulkanDevice* device)
-            : vertexShader(vertexShader), fragmentShader(fragmentShader), renderPass(renderPass), swapChain(swapChain), device(device) {}
+    VulkanGraphicsPipeline::VulkanGraphicsPipeline(
+        VulkanShader* vertexShader,
+        VulkanShader* fragmentShader,
+        VulkanRenderPass* renderPass,
+        VulkanSwapChain* swapChain,
+        VulkanDevice* device
+    ) : vertexShader(vertexShader),
+        fragmentShader(fragmentShader),
+        renderPass(renderPass),
+        swapChain(swapChain),
+        device(device) {
+    }
 
     VkPipelineLayout VulkanGraphicsPipeline::getLayout() const {
         return layout;
@@ -14,13 +23,13 @@ namespace Blink {
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
         vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertexShaderStageCreateInfo.module = vertexShader->getModule();
+        vertexShaderStageCreateInfo.module = *vertexShader;
         vertexShaderStageCreateInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo fragmentShaderStageCreateInfo{};
         fragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragmentShaderStageCreateInfo.module = fragmentShader->getModule();
+        fragmentShaderStageCreateInfo.module = *fragmentShader;
         fragmentShaderStageCreateInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {
@@ -38,7 +47,7 @@ namespace Blink {
         dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
         VkVertexInputBindingDescription bindingDescription = Vertex::getBindingDescription();
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = Vertex::getAttributeDescriptions();
+        VertexAttributeDescriptions attributeDescriptions = Vertex::getAttributeDescriptions();
 
         VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
         vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -88,6 +97,14 @@ namespace Blink {
         multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
         multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
+        VkPipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.stencilTestEnable = VK_FALSE;
+
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState{};
         colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         colorBlendAttachmentState.blendEnable = VK_FALSE;
@@ -120,8 +137,9 @@ namespace Blink {
         pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
         pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
         pipelineCreateInfo.layout = layout;
-        pipelineCreateInfo.renderPass = renderPass->getRenderPass();
+        pipelineCreateInfo.renderPass = *renderPass;
         pipelineCreateInfo.subpass = 0;
+        pipelineCreateInfo.pDepthStencilState = &depthStencil;
 
         if (device->createGraphicsPipeline(&pipelineCreateInfo, &pipeline) != VK_SUCCESS) {
             BL_LOG_ERROR("Could not create pipeline");

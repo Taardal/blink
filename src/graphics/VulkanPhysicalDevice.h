@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vulkan.h"
+#include "VulkanApp.h"
 #include <vulkan/vulkan.h>
 
 namespace Blink {
@@ -30,17 +30,19 @@ namespace Blink {
         static const std::vector<const char*> requiredExtensions;
 
     private:
-        Vulkan* vulkan = nullptr;
+        VulkanApp* vulkan;
         VulkanPhysicalDeviceInfo deviceInfo{};
 
     public:
-        explicit VulkanPhysicalDevice(Vulkan* vulkan);
+        explicit VulkanPhysicalDevice(VulkanApp* vulkan);
 
         const std::vector<VkExtensionProperties>& getExtensions() const;
 
         const QueueFamilyIndices& getQueueFamilyIndices() const;
 
         const VkPhysicalDeviceFeatures& getFeatures() const;
+
+        const VkPhysicalDeviceProperties& getProperties() const;
 
         const SwapChainInfo& getSwapChainInfo() const;
 
@@ -49,6 +51,8 @@ namespace Blink {
         VkResult createDevice(VkDeviceCreateInfo* createInfo, VkDevice* device) const;
 
         uint32_t getMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags memoryPropertyFlags) const;
+
+        VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
 
     private:
         VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const std::vector<const char*>& requiredExtensions) const;

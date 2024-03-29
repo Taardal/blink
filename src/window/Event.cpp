@@ -40,3 +40,10 @@ namespace Blink {
         }
     }
 }
+
+namespace Blink {
+    std::ostream& operator<<(std::ostream& os, const Event& event) {
+        os << event.toString();
+        return os;
+    }
+}

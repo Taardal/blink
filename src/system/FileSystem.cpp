@@ -1,20 +1,40 @@
 #include "FileSystem.h"
 #include "Log.h"
-#include <fstream>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include <filesystem>
+#include <fstream>
 
 namespace Blink {
+    Image::~Image() {
+        free();
+    }
+
+    void Image::free() {
+        if (pixels == nullptr) {
+            return;
+        }
+        stbi_image_free(pixels);
+        pixels = nullptr;
+    }
+}
+
+namespace Blink {
+    bool FileSystem::exists(const char* path) const {
+        return std::filesystem::exists(path);
+    }
+
     std::vector<char> FileSystem::readBytes(const char* path) const {
         if (!exists(path)) {
-            BL_LOG_ERROR("Could not find file [{}]", path);
-            return {};
+            throw std::runtime_error(BL_TAG("Could not find file [" + std::string(path) + "]"));
         }
         std::ifstream file{path, std::ios::ate | std::ios::binary};
         if (!file.is_open()) {
-            BL_LOG_ERROR("Could not open file with path [{0}]", path);
-            return {};
+            throw std::runtime_error(BL_TAG("Could not open file with path [" + std::string(path) + "]"));
         }
-        uint32_t fileSize = (uint32_t) file.tellg();
+        auto fileSize = (uint32_t) file.tellg();
         std::vector<char> buffer(fileSize);
         file.seekg(0);
         file.read(buffer.data(), fileSize);
@@ -22,7 +42,21 @@ namespace Blink {
         return buffer;
     }
 
-    bool FileSystem::exists(const char* string) const {
-        return std::filesystem::exists(string);
+    Image FileSystem::readImage(const char* path) const {
+        int32_t width;
+        int32_t height;
+        int32_t channels;
+        int32_t desiredChannels = STBI_rgb_alpha;
+        unsigned char* pixels = stbi_load(path, &width, &height, &channels, desiredChannels);
+        if (!pixels) {
+            throw std::runtime_error(BL_TAG("Could not read image [" + std::string(path) + "]"));
+        }
+        Image image{};
+        image.width = width;
+        image.height = height;
+        image.channels = channels;
+        image.size = width * height * channels;
+        image.pixels = pixels;
+        return image;
     }
 }

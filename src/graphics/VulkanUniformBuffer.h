@@ -18,7 +18,7 @@ namespace Blink {
 
         ~VulkanUniformBuffer();
 
-        VulkanBuffer* getBuffer() const;
+        operator VkBuffer() const;
 
         bool initialize(uint32_t bufferSize);
 

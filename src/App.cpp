@@ -32,17 +32,7 @@ namespace Blink {
             this->onEvent(event);
         });
         keyboard = new Keyboard(window);
-        VulkanConfig vulkanConfig{};
-        vulkanConfig.applicationName = appConfig.windowTitle;
-        vulkanConfig.engineName = appConfig.windowTitle;
-        vulkanConfig.validationLayersEnabled = Environment::isDebug();
-        vulkan = new Vulkan(vulkanConfig, window);
-        physicalDevice = new VulkanPhysicalDevice(vulkan);
-        device = new VulkanDevice(physicalDevice);
-        swapChain = new VulkanSwapChain(device, physicalDevice, vulkan, window);
-        renderPass = new VulkanRenderPass(swapChain, device);
-        commandPool = new VulkanCommandPool(device, physicalDevice);
-        renderer = new Renderer(fileSystem, window, physicalDevice, device, swapChain, renderPass, commandPool);
+        renderer = new Renderer(appConfig, fileSystem, window);
         luaEngine = new LuaEngine(keyboard);
         camera = new Camera(window, keyboard);
         scene = new Scene(keyboard, luaEngine);
@@ -53,20 +43,17 @@ namespace Blink {
         delete camera;
         delete luaEngine;
         delete renderer;
-        delete commandPool;
-        delete renderPass;
-        delete swapChain;
-        delete device;
-        delete physicalDevice;
-        delete vulkan;
         delete keyboard;
         delete window;
         delete fileSystem;
     }
 
-    void App::run() const {
+    void App::run() {
         while (!window->shouldClose()) {
-            double timestep = window->update();
+            double time = window->update();
+            double timestep = time - lastTime;
+            lastTime = time;
+
             camera->update(timestep);
 
             glm::mat4 playerModel = scene->update(timestep);
@@ -77,6 +64,14 @@ namespace Blink {
             frame.projection = camera->getProjectionMatrix();
 
             renderer->render(frame);
+
+            fps++;
+            fpsUpdateTimestep += timestep;
+            if (fpsUpdateTimestep >= 1.0) {
+                BL_LOG_DEBUG("FPS [{}]", fps);
+                fps = 0;
+                fpsUpdateTimestep = 0;
+            }
         }
     }
 

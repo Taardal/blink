@@ -2,24 +2,30 @@
 
 #include "system/FileSystem.h"
 #include "window/Window.h"
-#include "VulkanPhysicalDevice.h"
-#include "VulkanDevice.h"
-#include "VulkanSwapChain.h"
-#include "VulkanRenderPass.h"
-#include "VulkanCommandPool.h"
-#include "VulkanShader.h"
-#include "VulkanGraphicsPipeline.h"
-#include "VulkanVertexBuffer.h"
-#include "VulkanIndexBuffer.h"
-#include "VulkanUniformBuffer.h"
-#include "Quad.h"
-#include "Vertex.h"
+#include "graphics/VulkanApp.h"
+#include "graphics/VulkanPhysicalDevice.h"
+#include "graphics/VulkanDevice.h"
+#include "graphics/VulkanSwapChain.h"
+#include "graphics/VulkanRenderPass.h"
+#include "graphics/VulkanCommandPool.h"
+#include "graphics/VulkanPhysicalDevice.h"
+#include "graphics/VulkanDevice.h"
+#include "graphics/VulkanSwapChain.h"
+#include "graphics/VulkanRenderPass.h"
+#include "graphics/VulkanCommandPool.h"
+#include "graphics/VulkanShader.h"
+#include "graphics/VulkanGraphicsPipeline.h"
+#include "graphics/VulkanVertexBuffer.h"
+#include "graphics/VulkanIndexBuffer.h"
+#include "graphics/VulkanUniformBuffer.h"
+#include "graphics/VulkanImage.h"
+#include "graphics/Quad.h"
+#include "graphics/Vertex.h"
 
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 
 namespace Blink {
-
     struct Frame {
         glm::mat4 model;
         glm::mat4 view;
@@ -39,6 +45,7 @@ namespace Blink {
     private:
         FileSystem* fileSystem;
         Window* window;
+        VulkanApp* vulkanApp;
         VulkanPhysicalDevice* physicalDevice;
         VulkanDevice* device;
         VulkanSwapChain* swapChain;
@@ -61,44 +68,36 @@ namespace Blink {
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
 
+        VulkanImage* textureImage;
+        VkImageView textureImageView;
+        VkSampler textureSampler;
+
+        VulkanImage* depthImage;
+        VkImageView depthImageView;
+
     private:
         const std::vector<Vertex> vertices = {
-            // Front face
-            {{-0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
-            {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-            {{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
+            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
 
-            // Back face
-            {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-            {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},
-            {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}
+            {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
         };
+
         const std::vector<uint16_t> indices = {
-            // Front face
             0, 1, 2, 2, 3, 0,
-            // Right face
-            1, 5, 6, 6, 2, 1,
-            // Back face
-            5, 4, 7, 7, 6, 5,
-            // Left face
-            4, 0, 3, 3, 7, 4,
-            // Top face
-            3, 2, 6, 6, 7, 3,
-            // Bottom face
-            0, 1, 5, 5, 4, 0
+            4, 5, 6, 6, 7, 4
         };
 
     public:
         Renderer(
+            const AppConfig& appConfig,
             FileSystem* fileSystem,
-            Window* window,
-            VulkanPhysicalDevice* physicalDevice,
-            VulkanDevice* device,
-            VulkanSwapChain* swapChain,
-            VulkanRenderPass* renderPass,
-            VulkanCommandPool* commandPool
+            Window* window
         );
 
         ~Renderer();
@@ -107,9 +106,15 @@ namespace Blink {
 
         void render(const Frame& frame);
 
-        void submitQuad(Quad& quad);
-
     private:
+        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
+
+        void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame);
+
+        bool recreateSwapChain();
+
+        void compileShaders();
+
         bool initialize();
 
         void terminate();
@@ -118,13 +123,13 @@ namespace Blink {
 
         void terminateUniformBuffers() const;
 
-        bool initializeDescriptorObjects();
-
-        void terminateDescriptorObjects() const;
-
         bool initializeGraphicsPipelineObjects() const;
 
         void terminateGraphicsPipelineObjects() const;
+
+        bool initializeDescriptorObjects();
+
+        void terminateDescriptorObjects() const;
 
         bool initializeFramebuffers();
 
@@ -136,20 +141,22 @@ namespace Blink {
 
         void terminateSyncObjects() const;
 
-        bool recreateSwapChain();
+        bool initializeTextureImage();
 
-        bool initializeSwapChain();
+        bool createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) const;
 
-        void terminateSwapChain();
+        void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
-        void drawFrame(const Frame& frame);
+        void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) const;
 
-        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
+        VkCommandBuffer beginSingleTimeCommands() const;
 
-        static void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame);
+        void endSingleTimeCommands(VkCommandBuffer commandBuffer) const;
 
-        static void compileShaders();
+        bool initializeDepthResources();
+
+        VkFormat findDepthFormat() const;
+
+        bool hasStencilComponent(VkFormat format) const;
     };
 }
-
-

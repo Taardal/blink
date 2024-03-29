@@ -2,19 +2,17 @@
 
 #include "AppConfig.h"
 #include "window/Window.h"
+#include "system/Log.h"
 #include <vulkan/vulkan.h>
 #include <vector>
 
-#define BL_VK_ALLOCATOR nullptr
+#define BL_VULKAN_ALLOCATOR VK_NULL_HANDLE
+
+#define BL_VULKAN_ASSERT(expression) BL_ASSERT(expression == VK_SUCCESS)
+#define BL_VULKAN_ASSERT_THROW(expression) BL_ASSERT_THROW(expression == VK_SUCCESS)
 
 namespace Blink {
-    struct VulkanConfig {
-        std::string applicationName;
-        std::string engineName;
-        bool validationLayersEnabled = false;
-    };
-
-    class Vulkan {
+    class VulkanApp {
     private:
         Window* window = nullptr;
         VkInstance vulkanInstance = nullptr;
@@ -23,9 +21,9 @@ namespace Blink {
         bool validationLayersEnabled = false;
 
     public:
-        Vulkan(const VulkanConfig& vulkanConfig, Window* window);
+        VulkanApp(const AppConfig& appConfig, Window* window);
 
-        ~Vulkan();
+        ~VulkanApp();
 
         std::vector<VkPhysicalDevice> getPhysicalDevices() const;
 
@@ -33,7 +31,7 @@ namespace Blink {
 
     private:
         bool createInstance(
-            const VulkanConfig& vulkanConfig,
+            const AppConfig& appConfig,
             const std::vector<const char*>& requiredExtensions,
             const std::vector<const char*>& validationLayers,
             const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo

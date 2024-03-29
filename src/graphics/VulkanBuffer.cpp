@@ -6,7 +6,7 @@ namespace Blink {
     VulkanBuffer::VulkanBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
             : commandPool(commandPool), device(device), physicalDevice(physicalDevice) {}
 
-    VkBuffer VulkanBuffer::getBuffer() const {
+    VulkanBuffer::operator VkBuffer() const {
         return buffer;
     }
 
@@ -24,7 +24,7 @@ namespace Blink {
             return false;
         }
 
-        const VkMemoryRequirements& memoryRequirements = device->getMemoryRequirements(buffer);
+        const VkMemoryRequirements& memoryRequirements = device->getBufferMemoryRequirements(buffer);
 
         VkMemoryAllocateInfo memoryAllocateInfo{};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;

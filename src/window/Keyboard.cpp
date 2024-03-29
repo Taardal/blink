@@ -54,30 +54,58 @@ namespace Blink {
                 return "Left";
             case Key::Right:
                 return "Right";
-            case Key::Q:
-                return "Q";
-            case Key::W:
-                return "W";
-            case Key::E:
-                return "E";
-            case Key::R:
-                return "R";
             case Key::A:
                 return "A";
-            case Key::S:
-                return "S";
+            case Key::B:
+                return "B";
+            case Key::C:
+                return "C";
             case Key::D:
                 return "D";
+            case Key::E:
+                return "E";
+            case Key::F:
+                return "F";
+            case Key::G:
+                return "G";
             case Key::H:
                 return "H";
+            case Key::I:
+                return "I";
             case Key::J:
                 return "J";
             case Key::K:
                 return "K";
             case Key::L:
                 return "L";
-            case Key::C:
-                return "C";
+            case Key::M:
+                return "M";
+            case Key::N:
+                return "N";
+            case Key::O:
+                return "O";
+            case Key::P:
+                return "P";
+            case Key::Q:
+                return "Q";
+            case Key::R:
+                return "R";
+            case Key::S:
+                return "S";
+            case Key::T:
+                return "T";
+            case Key::U:
+                return "U";
+            case Key::V:
+                return "V";
+            case Key::W:
+                return "W";
+            case Key::X:
+                return "X";
+            case Key::Y:
+                return "Y";
+            case Key::Z:
+                return "Z";
             case Key::Num_1:
                 return "Num_1";
             case Key::Num_2:
@@ -130,18 +158,32 @@ namespace Blink {
             Key::Down,
             Key::Left,
             Key::Right,
-            Key::Q,
-            Key::W,
-            Key::E,
-            Key::R,
             Key::A,
-            Key::S,
+            Key::B,
+            Key::C,
             Key::D,
+            Key::E,
+            Key::F,
+            Key::G,
             Key::H,
+            Key::I,
             Key::J,
             Key::K,
             Key::L,
-            Key::C,
+            Key::M,
+            Key::N,
+            Key::O,
+            Key::P,
+            Key::Q,
+            Key::R,
+            Key::S,
+            Key::T,
+            Key::U,
+            Key::V,
+            Key::W,
+            Key::X,
+            Key::Y,
+            Key::Z,
             Key::Num_1,
             Key::Num_2,
             Key::Num_3,
@@ -174,18 +216,32 @@ namespace Blink {
             { "Down", Key::Down },
             { "Left", Key::Left },
             { "Right", Key::Right },
-            { "Q", Key::Q },
-            { "W", Key::W },
-            { "E", Key::E },
-            { "R", Key::R },
             { "A", Key::A },
-            { "S", Key::S },
+            { "B", Key::B },
+            { "C", Key::C },
             { "D", Key::D },
+            { "E", Key::E },
+            { "F", Key::F },
+            { "G", Key::G },
             { "H", Key::H },
+            { "I", Key::I },
             { "J", Key::J },
             { "K", Key::K },
             { "L", Key::L },
-            { "C", Key::C },
+            { "M", Key::M },
+            { "N", Key::N },
+            { "O", Key::O },
+            { "P", Key::P },
+            { "Q", Key::Q },
+            { "R", Key::R },
+            { "S", Key::S },
+            { "T", Key::T },
+            { "U", Key::U },
+            { "V", Key::V },
+            { "W", Key::W },
+            { "X", Key::X },
+            { "Y", Key::Y },
+            { "Z", Key::Z },
             { "Num_1", Key::Num_1 },
             { "Num_2", Key::Num_2 },
             { "Num_3", Key::Num_3 },
@@ -218,18 +274,32 @@ namespace Blink {
             { Key::Down, "Down" },
             { Key::Left, "Left" },
             { Key::Right, "Right" },
-            { Key::Q, "Q" },
-            { Key::W, "W" },
-            { Key::E, "E" },
-            { Key::R, "R" },
             { Key::A, "A" },
-            { Key::S, "S" },
+            { Key::B, "B" },
+            { Key::C, "C" },
             { Key::D, "D" },
+            { Key::E, "E" },
+            { Key::F, "F" },
+            { Key::G, "G" },
             { Key::H, "H" },
+            { Key::I, "I" },
             { Key::J, "J" },
             { Key::K, "K" },
             { Key::L, "L" },
-            { Key::C, "C" },
+            { Key::M, "M" },
+            { Key::N, "N" },
+            { Key::O, "O" },
+            { Key::P, "P" },
+            { Key::Q, "Q" },
+            { Key::R, "R" },
+            { Key::S, "S" },
+            { Key::T, "T" },
+            { Key::U, "U" },
+            { Key::V, "V" },
+            { Key::W, "W" },
+            { Key::X, "X" },
+            { Key::Y, "Y" },
+            { Key::Z, "Z" },
             { Key::Num_1, "Num_1" },
             { Key::Num_2, "Num_2" },
             { Key::Num_3, "Num_3" },

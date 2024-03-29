@@ -26,6 +26,10 @@ namespace Blink {
         device->destroyCommandPool(commandPool);
     }
 
+    VulkanCommandPool::operator VkCommandPool() const {
+        return commandPool;
+    }
+
     bool VulkanCommandPool::allocateCommandBuffers(std::vector<VkCommandBuffer>* commandBuffers) const {
         return allocateCommandBuffers(commandBuffers->size(), commandBuffers->data());
     }

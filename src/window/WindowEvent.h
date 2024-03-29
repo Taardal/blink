@@ -6,7 +6,9 @@ namespace Blink {
     struct WindowCloseEvent final : Event {
         WindowCloseEvent();
     };
+}
 
+namespace Blink {
     struct WindowMinimizeEvent final : Event {
         bool minimized;
 
@@ -15,6 +17,10 @@ namespace Blink {
         std::string toString() const override;
     };
 
+    std::ostream& operator<<(std::ostream& os, const WindowMinimizeEvent& event);
+}
+
+namespace Blink {
     struct WindowResizeEvent final : Event {
         int32_t width;
         int32_t height;
@@ -23,4 +29,6 @@ namespace Blink {
 
         std::string toString() const override;
     };
+
+    std::ostream& operator<<(std::ostream& os, const WindowResizeEvent& event);
 }

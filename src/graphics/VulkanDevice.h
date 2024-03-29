@@ -23,6 +23,8 @@ namespace Blink {
 
         ~VulkanDevice();
 
+        operator VkDevice() const;
+
         VkQueue getGraphicsQueue() const;
 
         VkQueue getPresentQueue() const;
@@ -87,7 +89,7 @@ namespace Blink {
 
         void destroyBuffer(VkBuffer buffer) const;
 
-        VkMemoryRequirements getMemoryRequirements(VkBuffer buffer) const;
+        VkMemoryRequirements getBufferMemoryRequirements(VkBuffer buffer) const;
 
         VkResult allocateMemory(VkMemoryAllocateInfo* allocateInfo, VkDeviceMemory* memory) const;
 
@@ -110,6 +112,18 @@ namespace Blink {
         VkResult allocateDescriptorSets(VkDescriptorSetAllocateInfo* allocateInfo, VkDescriptorSet* descriptorSets) const;
 
         void updateDescriptorSets(uint32_t count, VkWriteDescriptorSet* write) const;
+
+        VkResult createImage(VkImageCreateInfo* createInfo, VkImage* image) const;
+
+        VkMemoryRequirements getImageMemoryRequirements(VkImage image) const;
+
+        void bindImageMemory(VkImage image, VkDeviceMemory memory) const;
+
+        void destroyImage(VkImage image) const;
+
+        VkResult createSampler(VkSamplerCreateInfo* createInfo, VkSampler* sampler) const;
+
+        void destroySampler(VkSampler sampler) const;
 
     private:
 
