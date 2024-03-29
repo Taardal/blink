@@ -24,6 +24,10 @@ namespace Blink {
         BL_LOG_INFO("Destroyed logical device");
     }
 
+    VulkanDevice::operator VkDevice() const {
+        return device;
+    }
+
     VkQueue VulkanDevice::getGraphicsQueue() const {
         return graphicsQueue;
     }
@@ -162,7 +166,7 @@ namespace Blink {
         vkDestroyBuffer(device, buffer, BL_VULKAN_ALLOCATOR);
     }
 
-    VkMemoryRequirements VulkanDevice::getMemoryRequirements(VkBuffer buffer) const {
+    VkMemoryRequirements VulkanDevice::getBufferMemoryRequirements(VkBuffer buffer) const {
         VkMemoryRequirements memoryRequirements;
         vkGetBufferMemoryRequirements(device, buffer, &memoryRequirements);
         return memoryRequirements;
@@ -215,6 +219,33 @@ namespace Blink {
         constexpr uint32_t copyCount = 0;
         constexpr VkCopyDescriptorSet* copies = nullptr;
         vkUpdateDescriptorSets(device, count, write, copyCount, copies);
+    }
+
+    VkResult VulkanDevice::createImage(VkImageCreateInfo* createInfo, VkImage* image) const {
+        return vkCreateImage(device, createInfo, BL_VULKAN_ALLOCATOR, image);
+    }
+
+    VkMemoryRequirements VulkanDevice::getImageMemoryRequirements(VkImage image) const {
+        VkMemoryRequirements memoryRequirements;
+        vkGetImageMemoryRequirements(device, image, &memoryRequirements);
+        return memoryRequirements;
+    }
+
+    void VulkanDevice::bindImageMemory(VkImage image, VkDeviceMemory memory) const {
+        constexpr VkDeviceSize memoryOffset = 0;
+        vkBindImageMemory(device, image, memory, memoryOffset);
+    }
+
+    void VulkanDevice::destroyImage(VkImage image) const {
+        vkDestroyImage(device, image, BL_VULKAN_ALLOCATOR);
+    }
+
+    VkResult VulkanDevice::createSampler(VkSamplerCreateInfo* createInfo, VkSampler* sampler) const {
+        return vkCreateSampler(device, createInfo, BL_VULKAN_ALLOCATOR, sampler);
+    }
+
+    void VulkanDevice::destroySampler(VkSampler sampler) const {
+        vkDestroySampler(device, sampler, BL_VULKAN_ALLOCATOR);
     }
 
     bool VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) {

@@ -19,6 +19,7 @@ set(BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake)
 set(DIST_DIR ${PROJECT_SOURCE_DIR}/dist)
 set(INSTALL_DIR ${PROJECT_SOURCE_DIR}/install)
+set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
 set(LUA_DIR ${PROJECT_SOURCE_DIR}/lua)
 set(RES_DIR ${PROJECT_SOURCE_DIR}/res)
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src)
@@ -137,7 +138,15 @@ add_custom_target(
         COMMENT "Compiling shaders"
 )
 
-add_dependencies(${PROJECT_NAME} CompileLua CompileShaders)
+set(TEXTURES_SOURCE_DIR ${PROJECT_SOURCE_DIR}/res/textures)
+set(TEXTURES_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/textures)
+add_custom_target(
+        CopyTextures
+        COMMAND ${CMAKE_COMMAND} -D TEXTURES_SOURCE_DIR=${TEXTURES_SOURCE_DIR} -D TEXTURES_OUTPUT_DIR=${TEXTURES_OUTPUT_DIR} -P ${CMAKE_DIR}/copy_textures.cmake
+        COMMENT "Copying textures"
+)
+
+add_dependencies(${PROJECT_NAME} CompileLua CompileShaders CopyTextures)
 
 #########################################
 # Preprocessor macros (used in C++)     #
@@ -199,8 +208,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${LUA_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${LUA_LIBRARIES})
 
 find_package(Vulkan REQUIRED)
-target_include_directories(${PROJECT_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${LIB_DIR}/stb_image)
 
 #########################################
 # Installation                          #

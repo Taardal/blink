@@ -30,7 +30,7 @@ namespace Blink {
         static const std::vector<const char*> requiredExtensions;
 
     private:
-        VulkanApp* vulkan = nullptr;
+        VulkanApp* vulkan;
         VulkanPhysicalDeviceInfo deviceInfo{};
 
     public:
@@ -41,6 +41,8 @@ namespace Blink {
         const QueueFamilyIndices& getQueueFamilyIndices() const;
 
         const VkPhysicalDeviceFeatures& getFeatures() const;
+
+        const VkPhysicalDeviceProperties& getProperties() const;
 
         const SwapChainInfo& getSwapChainInfo() const;
 

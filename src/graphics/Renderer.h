@@ -25,7 +25,6 @@
 #include <glm/glm.hpp>
 
 namespace Blink {
-
     struct Frame {
         glm::mat4 model;
         glm::mat4 view;
@@ -62,38 +61,26 @@ namespace Blink {
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
         std::vector<VkFence> inFlightFences;
+        VkDescriptorSetLayout descriptorSetLayout = nullptr;
         VkDescriptorPool descriptorPool = nullptr;
         std::vector<VkDescriptorSet> descriptorSets;
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
 
+        VkImage textureImage;
+        VkDeviceMemory textureImageMemory;
+        VkImageView textureImageView;
+        VkSampler textureSampler;
+
     private:
         const std::vector<Vertex> vertices = {
-            // Front face
-            {{-0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
-            {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-            {{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
-
-            // Back face
-            {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-            {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},
-            {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}
+            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+            {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+            {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
         };
         const std::vector<uint16_t> indices = {
-            // Front face
-            0, 1, 2, 2, 3, 0,
-            // Right face
-            1, 5, 6, 6, 2, 1,
-            // Back face
-            5, 4, 7, 7, 6, 5,
-            // Left face
-            4, 0, 3, 3, 7, 4,
-            // Top face
-            3, 2, 6, 6, 7, 3,
-            // Bottom face
-            0, 1, 5, 5, 4, 0
+            0, 1, 2, 2, 3, 0
         };
 
     public:
@@ -110,6 +97,14 @@ namespace Blink {
         void render(const Frame& frame);
 
     private:
+        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
+
+        void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame);
+
+        bool recreateSwapChain();
+
+        void compileShaders();
+
         bool initialize();
 
         void terminate();
@@ -136,20 +131,14 @@ namespace Blink {
 
         void terminateSyncObjects() const;
 
-        bool recreateSwapChain();
+        bool initializeTextureImage();
 
-        bool initializeSwapChain();
+        void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
-        void terminateSwapChain();
+        void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) const;
 
-        void drawFrame(const Frame& frame);
+        VkCommandBuffer beginSingleTimeCommands() const;
 
-        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
-
-        static void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame);
-
-        static void compileShaders();
+        void endSingleTimeCommands(VkCommandBuffer commandBuffer) const;
     };
 }
-
-

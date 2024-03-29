@@ -29,7 +29,7 @@ namespace Blink {
 
         VkPipelineLayout getLayout() const;
 
-        bool initialize();
+        bool initialize(VkDescriptorSetLayout descriptorSetLayout);
 
         void terminate();
 

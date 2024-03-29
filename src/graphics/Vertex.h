@@ -4,15 +4,12 @@
 
 namespace Blink {
 
-    struct Vertex {
-        glm::vec3 position = { 0.0f, 0.0f, 0.0f };
-        glm::vec3 color = { 1.0f, 1.0f, 1.0f };
+    typedef std::array<VkVertexInputAttributeDescription, 3> VertexAttributeDescriptions;
 
-        //glm::vec3 position = { 0.0f, 0.0f, 0.0f };
-        //glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-        //glm::vec2 textureCoordinate = { 0.0f, 0.0f };
-        //float textureIndex = 0.0f;
-        //float tilingFactor = 0.0f;
+    struct Vertex {
+        glm::vec2 position = { 0.0f, 0.0f };
+        glm::vec3 color = { 1.0f, 1.0f, 1.0f };
+        glm::vec2 texCoord = { 0.0f, 0.0f };
 
         static VkVertexInputBindingDescription getBindingDescription() {
             VkVertexInputBindingDescription bindingDescription{};
@@ -23,8 +20,8 @@ namespace Blink {
             return bindingDescription;
         }
 
-        static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-            std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+        static VertexAttributeDescriptions getAttributeDescriptions() {
+            VertexAttributeDescriptions attributeDescriptions{};
 
             attributeDescriptions[0].binding = 0;
             attributeDescriptions[0].location = 0;
@@ -35,6 +32,11 @@ namespace Blink {
             attributeDescriptions[1].location = 1;
             attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
             attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+            attributeDescriptions[2].binding = 0;
+            attributeDescriptions[2].location = 2;
+            attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+            attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
             return attributeDescriptions;
         }

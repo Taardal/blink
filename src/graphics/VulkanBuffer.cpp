@@ -24,7 +24,7 @@ namespace Blink {
             return false;
         }
 
-        const VkMemoryRequirements& memoryRequirements = device->getMemoryRequirements(buffer);
+        const VkMemoryRequirements& memoryRequirements = device->getBufferMemoryRequirements(buffer);
 
         VkMemoryAllocateInfo memoryAllocateInfo{};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
