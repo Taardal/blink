@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vulkan.h"
+#include "VulkanApp.h"
 #include <vulkan/vulkan.h>
 
 namespace Blink {
@@ -30,11 +30,11 @@ namespace Blink {
         static const std::vector<const char*> requiredExtensions;
 
     private:
-        Vulkan* vulkan = nullptr;
+        VulkanApp* vulkan = nullptr;
         VulkanPhysicalDeviceInfo deviceInfo{};
 
     public:
-        explicit VulkanPhysicalDevice(Vulkan* vulkan);
+        explicit VulkanPhysicalDevice(VulkanApp* vulkan);
 
         const std::vector<VkExtensionProperties>& getExtensions() const;
 

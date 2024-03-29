@@ -6,7 +6,7 @@ namespace Blink {
     VulkanBuffer::VulkanBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
             : commandPool(commandPool), device(device), physicalDevice(physicalDevice) {}
 
-    VkBuffer VulkanBuffer::getBuffer() const {
+    VulkanBuffer::operator VkBuffer() const {
         return buffer;
     }
 

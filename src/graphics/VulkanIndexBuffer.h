@@ -19,6 +19,8 @@ namespace Blink {
 
         ~VulkanIndexBuffer();
 
+        operator VkBuffer() const;
+
         bool initialize(const std::vector<uint16_t>& indices);
 
         void terminate();

@@ -3,7 +3,7 @@
 
 namespace Blink {
 
-    VulkanPhysicalDevice::VulkanPhysicalDevice(Vulkan* vulkan) : vulkan(vulkan) {
+    VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanApp* vulkan) : vulkan(vulkan) {
         std::vector<VkPhysicalDevice> availableDevices = vulkan->getPhysicalDevices();
         if (availableDevices.empty()) {
             throw std::runtime_error("Could not find any physical devices");

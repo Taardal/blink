@@ -2,14 +2,14 @@
 
 #include "VulkanDevice.h"
 #include "VulkanPhysicalDevice.h"
-#include "Vulkan.h"
+#include "VulkanApp.h"
 
 namespace Blink {
     class VulkanSwapChain {
     private:
         VulkanDevice* device;
         VulkanPhysicalDevice* physicalDevice;
-        Vulkan* vulkan;
+        VulkanApp* vulkan;
         Window* window;
         VkSurfaceFormatKHR surfaceFormat{};
         VkPresentModeKHR presentMode{};
@@ -19,11 +19,11 @@ namespace Blink {
         std::vector<VkImageView> imageViews;
 
     public:
-        VulkanSwapChain(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice, Vulkan* vulkan, Window* window);
+        VulkanSwapChain(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice, VulkanApp* vulkan, Window* window);
 
         ~VulkanSwapChain();
 
-        VkSwapchainKHR getSwapChain() const;
+        operator VkSwapchainKHR() const;
 
         const VkSurfaceFormatKHR& getSurfaceFormat() const;
 

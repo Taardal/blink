@@ -2,18 +2,24 @@
 
 #include "system/FileSystem.h"
 #include "window/Window.h"
-#include "VulkanPhysicalDevice.h"
-#include "VulkanDevice.h"
-#include "VulkanSwapChain.h"
-#include "VulkanRenderPass.h"
-#include "VulkanCommandPool.h"
-#include "VulkanShader.h"
-#include "VulkanGraphicsPipeline.h"
-#include "VulkanVertexBuffer.h"
-#include "VulkanIndexBuffer.h"
-#include "VulkanUniformBuffer.h"
-#include "Quad.h"
-#include "Vertex.h"
+#include "graphics/VulkanApp.h"
+#include "graphics/VulkanPhysicalDevice.h"
+#include "graphics/VulkanDevice.h"
+#include "graphics/VulkanSwapChain.h"
+#include "graphics/VulkanRenderPass.h"
+#include "graphics/VulkanCommandPool.h"
+#include "graphics/VulkanPhysicalDevice.h"
+#include "graphics/VulkanDevice.h"
+#include "graphics/VulkanSwapChain.h"
+#include "graphics/VulkanRenderPass.h"
+#include "graphics/VulkanCommandPool.h"
+#include "graphics/VulkanShader.h"
+#include "graphics/VulkanGraphicsPipeline.h"
+#include "graphics/VulkanVertexBuffer.h"
+#include "graphics/VulkanIndexBuffer.h"
+#include "graphics/VulkanUniformBuffer.h"
+#include "graphics/Quad.h"
+#include "graphics/Vertex.h"
 
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
@@ -39,6 +45,7 @@ namespace Blink {
     private:
         FileSystem* fileSystem;
         Window* window;
+        VulkanApp* vulkanApp;
         VulkanPhysicalDevice* physicalDevice;
         VulkanDevice* device;
         VulkanSwapChain* swapChain;
@@ -55,7 +62,6 @@ namespace Blink {
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
         std::vector<VkFence> inFlightFences;
-        VkDescriptorSetLayout descriptorSetLayout = nullptr;
         VkDescriptorPool descriptorPool = nullptr;
         std::vector<VkDescriptorSet> descriptorSets;
         uint32_t currentFrame = 0;
@@ -92,13 +98,9 @@ namespace Blink {
 
     public:
         Renderer(
+            const AppConfig& appConfig,
             FileSystem* fileSystem,
-            Window* window,
-            VulkanPhysicalDevice* physicalDevice,
-            VulkanDevice* device,
-            VulkanSwapChain* swapChain,
-            VulkanRenderPass* renderPass,
-            VulkanCommandPool* commandPool
+            Window* window
         );
 
         ~Renderer();
@@ -116,13 +118,13 @@ namespace Blink {
 
         void terminateUniformBuffers() const;
 
-        bool initializeDescriptorObjects();
-
-        void terminateDescriptorObjects() const;
-
         bool initializeGraphicsPipelineObjects() const;
 
         void terminateGraphicsPipelineObjects() const;
+
+        bool initializeDescriptorObjects();
+
+        void terminateDescriptorObjects() const;
 
         bool initializeFramebuffers();
 

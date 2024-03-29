@@ -6,8 +6,12 @@ namespace Blink {
         spdlog::set_level(GetSpdLogLevel(level));
     }
 
-    std::string Log::Format(const char* filename, const char* functionName, uint32_t lineNumber,
-                            std::string_view message) {
+    std::string Log::Format(
+        const char* filename,
+        const char* functionName,
+        uint32_t lineNumber,
+        std::string_view message
+    ) {
         std::stringstream ss;
         ss << "[" << filename << ":" << functionName << ":" << lineNumber << "] - " << message;
         return ss.str();

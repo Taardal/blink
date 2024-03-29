@@ -5,7 +5,7 @@ namespace Blink {
     VulkanSwapChain::VulkanSwapChain(
     VulkanDevice* device,
     VulkanPhysicalDevice* physicalDevice,
-    Vulkan* vulkan,
+    VulkanApp* vulkan,
     Window* window
     ) : device(device),
         physicalDevice(physicalDevice),
@@ -19,9 +19,9 @@ namespace Blink {
         terminate();
     }
 
-    VkSwapchainKHR VulkanSwapChain::getSwapChain() const {
+    VulkanSwapChain::operator VkSwapchainKHR() const {
         return swapChain;
-    };
+    }
 
     const VkSurfaceFormatKHR& VulkanSwapChain::getSurfaceFormat() const {
         return surfaceFormat;

@@ -65,8 +65,12 @@ namespace Blink {
             spdlog::critical(message, args...);
         }
 
-        static std::string Format(const char* filename, const char* functionName, uint32_t lineNumber,
-                                  std::string_view message);
+        static std::string Format(
+            const char* filename,
+            const char* functionName,
+            uint32_t lineNumber,
+            std::string_view message
+        );
 
     private:
         static spdlog::level::level_enum GetSpdLogLevel(LogLevel level);

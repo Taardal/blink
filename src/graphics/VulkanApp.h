@@ -12,13 +12,7 @@
 #define BL_VULKAN_ASSERT_THROW(expression) BL_ASSERT_THROW(expression == VK_SUCCESS)
 
 namespace Blink {
-    struct VulkanConfig {
-        std::string applicationName;
-        std::string engineName;
-        bool validationLayersEnabled = false;
-    };
-
-    class Vulkan {
+    class VulkanApp {
     private:
         Window* window = nullptr;
         VkInstance vulkanInstance = nullptr;
@@ -27,9 +21,9 @@ namespace Blink {
         bool validationLayersEnabled = false;
 
     public:
-        Vulkan(const VulkanConfig& vulkanConfig, Window* window);
+        VulkanApp(const AppConfig& appConfig, Window* window);
 
-        ~Vulkan();
+        ~VulkanApp();
 
         std::vector<VkPhysicalDevice> getPhysicalDevices() const;
 
@@ -37,7 +31,7 @@ namespace Blink {
 
     private:
         bool createInstance(
-            const VulkanConfig& vulkanConfig,
+            const AppConfig& appConfig,
             const std::vector<const char*>& requiredExtensions,
             const std::vector<const char*>& validationLayers,
             const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo

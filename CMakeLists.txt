@@ -43,8 +43,8 @@ add_executable(
         ${SRC_DIR}/graphics/Vertex.h
         ${SRC_DIR}/graphics/VertexAttribute.cpp
         ${SRC_DIR}/graphics/VertexAttribute.h
-        ${SRC_DIR}/graphics/Vulkan.cpp
-        ${SRC_DIR}/graphics/Vulkan.h
+        ${SRC_DIR}/graphics/VulkanApp.cpp
+        ${SRC_DIR}/graphics/VulkanApp.h
         ${SRC_DIR}/graphics/VulkanBuffer.cpp
         ${SRC_DIR}/graphics/VulkanBuffer.h
         ${SRC_DIR}/graphics/VulkanCommandPool.cpp

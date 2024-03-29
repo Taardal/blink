@@ -1,4 +1,4 @@
-#include "Vulkan.h"
+#include "VulkanApp.h"
 #include <GLFW/glfw3.h>
 
 namespace Blink {
@@ -24,8 +24,10 @@ namespace Blink {
 
 namespace Blink {
 
-    Vulkan::Vulkan(const VulkanConfig& vulkanConfig, Window* window) : window(window) {
-        this->validationLayersEnabled = vulkanConfig.validationLayersEnabled;
+    VulkanApp::VulkanApp(const AppConfig& appConfig, Window* window) : window(window) {
+#ifdef BL_DEBUG
+        this->validationLayersEnabled = true;
+#endif
         if (!window->isVulkanSupported()) {
             throw std::runtime_error("Vulkan is not supported");
         }
@@ -33,9 +35,9 @@ namespace Blink {
         if (std::count(requiredExtensions.begin(), requiredExtensions.end(), "VK_KHR_surface") == 0) {
             throw std::runtime_error("Vulkan surface extension is not supported");
         }
-        if (Environment::isMacOS()) {
-            requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-        }
+#ifdef BL_PLATFORM_MACOS
+        requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+#endif
         if (validationLayersEnabled) {
             requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
@@ -51,7 +53,7 @@ namespace Blink {
             }
             debugMessengerCreateInfo = getDebugMessengerCreateInfo();
         }
-        if (!createInstance(vulkanConfig, requiredExtensions, validationLayers, debugMessengerCreateInfo)) {
+        if (!createInstance(appConfig, requiredExtensions, validationLayers, debugMessengerCreateInfo)) {
             throw std::runtime_error("Could not create Vulkan instance");
         }
         BL_LOG_INFO("Created Vulkan instance");
@@ -65,7 +67,7 @@ namespace Blink {
         }
     }
 
-    Vulkan::~Vulkan() {
+    VulkanApp::~VulkanApp() {
         destroySurface();
         if (validationLayersEnabled) {
             destroyDebugMessenger();
@@ -74,7 +76,7 @@ namespace Blink {
         BL_LOG_INFO("Destroyed Vulkan instance");
     }
 
-    std::vector<VkPhysicalDevice> Vulkan::getPhysicalDevices() const {
+    std::vector<VkPhysicalDevice> VulkanApp::getPhysicalDevices() const {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, nullptr);
         std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -82,21 +84,21 @@ namespace Blink {
         return devices;
     }
 
-    VkSurfaceKHR Vulkan::getSurface() const {
+    VkSurfaceKHR VulkanApp::getSurface() const {
         return surface;
     }
 
-    bool Vulkan::createInstance(
-            const VulkanConfig& vulkanConfig,
+    bool VulkanApp::createInstance(
+            const AppConfig& appConfig,
             const std::vector<const char*>& requiredExtensions,
             const std::vector<const char*>& validationLayers,
             const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo
     ) {
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = vulkanConfig.applicationName.c_str();
+        appInfo.pApplicationName = appConfig.name.c_str();
         appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.pEngineName = vulkanConfig.engineName.c_str();
+        appInfo.pEngineName = appConfig.name.c_str();
         appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_3;
 
@@ -117,11 +119,11 @@ namespace Blink {
         return vkCreateInstance(&createInfo, BL_VULKAN_ALLOCATOR, &vulkanInstance) == VK_SUCCESS;
     }
 
-    void Vulkan::destroyInstance() {
+    void VulkanApp::destroyInstance() {
         vkDestroyInstance(vulkanInstance, BL_VULKAN_ALLOCATOR);
     }
 
-    bool Vulkan::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) {
+    bool VulkanApp::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) {
         const char* functionName = "vkCreateDebugUtilsMessengerEXT";
         auto function = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vulkanInstance, functionName);
         if (function == nullptr) {
@@ -131,7 +133,7 @@ namespace Blink {
         return function(vulkanInstance, &debugMessengerCreateInfo, BL_VULKAN_ALLOCATOR, &debugMessenger) == VK_SUCCESS;
     }
 
-    void Vulkan::destroyDebugMessenger() {
+    void VulkanApp::destroyDebugMessenger() {
         const char* functionName = "vkDestroyDebugUtilsMessengerEXT";
         auto function = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vulkanInstance, functionName);
         if (function == nullptr) {
@@ -141,15 +143,15 @@ namespace Blink {
         function(vulkanInstance, debugMessenger, BL_VULKAN_ALLOCATOR);
     }
 
-    bool Vulkan::createSurface() {
+    bool VulkanApp::createSurface() {
         return window->createVulkanSurface(vulkanInstance, &surface, BL_VULKAN_ALLOCATOR) == VK_SUCCESS;
     }
 
-    void Vulkan::destroySurface() const {
+    void VulkanApp::destroySurface() const {
         vkDestroySurfaceKHR(vulkanInstance, surface, BL_VULKAN_ALLOCATOR);
     }
 
-    bool Vulkan::hasValidationLayers(const std::vector<const char*>& validationLayers) const {
+    bool VulkanApp::hasValidationLayers(const std::vector<const char*>& validationLayers) const {
         std::vector<VkLayerProperties> availableValidationLayers = getAvailableValidationLayers();
         for (const char* layerName: validationLayers) {
             bool layerFound = false;
@@ -167,7 +169,7 @@ namespace Blink {
         return true;
     }
 
-    std::vector<VkLayerProperties> Vulkan::getAvailableValidationLayers() const {
+    std::vector<VkLayerProperties> VulkanApp::getAvailableValidationLayers() const {
         uint32_t count;
         VkLayerProperties* layerProperties = nullptr;
         vkEnumerateInstanceLayerProperties(&count, layerProperties);
@@ -176,7 +178,7 @@ namespace Blink {
         return layers;
     }
 
-    bool Vulkan::hasExtensions(const std::vector<const char*>& extensions) const {
+    bool VulkanApp::hasExtensions(const std::vector<const char*>& extensions) const {
         std::vector<VkExtensionProperties> availableExtensions = getAvailableExtensions();
         for (const char* extension: extensions) {
             bool extensionFound = false;
@@ -194,7 +196,7 @@ namespace Blink {
         return true;
     }
 
-    std::vector<VkExtensionProperties> Vulkan::getAvailableExtensions() const {
+    std::vector<VkExtensionProperties> VulkanApp::getAvailableExtensions() const {
         uint32_t extensionCount = 0;
         const char* layerName = nullptr;
         VkExtensionProperties* extensionProperties = nullptr;
@@ -204,7 +206,7 @@ namespace Blink {
         return extensions;
     }
 
-    VkDebugUtilsMessengerCreateInfoEXT Vulkan::getDebugMessengerCreateInfo() const {
+    VkDebugUtilsMessengerCreateInfoEXT VulkanApp::getDebugMessengerCreateInfo() const {
         VkDebugUtilsMessengerCreateInfoEXT createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 

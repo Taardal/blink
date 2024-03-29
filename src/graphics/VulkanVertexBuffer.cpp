@@ -10,6 +10,11 @@ namespace Blink {
         delete buffer;
     }
 
+    VulkanVertexBuffer::operator VkBuffer() const {
+        BL_ASSERT(buffer != nullptr);
+        return *buffer;
+    }
+
     bool VulkanVertexBuffer::initialize(const std::vector<Vertex>& vertices) {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
@@ -48,7 +53,7 @@ namespace Blink {
 
     void VulkanVertexBuffer::bind(VkCommandBuffer commandBuffer) const {
         VkBuffer buffers[] = {
-                buffer->getBuffer()
+                *buffer
         };
         VkDeviceSize offsets[] = { 0 };
         constexpr uint32_t firstBinding = 0;

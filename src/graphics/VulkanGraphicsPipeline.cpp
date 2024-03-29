@@ -2,15 +2,24 @@
 #include "Vertex.h"
 
 namespace Blink {
-
-    VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanShader* vertexShader, VulkanShader* fragmentShader, VulkanRenderPass* renderPass, VulkanSwapChain* swapChain, VulkanDevice* device)
-            : vertexShader(vertexShader), fragmentShader(fragmentShader), renderPass(renderPass), swapChain(swapChain), device(device) {}
+    VulkanGraphicsPipeline::VulkanGraphicsPipeline(
+        VulkanShader* vertexShader,
+        VulkanShader* fragmentShader,
+        VulkanRenderPass* renderPass,
+        VulkanSwapChain* swapChain,
+        VulkanDevice* device
+    ) : vertexShader(vertexShader),
+        fragmentShader(fragmentShader),
+        renderPass(renderPass),
+        swapChain(swapChain),
+        device(device) {
+    }
 
     VkPipelineLayout VulkanGraphicsPipeline::getLayout() const {
         return layout;
     }
 
-    bool VulkanGraphicsPipeline::initialize(VkDescriptorSetLayout descriptorSetLayout) {
+    bool VulkanGraphicsPipeline::initialize() {
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
         vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -98,10 +107,20 @@ namespace Blink {
         colorBlendStateCreateInfo.attachmentCount = 1;
         colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+        VkDescriptorSetLayout vertexShaderLayout = vertexShader->getLayout();
+        if (vertexShaderLayout != VK_NULL_HANDLE) {
+            descriptorSetLayouts.push_back(vertexShaderLayout);
+        }
+        VkDescriptorSetLayout fragmentShaderLayout = fragmentShader->getLayout();
+        if (fragmentShaderLayout != VK_NULL_HANDLE) {
+            descriptorSetLayouts.push_back(fragmentShaderLayout);
+        }
+
         VkPipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        layoutCreateInfo.setLayoutCount = 1;
-        layoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+        layoutCreateInfo.setLayoutCount = descriptorSetLayouts.size();
+        layoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
 
         if (device->createPipelineLayout(&layoutCreateInfo, &layout) != VK_SUCCESS) {
             BL_LOG_ERROR("Could not create pipeline layout");

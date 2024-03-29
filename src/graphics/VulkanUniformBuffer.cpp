@@ -9,8 +9,9 @@ namespace Blink {
         delete buffer;
     }
 
-    VulkanBuffer* VulkanUniformBuffer::getBuffer() const {
-        return buffer;
+    VulkanUniformBuffer::operator VkBuffer() const {
+        BL_ASSERT(buffer != nullptr);
+        return *buffer;
     }
 
     bool VulkanUniformBuffer::initialize(uint32_t bufferSize) {

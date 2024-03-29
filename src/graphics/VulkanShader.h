@@ -20,16 +20,10 @@ namespace Blink {
 
         void terminate();
 
-        VkDescriptorSetLayout getDescriptorLayout() const;
+        VkDescriptorSetLayout getLayout() const;
 
-        void setDescriptorLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+        void setLayout(VkDescriptorSetLayout layout);
 
-        void createDescriptorSets(uint16_t descriptorSetCount, VkDescriptorPool descriptorPool);
-
-        typedef uint16_t BindingIndex;
-
-        void setBufferDescriptors(
-            const std::vector<std::tuple<BindingIndex, VkDescriptorType, VkDescriptorBufferInfo>>& bufferDescriptors
-        ) const;
+        void setLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
     };
 }

@@ -8,20 +8,17 @@
 namespace Blink {
 
     Renderer::Renderer(
+        const AppConfig& appConfig,
         FileSystem* fileSystem,
-        Window* window,
-        VulkanPhysicalDevice* physicalDevice,
-        VulkanDevice* device,
-        VulkanSwapChain* swapChain,
-        VulkanRenderPass* renderPass,
-        VulkanCommandPool* commandPool
+        Window* window
     ) : fileSystem(fileSystem),
         window(window),
-        physicalDevice(physicalDevice),
-        device(device),
-        swapChain(swapChain),
-        renderPass(renderPass),
-        commandPool(commandPool),
+        vulkanApp(new VulkanApp(appConfig, window)),
+        physicalDevice(new VulkanPhysicalDevice(vulkanApp)),
+        device(new VulkanDevice(physicalDevice)),
+        swapChain(new VulkanSwapChain(device, physicalDevice, vulkanApp, window)),
+        renderPass(new VulkanRenderPass(swapChain, device)),
+        commandPool(new VulkanCommandPool(device, physicalDevice)),
         vertexShader(new VulkanShader(device)),
         fragmentShader(new VulkanShader(device)),
         graphicsPipeline(new VulkanGraphicsPipeline(vertexShader, fragmentShader, renderPass, swapChain, device)),
@@ -38,12 +35,12 @@ namespace Blink {
             BL_LOG_ERROR("Could not initialize uniform buffers");
             return false;
         }
-        if (!initializeDescriptorObjects()) {
-            BL_LOG_ERROR("Could not initialize descriptor objects");
-            return false;
-        }
         if (!initializeGraphicsPipelineObjects()) {
             BL_LOG_ERROR("Could not initialize graphics pipeline objects");
+            return false;
+        }
+        if (!initializeDescriptorObjects()) {
+            BL_LOG_ERROR("Could not initialize descriptor objects");
             return false;
         }
         if (!vertexBuffer->initialize(vertices)) {
@@ -74,8 +71,8 @@ namespace Blink {
         terminateFramebuffers();
         indexBuffer->terminate();
         vertexBuffer->terminate();
-        terminateGraphicsPipelineObjects();
         terminateDescriptorObjects();
+        terminateGraphicsPipelineObjects();
         terminateUniformBuffers();
     }
 
@@ -90,13 +87,19 @@ namespace Blink {
         delete graphicsPipeline;
         delete fragmentShader;
         delete vertexShader;
+        delete commandPool;
+        delete renderPass;
+        delete swapChain;
+        delete device;
+        delete physicalDevice;
+        delete vulkanApp;
     }
 
     void Renderer::onEvent(Event& event) {
         if (event.type == EventType::WindowResize || event.type == EventType::WindowMinimize) {
             this->framebufferResized = true;
         }
-        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Q) {
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
             compileShaders();
             terminateGraphicsPipelineObjects();
             if (!initializeGraphicsPipelineObjects()) {
@@ -127,6 +130,35 @@ namespace Blink {
         }
     }
 
+    bool Renderer::initializeGraphicsPipelineObjects() const {
+        if (!vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv"))) {
+            BL_LOG_ERROR("Could not initialize vertex shader");
+            return false;
+        }
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vertexShader->setLayout({ uboLayoutBinding });
+
+        if (!fragmentShader->initialize(fileSystem->readBytes("shaders/shader.frag.spv"))) {
+            BL_LOG_ERROR("Could not initialize fragment shader");
+            return false;
+        }
+        if (!graphicsPipeline->initialize()) {
+            BL_LOG_ERROR("Could not initialize graphics pipeline");
+            return false;
+        }
+        return true;
+    }
+
+    void Renderer::terminateGraphicsPipelineObjects() const {
+        graphicsPipeline->terminate();
+        fragmentShader->terminate();
+        vertexShader->terminate();
+    }
+
     bool Renderer::initializeDescriptorObjects() {
 
         //
@@ -149,54 +181,34 @@ namespace Blink {
         }
 
         //
-        // DESCRIPTOR LAYOUT
+        // DESCRIPTOR LAYOUTS
         //
 
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
-        descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptorSetLayoutCreateInfo.bindingCount = 1;
-        descriptorSetLayoutCreateInfo.pBindings = &uboLayoutBinding;
-
-        if (device->createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, &descriptorSetLayout) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create descrptor set layout");
-            return false;
-        }
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(MAX_FRAMES_IN_FLIGHT, vertexShader->getLayout());
 
         //
         // DESCRIPTOR SETS
         //
 
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.descriptorPool = descriptorPool;
         descriptorSetAllocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
         descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
 
-        descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        descriptorSets.resize(descriptorSetAllocateInfo.descriptorSetCount);
         if (device->allocateDescriptorSets(&descriptorSetAllocateInfo, descriptorSets.data()) != VK_SUCCESS) {
             BL_LOG_ERROR("Could not allocate descriptor sets");
             return false;
         }
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < descriptorSets.size(); i++) {
+            VulkanUniformBuffer* uniformBuffer = uniformBuffers[i];
+
             VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = uniformBuffers[i]->getBuffer()->getBuffer();
+            bufferInfo.buffer = *uniformBuffer;
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
-
-            vertexShader->setDescriptorLayout({
-                { 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT }
-            });
-            vertexShader->setBufferDescriptors({
-                { 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo }
-            });
 
             VkWriteDescriptorSet descriptorWrite{};
             descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -214,29 +226,6 @@ namespace Blink {
 
     void Renderer::terminateDescriptorObjects() const {
         device->destroyDescriptorPool(descriptorPool);
-        device->destroyDescriptorSetLayout(descriptorSetLayout);
-    }
-
-    bool Renderer::initializeGraphicsPipelineObjects() const {
-        if (!vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv"))) {
-            BL_LOG_ERROR("Could not initialize vertex shader");
-            return false;
-        }
-        if (!fragmentShader->initialize(fileSystem->readBytes("shaders/shader.frag.spv"))) {
-            BL_LOG_ERROR("Could not initialize fragment shader");
-            return false;
-        }
-        if (!graphicsPipeline->initialize(descriptorSetLayout)) {
-            BL_LOG_ERROR("Could not initialize graphics pipeline");
-            return false;
-        }
-        return true;
-    }
-
-    void Renderer::terminateGraphicsPipelineObjects() const {
-        graphicsPipeline->terminate();
-        fragmentShader->terminate();
-        vertexShader->terminate();
     }
 
     bool Renderer::initializeFramebuffers() {
@@ -340,9 +329,10 @@ namespace Blink {
     }
 
     void Renderer::drawFrame(const Frame& frame) {
-        /*
-         * Frame resources
-         */
+
+        //
+        // Resources
+        //
 
         VkFence inFlightFence = inFlightFences[currentFrame];
         VkSemaphore imageAvailableSemaphore = imageAvailableSemaphores[currentFrame];
@@ -350,9 +340,9 @@ namespace Blink {
         VkCommandBuffer commandBuffer = commandBuffers[currentFrame];
         VulkanUniformBuffer* uniformBuffer = uniformBuffers[currentFrame];
 
-        /*
-         * Acquisition
-         */
+        //
+        // Acquisition
+        //
 
         device->waitForFence(&inFlightFence);
 
@@ -371,12 +361,16 @@ namespace Blink {
         VkCommandBufferResetFlags commandBufferResetFlags = 0;
         vkResetCommandBuffer(commandBuffer, commandBufferResetFlags);
 
-        /*
-         * Recording & Submission
-         */
+        //
+        // Recording
+        //
 
         recordCommandBuffer(commandBuffer, imageIndex);
         updateUniformBuffer(uniformBuffer, frame);
+
+        //
+        // Submission
+        //
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -405,9 +399,10 @@ namespace Blink {
             throw std::runtime_error("Could not submit draw command buffer");
         }
 
-        /*
-         * Presentation
-         */
+        //
+        // Presentation
+        //
+
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
@@ -415,7 +410,7 @@ namespace Blink {
         presentInfo.pWaitSemaphores = signalSemaphores;
 
         VkSwapchainKHR swapChains[] = {
-                swapChain->getSwapChain()
+                *swapChain
         };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains;
@@ -429,9 +424,10 @@ namespace Blink {
             throw std::runtime_error("Could not present image to swap chain");
         }
 
-        /*
-         * Next frame
-         */
+        //
+        // Next frame
+        //
+
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 

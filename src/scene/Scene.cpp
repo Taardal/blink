@@ -44,7 +44,7 @@ namespace Blink {
         if (event.type != EventType::KeyPressed) {
             return;
         }
-        if (event.as<KeyPressedEvent>().key == Key::R) {
+        if (event.as<KeyPressedEvent>().key == Key::P) {
             luaEngine->reload(&registry);
             BL_LOG_INFO("Recreated entity bindings");
         }
