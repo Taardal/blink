@@ -1,5 +1,4 @@
 #include "VulkanApp.h"
-#include <GLFW/glfw3.h>
 
 namespace Blink {
 
@@ -24,52 +23,49 @@ namespace Blink {
 
 namespace Blink {
 
-    VulkanApp::VulkanApp(const AppConfig& appConfig, Window* window) : window(window) {
-#ifdef BL_DEBUG
-        this->validationLayersEnabled = true;
-#endif
-        if (!window->isVulkanSupported()) {
-            throw std::runtime_error("Vulkan is not supported");
+    VulkanApp::VulkanApp(const VulkanAppConfig& config) : config(config) {
+        if (!config.window->isVulkanSupported()) {
+            BL_THROW("Vulkan is not supported");
         }
-        std::vector<const char*> requiredExtensions = window->getRequiredVulkanExtensions();
+        std::vector<const char*> requiredExtensions = config.window->getRequiredVulkanExtensions();
         if (std::count(requiredExtensions.begin(), requiredExtensions.end(), "VK_KHR_surface") == 0) {
-            throw std::runtime_error("Vulkan surface extension is not supported");
+            BL_THROW("Vulkan surface extension is not supported");
         }
 #ifdef BL_PLATFORM_MACOS
         requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 #endif
-        if (validationLayersEnabled) {
+        if (config.validationLayersEnabled) {
             requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
         if (!hasExtensions(requiredExtensions)) {
-            throw std::runtime_error("Could not find required extensions");
+            BL_THROW("Could not find required extensions");
         }
         std::vector<const char*> validationLayers;
         VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
-        if (validationLayersEnabled) {
+        if (config.validationLayersEnabled) {
             validationLayers.push_back("VK_LAYER_KHRONOS_validation");
             if (!hasValidationLayers(validationLayers)) {
-                throw std::runtime_error("Could not find validation layers");
+                BL_THROW("Could not find validation layers");
             }
             debugMessengerCreateInfo = getDebugMessengerCreateInfo();
         }
-        if (!createInstance(appConfig, requiredExtensions, validationLayers, debugMessengerCreateInfo)) {
-            throw std::runtime_error("Could not create Vulkan instance");
+        if (!createInstance(requiredExtensions, validationLayers, debugMessengerCreateInfo)) {
+            BL_THROW("Could not create Vulkan instance");
         }
         BL_LOG_INFO("Created Vulkan instance");
-        if (validationLayersEnabled) {
+        if (config.validationLayersEnabled) {
             if (!createDebugMessenger(debugMessengerCreateInfo)) {
-                throw std::runtime_error("Could not create debug messenger");
+                BL_THROW("Could not create debug messenger");
             }
         }
         if (!createSurface()) {
-            throw std::runtime_error("Could not create surface");
+            BL_THROW("Could not create surface");
         }
     }
 
     VulkanApp::~VulkanApp() {
         destroySurface();
-        if (validationLayersEnabled) {
+        if (config.validationLayersEnabled) {
             destroyDebugMessenger();
         }
         destroyInstance();
@@ -89,16 +85,15 @@ namespace Blink {
     }
 
     bool VulkanApp::createInstance(
-            const AppConfig& appConfig,
-            const std::vector<const char*>& requiredExtensions,
-            const std::vector<const char*>& validationLayers,
-            const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo
+        const std::vector<const char*>& requiredExtensions,
+        const std::vector<const char*>& validationLayers,
+        const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo
     ) {
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = appConfig.name.c_str();
+        appInfo.pApplicationName = config.applicationName.c_str();
         appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.pEngineName = appConfig.name.c_str();
+        appInfo.pEngineName = config.engineName.c_str();
         appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_3;
 
@@ -110,7 +105,7 @@ namespace Blink {
         if (Environment::isMacOS()) {
             createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
         }
-        if (validationLayersEnabled) {
+        if (config.validationLayersEnabled) {
             createInfo.pNext = &debugMessengerCreateInfo;
             createInfo.enabledLayerCount = (uint32_t) validationLayers.size();
             createInfo.ppEnabledLayerNames = validationLayers.data();
@@ -144,7 +139,7 @@ namespace Blink {
     }
 
     bool VulkanApp::createSurface() {
-        return window->createVulkanSurface(vulkanInstance, &surface, BL_VULKAN_ALLOCATOR) == VK_SUCCESS;
+        return config.window->createVulkanSurface(vulkanInstance, &surface, BL_VULKAN_ALLOCATOR) == VK_SUCCESS;
     }
 
     void VulkanApp::destroySurface() const {

@@ -1,38 +1,45 @@
 #pragma once
 
-#include "graphics/VulkanPhysicalDevice.h"
-#include "graphics/VulkanDevice.h"
+#include "VulkanPhysicalDevice.h"
+#include "VulkanDevice.h"
+#include "VulkanCommandPool.h"
+#include "VulkanBuffer.h"
+#include "system/FileSystem.h"
 
 #include <vulkan/vulkan.h>
 
 namespace Blink {
     struct VulkanImageConfig {
-        uint32_t width;
-        uint32_t height;
-        uint32_t mipLevels;
-        VkFormat format;
-        VkImageTiling tiling;
-        VkImageUsageFlags usage;
-        VkMemoryPropertyFlags memoryProperties;
-        VkImageLayout layout;
-        VkSampleCountFlagBits sampleCount;
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+        VkImageCreateInfo* createInfo{};
+        VkMemoryPropertyFlags memoryProperties{};
     };
 
     class VulkanImage {
     private:
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
+        VulkanImageConfig config;
         VkImage image = VK_NULL_HANDLE;
         VkDeviceMemory deviceMemory = VK_NULL_HANDLE;
+        VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+        VkFormat format;
 
     public:
-        VulkanImage(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        VulkanImage(VulkanImageConfig& config) noexcept(false);
+
+        ~VulkanImage();
 
         operator VkImage() const;
 
-        bool initialize(const VulkanImageConfig& config);
+        void setLayout(VkImageLayout layout) noexcept(false);
 
-        void terminate() const;
+        void setData(const Image& image) noexcept(false);
+
+    private:
+        bool hasStencilComponent(VkFormat format) const;
+
+        static std::string getLayoutName(VkImageLayout layout);
     };
 
 }

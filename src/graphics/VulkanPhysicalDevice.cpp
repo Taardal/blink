@@ -3,10 +3,10 @@
 
 namespace Blink {
 
-    VulkanPhysicalDevice::VulkanPhysicalDevice(VulkanApp* vulkan) : vulkan(vulkan) {
-        std::vector<VkPhysicalDevice> availableDevices = vulkan->getPhysicalDevices();
+    VulkanPhysicalDevice::VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config) : config(config) {
+        std::vector<VkPhysicalDevice> availableDevices = config.vulkanApp->getPhysicalDevices();
         if (availableDevices.empty()) {
-            throw std::runtime_error("Could not find any physical devices");
+            BL_THROW("Could not find any physical devices");
         }
         std::vector<const char*> requiredExtensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -16,7 +16,7 @@ namespace Blink {
         }
         VulkanPhysicalDeviceInfo mostSuitableDeviceInfo = getMostSuitableDevice(availableDevices, requiredExtensions);
         if (mostSuitableDeviceInfo.physicalDevice == nullptr) {
-            throw std::runtime_error("Could not get any suitable device");
+            BL_THROW("Could not get any suitable device");
         }
         this->deviceInfo = mostSuitableDeviceInfo;
         BL_LOG_INFO("Using physical device [{}]", mostSuitableDeviceInfo.properties.deviceName);
@@ -147,7 +147,7 @@ namespace Blink {
                 indices.graphicsFamily = queueFamilyIndex;
             }
             VkBool32 presentationSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, queueFamilyIndex, vulkan->getSurface(), &presentationSupport);
+            vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, queueFamilyIndex, config.vulkanApp->getSurface(), &presentationSupport);
             if (presentationSupport) {
                 indices.presentFamily = queueFamilyIndex;
             }
@@ -161,17 +161,19 @@ namespace Blink {
     SwapChainInfo VulkanPhysicalDevice::findSwapChainInfo(VkPhysicalDevice device) const {
         SwapChainInfo swapChainInfo;
 
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, vulkan->getSurface(), &swapChainInfo.surfaceCapabilities);
+        VkSurfaceKHR surface = config.vulkanApp->getSurface();
+
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &swapChainInfo.surfaceCapabilities);
 
         uint32_t formatCount = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, vulkan->getSurface(), &formatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
         swapChainInfo.surfaceFormats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, vulkan->getSurface(), &formatCount, swapChainInfo.surfaceFormats.data());
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, swapChainInfo.surfaceFormats.data());
 
         uint32_t presentationModeCount = 0;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, vulkan->getSurface(), &presentationModeCount, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentationModeCount, nullptr);
         swapChainInfo.presentModes.resize(presentationModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, vulkan->getSurface(), &presentationModeCount, swapChainInfo.presentModes.data());
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentationModeCount, swapChainInfo.presentModes.data());
 
         return swapChainInfo;
     }

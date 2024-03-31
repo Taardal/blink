@@ -6,15 +6,19 @@
 
 namespace Blink {
 
+    struct VulkanUniformBufferConfig {
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+    };
+
     class VulkanUniformBuffer {
     private:
-        VulkanCommandPool* commandPool;
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
+        VulkanUniformBufferConfig config;
         VulkanBuffer* buffer = nullptr;
 
     public:
-        VulkanUniformBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        VulkanUniformBuffer(const VulkanUniformBufferConfig& config);
 
         ~VulkanUniformBuffer();
 

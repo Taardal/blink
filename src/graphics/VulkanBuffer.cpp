@@ -67,31 +67,25 @@ namespace Blink {
     ) {
         BL_ASSERT(sourceBuffer->config.size == destinationBuffer->config.size);
 
-        VkCommandBuffer commandBuffer;
-        commandPool->allocateCommandBuffers(1, &commandBuffer);
-
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+        VulkanCommandBuffer commandBuffer;
+        BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffer(&commandBuffer));
+        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT));
 
         VkBufferCopy copyRegion{};
         copyRegion.size = sourceBuffer->config.size;
         constexpr uint32_t regionCount = 1;
         vkCmdCopyBuffer(commandBuffer, sourceBuffer->buffer, destinationBuffer->buffer, regionCount, &copyRegion);
 
-        vkEndCommandBuffer(commandBuffer);
+        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.end());
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
+        submitInfo.pCommandBuffers = commandBuffer.vk_ptr();
 
-        constexpr uint32_t submitCount = 1;
-        VkFence fence = VK_NULL_HANDLE;
-        vkQueueSubmit(device->getGraphicsQueue(), submitCount, &submitInfo, fence);
-        vkQueueWaitIdle(device->getGraphicsQueue());
+        device->submitToGraphicsQueue(&submitInfo);
+        device->waitUntilGraphicsQueueIsIdle();
 
-        commandPool->freeCommandBuffer(commandBuffer);
+        commandPool->freeCommandBuffer(&commandBuffer);
     }
 }

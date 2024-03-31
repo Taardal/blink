@@ -8,24 +8,22 @@
 #include <vulkan/vulkan.h>
 
 namespace Blink {
+    struct VulkanGraphicsPipelineConfig {
+        VulkanShader* vertexShader = nullptr;
+        VulkanShader* fragmentShader = nullptr;
+        VulkanRenderPass* renderPass = nullptr;
+        VulkanSwapChain* swapChain = nullptr;
+        VulkanDevice* device = nullptr;
+    };
+
     class VulkanGraphicsPipeline {
     private:
-        VulkanShader* vertexShader;
-        VulkanShader* fragmentShader;
-        VulkanRenderPass* renderPass;
-        VulkanSwapChain* swapChain;
-        VulkanDevice* device;
-        VkPipelineLayout layout = nullptr;
-        VkPipeline pipeline = nullptr;
+        VulkanGraphicsPipelineConfig config;
+        VkPipelineLayout layout = VK_NULL_HANDLE;
+        VkPipeline pipeline = VK_NULL_HANDLE;
 
     public:
-        VulkanGraphicsPipeline(
-            VulkanShader* vertexShader,
-            VulkanShader* fragmentShader,
-            VulkanRenderPass* renderPass,
-            VulkanSwapChain* swapChain,
-            VulkanDevice* device
-        );
+        explicit VulkanGraphicsPipeline(const VulkanGraphicsPipelineConfig& config);
 
         VkPipelineLayout getLayout() const;
 

@@ -2,6 +2,9 @@
 
 #include "system/Log.h"
 #include "system/Environment.h"
+#include "system/Error.h"
+
+#include <iostream>
 
 #ifdef BL_DEBUG
     #define BL_ENABLE_BREAK
@@ -22,19 +25,30 @@
 
 #ifdef BL_ENABLE_ASSERT
     #define BL_ASSERT(expression) \
-        if (expression) {\
-            /* Continue */\
-        } else {\
-            BL_LOG_CRITICAL("Assertion failed: {}", #expression); \
-            BL_BREAK(); \
-        }
+            if (expression) {\
+                /* Continue */\
+            } else {\
+                BL_LOG_CRITICAL("Assertion failed: {}", #expression); \
+                BL_BREAK(); \
+            }
 #else
     #define BL_ASSERT(expression)
 #endif
+
+#define BL_THROW(error) throw Error(BL_TAG(error))
 
 #define BL_ASSERT_THROW(expression) \
     if (expression) {\
         /* Continue */\
     } else {\
-        throw std::runtime_error(BL_TAG(std::string("Assertion failed: ") + #expression));\
+        BL_THROW(std::string("Assertion failed: ") + #expression);\
+    }
+
+#define BL_TRY(expression) \
+    try {\
+        expression;\
+    } catch (const Error& e) { \
+        throw Error(BL_TAG(#expression), std::make_shared<Error>(e));\
+    } catch (const std::exception& e) {\
+        throw Error(BL_TAG(#expression), std::make_shared<Error>(e.what()));\
     }

@@ -48,6 +48,8 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanApp.h
         ${SRC_DIR}/graphics/VulkanBuffer.cpp
         ${SRC_DIR}/graphics/VulkanBuffer.h
+        ${SRC_DIR}/graphics/VulkanCommandBuffer.cpp
+        ${SRC_DIR}/graphics/VulkanCommandBuffer.h
         ${SRC_DIR}/graphics/VulkanCommandPool.cpp
         ${SRC_DIR}/graphics/VulkanCommandPool.h
         ${SRC_DIR}/graphics/VulkanDevice.cpp
@@ -85,6 +87,8 @@ add_executable(
         ${SRC_DIR}/scene/Scene.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
+        ${SRC_DIR}/system/Error.cpp
+        ${SRC_DIR}/system/Error.h
         ${SRC_DIR}/system/FileSystem.cpp
         ${SRC_DIR}/system/FileSystem.h
         ${SRC_DIR}/system/Log.cpp

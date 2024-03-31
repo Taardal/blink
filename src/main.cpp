@@ -1,16 +1,14 @@
 #include "App.h"
 
-using namespace Blink;
-
 int main() {
-    AppConfig config;
+    Blink::AppConfig config;
     config.name = "Blink";
-    config.logLevel = LogLevel::Debug;
+    config.logLevel = Blink::LogLevel::Debug;
     config.windowWidth = 1280;
     config.windowHeight = 768;
     config.windowResizable = true;
 
-    runApp(config);
+    Blink::runApp(config);
 
     return EXIT_SUCCESS;
 }

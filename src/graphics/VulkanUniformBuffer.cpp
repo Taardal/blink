@@ -1,8 +1,8 @@
 #include "VulkanUniformBuffer.h"
 
 namespace Blink {
-    VulkanUniformBuffer::VulkanUniformBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
-        : commandPool(commandPool), device(device), physicalDevice(physicalDevice), buffer(new VulkanBuffer(commandPool, device, physicalDevice)) {
+    VulkanUniformBuffer::VulkanUniformBuffer(const VulkanUniformBufferConfig& config) {
+        buffer = new VulkanBuffer(config.commandPool, config.device, config.physicalDevice);
     }
 
     VulkanUniformBuffer::~VulkanUniformBuffer() {
@@ -10,7 +10,6 @@ namespace Blink {
     }
 
     VulkanUniformBuffer::operator VkBuffer() const {
-        BL_ASSERT(buffer != nullptr);
         return *buffer;
     }
 

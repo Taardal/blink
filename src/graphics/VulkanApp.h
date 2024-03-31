@@ -8,20 +8,26 @@
 
 #define BL_VULKAN_ALLOCATOR VK_NULL_HANDLE
 
-#define BL_VULKAN_ASSERT(expression) BL_ASSERT(expression == VK_SUCCESS)
-#define BL_VULKAN_ASSERT_THROW(expression) BL_ASSERT_THROW(expression == VK_SUCCESS)
+#define BL_ASSERT_VK_SUCCESS(expression) BL_ASSERT(expression == VK_SUCCESS)
+#define BL_ASSERT_THROW_VK_SUCCESS(expression) BL_ASSERT_THROW(expression == VK_SUCCESS)
 
 namespace Blink {
+    struct VulkanAppConfig {
+        Window* window = nullptr;
+        std::string applicationName;
+        std::string engineName;
+        bool validationLayersEnabled = false;
+    };
+
     class VulkanApp {
     private:
-        Window* window = nullptr;
-        VkInstance vulkanInstance = nullptr;
-        VkDebugUtilsMessengerEXT debugMessenger = nullptr;
-        VkSurfaceKHR surface = nullptr;
-        bool validationLayersEnabled = false;
+        VulkanAppConfig config;
+        VkInstance vulkanInstance = VK_NULL_HANDLE;
+        VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
+        VkSurfaceKHR surface = VK_NULL_HANDLE;
 
     public:
-        VulkanApp(const AppConfig& appConfig, Window* window);
+        VulkanApp(const VulkanAppConfig& config);
 
         ~VulkanApp();
 
@@ -31,7 +37,6 @@ namespace Blink {
 
     private:
         bool createInstance(
-            const AppConfig& appConfig,
             const std::vector<const char*>& requiredExtensions,
             const std::vector<const char*>& validationLayers,
             const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo

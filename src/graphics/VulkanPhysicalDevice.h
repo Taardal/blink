@@ -25,16 +25,20 @@ namespace Blink {
         SwapChainInfo swapChainInfo{};
     };
 
+    struct VulkanPhysicalDeviceConfig {
+        VulkanApp* vulkanApp = nullptr;
+    };
+
     class VulkanPhysicalDevice {
     public:
         static const std::vector<const char*> requiredExtensions;
 
     private:
-        VulkanApp* vulkan;
+        VulkanPhysicalDeviceConfig config;
         VulkanPhysicalDeviceInfo deviceInfo{};
 
     public:
-        explicit VulkanPhysicalDevice(VulkanApp* vulkan);
+        explicit VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config);
 
         const std::vector<VkExtensionProperties>& getExtensions() const;
 

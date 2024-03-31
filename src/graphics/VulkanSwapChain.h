@@ -5,12 +5,16 @@
 #include "VulkanApp.h"
 
 namespace Blink {
+    struct VulkanSwapChainConfig {
+        Window* window = nullptr;
+        VulkanApp* vulkanApp = nullptr;
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+    };
+
     class VulkanSwapChain {
     private:
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
-        VulkanApp* vulkan;
-        Window* window;
+        VulkanSwapChainConfig config;
         VkSurfaceFormatKHR surfaceFormat{};
         VkPresentModeKHR presentMode{};
         VkExtent2D extent{};
@@ -19,7 +23,7 @@ namespace Blink {
         std::vector<VkImageView> imageViews;
 
     public:
-        VulkanSwapChain(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice, VulkanApp* vulkan, Window* window);
+        explicit VulkanSwapChain(const VulkanSwapChainConfig& config);
 
         ~VulkanSwapChain();
 
@@ -33,7 +37,7 @@ namespace Blink {
 
         bool initialize();
 
-        void terminate();
+        void terminate() const;
 
         VkResult acquireNextImage(VkSemaphore semaphore, uint32_t* imageIndex) const;
 

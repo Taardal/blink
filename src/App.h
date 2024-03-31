@@ -17,6 +17,7 @@ namespace Blink {
 namespace Blink {
     class App {
     private:
+        AppConfig config;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;
@@ -24,18 +25,23 @@ namespace Blink {
         LuaEngine* luaEngine = nullptr;
         Camera* camera = nullptr;
         Scene* scene = nullptr;
+        bool initialized = false;
         double lastTime = 0.0;
         double fpsUpdateTimestep = 0.0;
         uint32_t fps = 0;
 
     public:
-        explicit App(const AppConfig& appConfig);
+        explicit App(const AppConfig& config);
+
+        void initialize();
 
         ~App();
 
         void run();
 
     private:
+        void update();
+
         void onEvent(Event& event) const;
     };
 }

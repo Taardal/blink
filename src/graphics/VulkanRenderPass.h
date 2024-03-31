@@ -6,15 +6,19 @@
 #include <vulkan/vulkan.h>
 
 namespace Blink {
+    struct VulkanRenderPassConfig {
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanSwapChain* swapChain = nullptr;
+    };
+
     class VulkanRenderPass {
     private:
-        VulkanSwapChain* swapChain;
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
-        VkRenderPass renderPass = nullptr;
+        VulkanRenderPassConfig config;
+        VkRenderPass renderPass = VK_NULL_HANDLE;
 
     public:
-        VulkanRenderPass(VulkanSwapChain* swapChain, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        explicit VulkanRenderPass(const VulkanRenderPassConfig& config);
 
         ~VulkanRenderPass();
 

@@ -5,14 +5,18 @@
 #include <string>
 
 namespace Blink {
+    struct VulkanShaderConfig {
+        VulkanDevice* device = nullptr;
+    };
+
     class VulkanShader {
     private:
-        VulkanDevice* device;
+        VulkanShaderConfig config;
         VkShaderModule shaderModule = VK_NULL_HANDLE;
         VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 
     public:
-        explicit VulkanShader(VulkanDevice* device);
+        explicit VulkanShader(const VulkanShaderConfig& config);
 
         operator VkShaderModule() const;
 

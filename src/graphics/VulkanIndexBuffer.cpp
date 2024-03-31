@@ -2,8 +2,8 @@
 
 namespace Blink {
 
-    VulkanIndexBuffer::VulkanIndexBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
-            : commandPool(commandPool), device(device), physicalDevice(physicalDevice) {}
+    VulkanIndexBuffer::VulkanIndexBuffer(const VulkanIndexBufferConfig& config) : config(config) {
+    }
 
     VulkanIndexBuffer::~VulkanIndexBuffer() {
         delete buffer;
@@ -22,7 +22,7 @@ namespace Blink {
         stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-        VulkanBuffer stagingBuffer(commandPool, device, physicalDevice);
+        VulkanBuffer stagingBuffer(config.commandPool, config.device, config.physicalDevice);
         if (!stagingBuffer.initialize(stagingBufferConfig)) {
             BL_LOG_ERROR("Could not initialize staging buffer");
             return false;
@@ -33,7 +33,7 @@ namespace Blink {
         bufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
         bufferConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-        buffer = new VulkanBuffer(commandPool, device, physicalDevice);
+        buffer = new VulkanBuffer(config.commandPool, config.device, config.physicalDevice);
         if (!buffer->initialize(bufferConfig)) {
             BL_LOG_ERROR("Could not initialize buffer");
             return false;

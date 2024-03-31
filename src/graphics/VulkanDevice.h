@@ -11,15 +11,19 @@ namespace Blink {
         uint32_t queueFamilyIndex = -1;
     };
 
+    struct VulkanDeviceConfig {
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+    };
+
     class VulkanDevice {
     private:
-        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDeviceConfig config;
         VkDevice device = nullptr;
         VkQueue graphicsQueue = nullptr;
         VkQueue presentQueue = nullptr;
 
     public:
-        explicit VulkanDevice(VulkanPhysicalDevice* physicalDevice);
+        explicit VulkanDevice(const VulkanDeviceConfig& config);
 
         ~VulkanDevice();
 
@@ -27,9 +31,15 @@ namespace Blink {
 
         VkQueue getGraphicsQueue() const;
 
+        void submitToGraphicsQueue(VkSubmitInfo* submitInfo, VkFence fence = VK_NULL_HANDLE) const;
+
+        void waitUntilGraphicsQueueIsIdle() const;
+
         VkQueue getPresentQueue() const;
 
         void waitUntilIdle() const;
+
+        void waitUntilQueueIsIdle(VkQueue queue) const;
 
         VkResult createSwapChain(VkSwapchainCreateInfoKHR* createInfo, VkSwapchainKHR* swapchain) const;
 
@@ -131,6 +141,6 @@ namespace Blink {
 
         void destroyDevice() const;
 
-        VkQueue getDeviceQueue(uint32_t queueFamilyIndex, uint32_t queueIndex = 0) const;
+        VkQueue getDeviceQueue(uint32_t queueFamilyIndex) const;
     };
 }

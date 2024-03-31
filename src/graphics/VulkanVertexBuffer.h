@@ -10,15 +10,19 @@
 
 namespace Blink {
 
+    struct VulkanVertexBufferConfig {
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+    };
+
     class VulkanVertexBuffer {
     private:
-        VulkanCommandPool* commandPool;
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
+        VulkanVertexBufferConfig config;
         VulkanBuffer* buffer = nullptr;
 
     public:
-        VulkanVertexBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        explicit VulkanVertexBuffer(const VulkanVertexBufferConfig& config);
 
         ~VulkanVertexBuffer();
 

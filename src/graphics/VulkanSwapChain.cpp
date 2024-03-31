@@ -2,16 +2,7 @@
 
 namespace Blink {
 
-    VulkanSwapChain::VulkanSwapChain(
-    VulkanDevice* device,
-    VulkanPhysicalDevice* physicalDevice,
-    VulkanApp* vulkan,
-    Window* window
-    ) : device(device),
-        physicalDevice(physicalDevice),
-        vulkan(vulkan),
-        window(window)
-    {
+    VulkanSwapChain::VulkanSwapChain(const VulkanSwapChainConfig& config) : config(config) {
         initialize();
     }
 
@@ -36,9 +27,9 @@ namespace Blink {
     }
 
     bool VulkanSwapChain::initialize() {
-        const SwapChainInfo& swapChainInfo = physicalDevice->getSwapChainInfo();
-        const QueueFamilyIndices& queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
-        VkSurfaceKHR surface = vulkan->getSurface();
+        const SwapChainInfo& swapChainInfo = config.physicalDevice->getSwapChainInfo();
+        const QueueFamilyIndices& queueFamilyIndices = config.physicalDevice->getQueueFamilyIndices();
+        VkSurfaceKHR surface = config.vulkanApp->getSurface();
 
         surfaceFormat = chooseSurfaceFormat(swapChainInfo.surfaceFormats);
         presentMode = choosePresentMode(swapChainInfo.presentModes);
@@ -63,16 +54,16 @@ namespace Blink {
         return true;
     }
 
-    void VulkanSwapChain::terminate() {
+    void VulkanSwapChain::terminate() const {
         for (VkImageView imageView : imageViews) {
-            device->destroyImageView(imageView);
+            config.device->destroyImageView(imageView);
         }
-        device->destroySwapChain(swapChain);
+        config.device->destroySwapChain(swapChain);
         BL_LOG_INFO("Destroyed swap chain");
     }
 
     VkResult VulkanSwapChain::acquireNextImage(VkSemaphore semaphore, uint32_t* imageIndex) const {
-        return device->acquireSwapChainImage(swapChain, semaphore, imageIndex);
+        return config.device->acquireSwapChainImage(swapChain, semaphore, imageIndex);
     }
 
     bool VulkanSwapChain::createSwapChain(uint32_t imageCount, const SwapChainInfo& swapChainInfo, const QueueFamilyIndices& queueFamilyIndices, VkSurfaceKHR surface) {
@@ -100,12 +91,12 @@ namespace Blink {
             createInfo.queueFamilyIndexCount = queueFamilyIndexValues.size();
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         } else {
-            createInfo.pQueueFamilyIndices = nullptr;
+            createInfo.pQueueFamilyIndices = VK_NULL_HANDLE;
             createInfo.queueFamilyIndexCount = 0;
             createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
 
-        return device->createSwapChain(&createInfo, &swapChain) == VK_SUCCESS;
+        return config.device->createSwapChain(&createInfo, &swapChain) == VK_SUCCESS;
     }
 
     VkSurfaceFormatKHR VulkanSwapChain::chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const {
@@ -132,7 +123,7 @@ namespace Blink {
         if (extentMustMatchWindowSize) {
             return surfaceCapabilities.currentExtent;
         }
-        WindowSize windowSizeInPixels = window->getSizeInPixels();
+        WindowSize windowSizeInPixels = config.window->getSizeInPixels();
         uint32_t width = std::clamp((uint32_t) windowSizeInPixels.width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
         uint32_t height = std::clamp((uint32_t) windowSizeInPixels.height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
         return { width, height };
@@ -149,7 +140,7 @@ namespace Blink {
     }
 
     bool VulkanSwapChain::findImages(uint32_t imageCount) {
-        device->getSwapChainImages(&imageCount, &images, swapChain);
+        config.device->getSwapChainImages(&imageCount, &images, swapChain);
         return !images.empty();
     }
 
@@ -170,7 +161,7 @@ namespace Blink {
             createInfo.subresourceRange.levelCount = 1;
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
-            if (device->createImageView(&createInfo, &imageViews[i]) != VK_SUCCESS) {
+            if (config.device->createImageView(&createInfo, &imageViews[i]) != VK_SUCCESS) {
                 return false;
             }
         }

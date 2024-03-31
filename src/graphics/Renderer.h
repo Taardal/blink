@@ -45,25 +45,25 @@ namespace Blink {
     private:
         FileSystem* fileSystem;
         Window* window;
-        VulkanApp* vulkanApp;
-        VulkanPhysicalDevice* physicalDevice;
-        VulkanDevice* device;
-        VulkanSwapChain* swapChain;
-        VulkanRenderPass* renderPass;
-        VulkanCommandPool* commandPool;
-        VulkanShader* vertexShader;
-        VulkanShader* fragmentShader;
-        VulkanGraphicsPipeline* graphicsPipeline;
-        VulkanVertexBuffer* vertexBuffer;
-        VulkanIndexBuffer* indexBuffer;
+        VulkanApp* vulkanApp = VK_NULL_HANDLE;
+        VulkanPhysicalDevice* physicalDevice = VK_NULL_HANDLE;
+        VulkanDevice* device = VK_NULL_HANDLE;
+        VulkanSwapChain* swapChain = VK_NULL_HANDLE;
+        VulkanRenderPass* renderPass = VK_NULL_HANDLE;
+        VulkanCommandPool* commandPool = VK_NULL_HANDLE;
+        VulkanShader* vertexShader = VK_NULL_HANDLE;
+        VulkanShader* fragmentShader = VK_NULL_HANDLE;
+        VulkanGraphicsPipeline* graphicsPipeline = VK_NULL_HANDLE;
+        VulkanVertexBuffer* vertexBuffer = VK_NULL_HANDLE;
+        VulkanIndexBuffer* indexBuffer = VK_NULL_HANDLE;
         std::vector<VulkanUniformBuffer*> uniformBuffers;
         std::vector<VkFramebuffer> framebuffers;
         std::vector<VkCommandBuffer> commandBuffers;
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
         std::vector<VkFence> inFlightFences;
-        VkDescriptorSetLayout descriptorSetLayout = nullptr;
-        VkDescriptorPool descriptorPool = nullptr;
+        VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+        VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
         std::vector<VkDescriptorSet> descriptorSets;
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
@@ -98,7 +98,7 @@ namespace Blink {
             const AppConfig& appConfig,
             FileSystem* fileSystem,
             Window* window
-        );
+        ) noexcept(false);
 
         ~Renderer();
 
@@ -114,8 +114,6 @@ namespace Blink {
         bool recreateSwapChain();
 
         void compileShaders();
-
-        bool initialize();
 
         void terminate();
 
