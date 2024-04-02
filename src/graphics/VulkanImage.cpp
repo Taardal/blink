@@ -4,14 +4,11 @@
 #include "VulkanCommandPool.h"
 
 namespace Blink {
-    VulkanImage::VulkanImage(VulkanImageConfig &config) : config(config) {
-        BL_ASSERT(config.physicalDevice != nullptr);
-        BL_ASSERT(config.device != nullptr);
-        BL_ASSERT(config.commandPool != nullptr);
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->createImage(config.createInfo, &image));
+    VulkanImage::VulkanImage(const VulkanImageConfig& config) : config(config) {
         this->layout = config.createInfo->initialLayout;
         this->format = config.createInfo->format;
+
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createImage(config.createInfo, &image));
 
         VkMemoryRequirements memoryRequirements = config.device->getImageMemoryRequirements(image);
 
@@ -73,18 +70,22 @@ namespace Blink {
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
             destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+                   newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
             sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
             destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+        } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED &&
+                   newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
             barrier.srcAccessMask = 0;
-            barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            barrier.dstAccessMask =
+                    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
             sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
             destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
         } else {
-            BL_THROW("Unsupported layout transition: [" + getLayoutName(oldLayout) + " -> " + getLayoutName(newLayout) + "]");
+            BL_THROW("Unsupported layout transition: [" + getLayoutName(oldLayout) + " -> " + getLayoutName(newLayout) +
+                     "]");
         }
 
         VulkanCommandBuffer commandBuffer;
@@ -93,9 +94,9 @@ namespace Blink {
 
         constexpr VkDependencyFlags dependencyFlags = 0;
         constexpr uint32_t memoryBarrierCount = 0;
-        constexpr VkMemoryBarrier *memoryBarriers = VK_NULL_HANDLE;
+        constexpr VkMemoryBarrier* memoryBarriers = VK_NULL_HANDLE;
         constexpr uint32_t bufferMemoryBarrierCount = 0;
-        constexpr VkBufferMemoryBarrier *bufferMemoryBarriers = VK_NULL_HANDLE;
+        constexpr VkBufferMemoryBarrier* bufferMemoryBarriers = VK_NULL_HANDLE;
         constexpr uint32_t imageMemoryBarrierCount = 1;
         vkCmdPipelineBarrier(
                 commandBuffer,
@@ -127,7 +128,8 @@ namespace Blink {
         VulkanBufferConfig stagingBufferConfig{};
         stagingBufferConfig.size = image.size;
         stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        stagingBufferConfig.memoryProperties =
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
         VulkanBuffer stagingBuffer(config.commandPool, config.device, config.physicalDevice);
         stagingBuffer.initialize(stagingBufferConfig);

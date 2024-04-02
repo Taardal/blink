@@ -27,7 +27,5 @@ namespace Blink {
         void begin(VkCommandBuffer commandBuffer, VkFramebuffer framebuffer) const;
 
         void end(VkCommandBuffer commandBuffer) const;
-
-        VkFormat findDepthFormat();
     };
 }

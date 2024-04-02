@@ -17,7 +17,7 @@ namespace Blink {
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = findDepthFormat();
+        depthAttachment.format = config.physicalDevice->getDepthFormat();
         depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -45,8 +45,8 @@ namespace Blink {
         dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
         std::array<VkAttachmentDescription, 2> attachments = {
-            colorAttachment,
-            depthAttachment
+                colorAttachment,
+                depthAttachment
         };
         VkRenderPassCreateInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -57,9 +57,7 @@ namespace Blink {
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        if (config.device->createRenderPass(&renderPassInfo, &renderPass) != VK_SUCCESS) {
-            BL_THROW("Could not create render pass");
-        }
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createRenderPass(&renderPassInfo, &renderPass));
     }
 
     VulkanRenderPass::~VulkanRenderPass() {
@@ -72,7 +70,7 @@ namespace Blink {
 
     void VulkanRenderPass::begin(VkCommandBuffer commandBuffer, VkFramebuffer framebuffer) const {
         VkClearColorValue clearColorValue = {
-            {0.0f, 0.0f, 0.0f, 1.0f}
+                {0.0f, 0.0f, 0.0f, 1.0f}
         };
 
         VkClearDepthStencilValue clearDepthStencilValue{};
@@ -87,7 +85,7 @@ namespace Blink {
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassBeginInfo.renderPass = renderPass;
         renderPassBeginInfo.framebuffer = framebuffer;
-        renderPassBeginInfo.renderArea.offset = { 0, 0};
+        renderPassBeginInfo.renderArea.offset = {0, 0};
         renderPassBeginInfo.renderArea.extent = config.swapChain->getExtent();
         renderPassBeginInfo.clearValueCount = (uint32_t) clearValues.size();
         renderPassBeginInfo.pClearValues = clearValues.data();
@@ -97,16 +95,5 @@ namespace Blink {
 
     void VulkanRenderPass::end(VkCommandBuffer commandBuffer) const {
         vkCmdEndRenderPass(commandBuffer);
-    }
-
-    VkFormat VulkanRenderPass::findDepthFormat() {
-        std::vector<VkFormat> candidates = {
-            VK_FORMAT_D32_SFLOAT,
-            VK_FORMAT_D32_SFLOAT_S8_UINT,
-            VK_FORMAT_D24_UNORM_S8_UINT
-    };
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-        VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        return config.physicalDevice->findSupportedFormat(candidates, tiling, features);
     }
 }

@@ -26,7 +26,7 @@ namespace Blink {
         VkFormat format;
 
     public:
-        VulkanImage(VulkanImageConfig& config) noexcept(false);
+        VulkanImage(const VulkanImageConfig& config) noexcept(false);
 
         ~VulkanImage();
 
