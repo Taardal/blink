@@ -41,6 +41,8 @@ namespace Blink {
 
         VkResult acquireNextImage(VkSemaphore semaphore, uint32_t* imageIndex) const;
 
+        VkResult present(uint32_t imageIndex, VkSemaphore* waitSemaphores = VK_NULL_HANDLE) const;
+
     private:
         bool createSwapChain(uint32_t imageCount, const SwapChainInfo& swapChainInfo, const QueueFamilyIndices& queueFamilyIndices, VkSurfaceKHR surface);
 

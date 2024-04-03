@@ -20,7 +20,7 @@ namespace Blink {
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         if (device->createBuffer(&bufferCreateInfo, &buffer) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create vertex buffer");
+            BL_LOG_ERROR("Could not create buffer");
             return false;
         }
 
@@ -32,10 +32,13 @@ namespace Blink {
         memoryAllocateInfo.memoryTypeIndex = physicalDevice->getMemoryType(memoryRequirements.memoryTypeBits, config.memoryProperties);
 
         if (device->allocateMemory(&memoryAllocateInfo, &memory) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not allocate vertex buffer memory");
+            BL_LOG_ERROR("Could not allocate buffer memory");
             return false;
         }
-        device->bindBufferMemory(buffer, memory);
+        if (device->bindBufferMemory(buffer, memory) != VK_SUCCESS) {
+            BL_LOG_ERROR("Could not bind buffer memory");
+            return false;
+        }
         return true;
     }
 
@@ -46,7 +49,7 @@ namespace Blink {
 
     void VulkanBuffer::setData(void* src) const {
         void* dst;
-        device->mapMemory(memory, config.size, &dst);
+        BL_ASSERT_THROW_VK_SUCCESS(device->mapMemory(memory, config.size, &dst));
         memcpy(dst, src, (size_t) config.size);
         device->unmapMemory(memory);
     }
@@ -83,8 +86,8 @@ namespace Blink {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = commandBuffer.vk_ptr();
 
-        device->submitToGraphicsQueue(&submitInfo);
-        device->waitUntilGraphicsQueueIsIdle();
+        BL_ASSERT_THROW_VK_SUCCESS(device->submitToGraphicsQueue(&submitInfo));
+        BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilGraphicsQueueIsIdle());
 
         commandPool->freeCommandBuffer(&commandBuffer);
     }

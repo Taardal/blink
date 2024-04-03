@@ -11,20 +11,17 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createImage(config.createInfo, &image));
 
         VkMemoryRequirements memoryRequirements = config.device->getImageMemoryRequirements(image);
-
         uint32_t memoryTypeIndex = config.physicalDevice->getMemoryType(
                 memoryRequirements.memoryTypeBits,
                 config.memoryProperties
         );
-
         VkMemoryAllocateInfo memoryAllocateInfo{};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.allocationSize = memoryRequirements.size;
         memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateMemory(&memoryAllocateInfo, &deviceMemory));
-
-        config.device->bindImageMemory(image, deviceMemory);
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->bindImageMemory(image, deviceMemory));
     }
 
     VulkanImage::~VulkanImage() {
@@ -118,8 +115,8 @@ namespace Blink {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = commandBuffer.vk_ptr();
 
-        config.device->submitToGraphicsQueue(&submitInfo);
-        config.device->waitUntilGraphicsQueueIsIdle();
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->submitToGraphicsQueue(&submitInfo));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilGraphicsQueueIsIdle());
 
         config.commandPool->freeCommandBuffer(commandBuffer.vk_ptr());
     }
@@ -179,8 +176,8 @@ namespace Blink {
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = commandBuffer.vk_ptr();
 
-        config.device->submitToGraphicsQueue(&submitInfo);
-        config.device->waitUntilGraphicsQueueIsIdle();
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->submitToGraphicsQueue(&submitInfo));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilGraphicsQueueIsIdle());
 
         config.commandPool->freeCommandBuffer(commandBuffer.vk_ptr());
 

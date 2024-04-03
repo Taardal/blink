@@ -32,25 +32,33 @@ namespace Blink {
         return graphicsQueue;
     }
 
-    void VulkanDevice::submitToGraphicsQueue(VkSubmitInfo* submitInfo, VkFence fence) const {
+    VkResult VulkanDevice::submitToGraphicsQueue(VkSubmitInfo* submitInfo, VkFence fence) const {
         constexpr uint32_t submitCount = 1;
-        vkQueueSubmit(graphicsQueue, submitCount, submitInfo, fence);
+        return vkQueueSubmit(graphicsQueue, submitCount, submitInfo, fence);
     }
 
-    void VulkanDevice::waitUntilGraphicsQueueIsIdle() const {
-        vkQueueWaitIdle(graphicsQueue);
+    VkResult VulkanDevice::waitUntilGraphicsQueueIsIdle() const {
+        return vkQueueWaitIdle(graphicsQueue);
     }
 
     VkQueue VulkanDevice::getPresentQueue() const {
         return presentQueue;
     }
 
-    void VulkanDevice::waitUntilIdle() const {
-        vkDeviceWaitIdle(device);
+    VkResult VulkanDevice::submitToPresentQueue(VkPresentInfoKHR* presentInfo) const {
+        return vkQueuePresentKHR(presentQueue, presentInfo);
     }
 
-    void VulkanDevice::waitUntilQueueIsIdle(VkQueue queue) const {
-        vkQueueWaitIdle(queue);
+    VkResult VulkanDevice::waitUntilPresentQueueIsIdle() const {
+        return vkQueueWaitIdle(presentQueue);
+    }
+
+    VkResult VulkanDevice::waitUntilIdle() const {
+        return vkDeviceWaitIdle(device);
+    }
+
+    VkResult VulkanDevice::waitUntilQueueIsIdle(VkQueue queue) const {
+        return vkQueueWaitIdle(queue);
     }
 
     VkResult VulkanDevice::createSwapChain(VkSwapchainCreateInfoKHR* createInfo, VkSwapchainKHR* swapchain) const {
@@ -149,20 +157,19 @@ namespace Blink {
         vkDestroyFence(device, fence, BL_VULKAN_ALLOCATOR);
     }
 
-    void VulkanDevice::waitForFence(VkFence* fence) const {
+    VkResult VulkanDevice::waitForFence(VkFence* fence) const {
         uint32_t count = 1;
         bool waitAll = VK_TRUE;
         uint64_t timeout = UINT64_MAX;
-        vkWaitForFences(device, count, fence, waitAll, timeout);
+        return vkWaitForFences(device, count, fence, waitAll, timeout);
     }
 
-    void VulkanDevice::resetFence(VkFence* fence) const {
-        uint32_t count = 1;
-        resetFences(1, fence);
+    VkResult VulkanDevice::resetFence(VkFence* fence) const {
+        return vkResetFences(device, 1, fence);
     }
 
-    void VulkanDevice::resetFences(uint32_t count, VkFence* fences) const {
-        vkResetFences(device, count, fences);
+    VkResult VulkanDevice::resetFences(uint32_t count, VkFence* fences) const {
+        return vkResetFences(device, count, fences);
     }
 
     VkResult VulkanDevice::acquireSwapChainImage(VkSwapchainKHR swapChain, VkSemaphore semaphore, uint32_t* imageIndex) const {
@@ -193,15 +200,15 @@ namespace Blink {
         vkFreeMemory(device, memory, BL_VULKAN_ALLOCATOR);
     }
 
-    void VulkanDevice::bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const {
+    VkResult VulkanDevice::bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const {
         constexpr VkDeviceSize memoryOffset = 0;
-        vkBindBufferMemory(device, buffer, memory, memoryOffset);
+        return vkBindBufferMemory(device, buffer, memory, memoryOffset);
     }
 
-    void VulkanDevice::mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const {
+    VkResult VulkanDevice::mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const {
         constexpr VkDeviceSize memoryOffset = 0;
         constexpr VkMemoryMapFlags memoryMapFlags = 0;
-        vkMapMemory(device, memory, memoryOffset, memorySize, memoryMapFlags, data);
+        return vkMapMemory(device, memory, memoryOffset, memorySize, memoryMapFlags, data);
     }
 
     void VulkanDevice::unmapMemory(VkDeviceMemory memory) const {
@@ -244,9 +251,9 @@ namespace Blink {
         return memoryRequirements;
     }
 
-    void VulkanDevice::bindImageMemory(VkImage image, VkDeviceMemory memory) const {
+    VkResult VulkanDevice::bindImageMemory(VkImage image, VkDeviceMemory memory) const {
         constexpr VkDeviceSize memoryOffset = 0;
-        vkBindImageMemory(device, image, memory, memoryOffset);
+        return vkBindImageMemory(device, image, memory, memoryOffset);
     }
 
     void VulkanDevice::destroyImage(VkImage image) const {

@@ -528,10 +528,10 @@ namespace Blink {
         VulkanUniformBuffer* uniformBuffer = uniformBuffers[currentFrame];
 
         //
-        // Acquisition
+        // Image acquisition
         //
 
-        device->waitForFence(&inFlightFence);
+        BL_ASSERT_THROW_VK_SUCCESS(device->waitForFence(&inFlightFence));
 
         uint32_t imageIndex;
         VkResult nextImageResult = swapChain->acquireNextImage(imageAvailableSemaphore, &imageIndex);
@@ -543,67 +543,43 @@ namespace Blink {
             BL_THROW("Could not acquire next image from swap chain");
         }
 
-        device->resetFence(&inFlightFence);
+        BL_ASSERT_THROW_VK_SUCCESS(device->resetFence(&inFlightFence));
 
         VkCommandBufferResetFlags commandBufferResetFlags = 0;
         vkResetCommandBuffer(commandBuffer, commandBufferResetFlags);
 
         //
-        // Recording
+        // Command recording
         //
 
         recordCommandBuffer(commandBuffer, imageIndex);
         updateUniformBuffer(uniformBuffer, frame);
 
         //
-        // Submission
+        // Command submission (rendering)
         //
+
+        VkPipelineStageFlags colorOutputPipelineStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        VkSemaphore waitSemaphores[] = {
-                imageAvailableSemaphore
-        };
-        VkPipelineStageFlags waitStages[] = {
-                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-        };
         submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-
+        submitInfo.pWaitSemaphores = &imageAvailableSemaphore;
+        submitInfo.pWaitDstStageMask = &colorOutputPipelineStage;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
-
-        VkSemaphore signalSemaphores[] = {
-                renderFinishedSemaphore
-        };
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
 
-        uint32_t submitCount = 1;
-        if (vkQueueSubmit(device->getGraphicsQueue(), submitCount, &submitInfo, inFlightFence) != VK_SUCCESS) {
+        if (device->submitToGraphicsQueue(&submitInfo, inFlightFence) != VK_SUCCESS) {
             BL_THROW("Could not submit draw command buffer");
         }
 
         //
-        // Presentation
+        // Image presentation
         //
 
-        VkPresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
-
-        VkSwapchainKHR swapChains[] = {
-                *swapChain
-        };
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = swapChains;
-        presentInfo.pImageIndices = &imageIndex;
-
-        VkResult presentResult = vkQueuePresentKHR(device->getPresentQueue(), &presentInfo);
+        VkResult presentResult = swapChain->present(imageIndex, &renderFinishedSemaphore);
         if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR || framebufferResized) {
             framebufferResized = false;
             recreateSwapChain();
@@ -695,7 +671,7 @@ namespace Blink {
 
     bool Renderer::recreateSwapChain() {
         window->waitUntilNotMinimized();
-        device->waitUntilIdle();
+        BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilIdle());
 
         terminateFramebuffers();
         delete depthImage;

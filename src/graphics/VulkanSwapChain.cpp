@@ -66,6 +66,18 @@ namespace Blink {
         return config.device->acquireSwapChainImage(swapChain, semaphore, imageIndex);
     }
 
+    VkResult VulkanSwapChain::present(uint32_t imageIndex, VkSemaphore* waitSemaphores) const {
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = waitSemaphores;
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = &swapChain;
+        presentInfo.pImageIndices = &imageIndex;
+
+        return config.device->submitToPresentQueue(&presentInfo);
+    }
+
     bool VulkanSwapChain::createSwapChain(uint32_t imageCount, const SwapChainInfo& swapChainInfo, const QueueFamilyIndices& queueFamilyIndices, VkSurfaceKHR surface) {
         VkSwapchainCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

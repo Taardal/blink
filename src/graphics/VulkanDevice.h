@@ -31,15 +31,19 @@ namespace Blink {
 
         VkQueue getGraphicsQueue() const;
 
-        void submitToGraphicsQueue(VkSubmitInfo* submitInfo, VkFence fence = VK_NULL_HANDLE) const;
+        VkResult submitToGraphicsQueue(VkSubmitInfo* submitInfo, VkFence fence = VK_NULL_HANDLE) const;
 
-        void waitUntilGraphicsQueueIsIdle() const;
+        VkResult waitUntilGraphicsQueueIsIdle() const;
 
         VkQueue getPresentQueue() const;
 
-        void waitUntilIdle() const;
+        VkResult submitToPresentQueue(VkPresentInfoKHR* presentInfo) const;
 
-        void waitUntilQueueIsIdle(VkQueue queue) const;
+        VkResult waitUntilPresentQueueIsIdle() const;
+
+        VkResult waitUntilIdle() const;
+
+        VkResult waitUntilQueueIsIdle(VkQueue queue) const;
 
         VkResult createSwapChain(VkSwapchainCreateInfoKHR* createInfo, VkSwapchainKHR* swapchain) const;
 
@@ -87,11 +91,11 @@ namespace Blink {
 
         void destroyFence(VkFence fence) const;
 
-        void waitForFence(VkFence* fence) const;
+        VkResult waitForFence(VkFence* fence) const;
 
-        void resetFences(uint32_t count, VkFence* fences) const;
+        VkResult resetFences(uint32_t count, VkFence* fences) const;
 
-        void resetFence(VkFence* fence) const;
+        VkResult resetFence(VkFence* fence) const;
 
         VkResult acquireSwapChainImage(VkSwapchainKHR swapChain, VkSemaphore semaphore, uint32_t* imageIndex) const;
 
@@ -105,9 +109,9 @@ namespace Blink {
 
         void freeMemory(VkDeviceMemory memory) const;
 
-        void bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const;
+        VkResult bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const;
 
-        void mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const;
+        VkResult mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const;
 
         void unmapMemory(VkDeviceMemory memory) const;
 
@@ -127,7 +131,7 @@ namespace Blink {
 
         VkMemoryRequirements getImageMemoryRequirements(VkImage image) const;
 
-        void bindImageMemory(VkImage image, VkDeviceMemory memory) const;
+        VkResult bindImageMemory(VkImage image, VkDeviceMemory memory) const;
 
         void destroyImage(VkImage image) const;
 
