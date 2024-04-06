@@ -6,12 +6,10 @@
 #include "graphics/VulkanPhysicalDevice.h"
 #include "graphics/VulkanDevice.h"
 #include "graphics/VulkanSwapChain.h"
-#include "graphics/VulkanRenderPass.h"
 #include "graphics/VulkanCommandPool.h"
 #include "graphics/VulkanPhysicalDevice.h"
 #include "graphics/VulkanDevice.h"
 #include "graphics/VulkanSwapChain.h"
-#include "graphics/VulkanRenderPass.h"
 #include "graphics/VulkanCommandPool.h"
 #include "graphics/VulkanShader.h"
 #include "graphics/VulkanGraphicsPipeline.h"
@@ -35,12 +33,6 @@ namespace Blink {
     class Renderer {
     private:
         static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
-        static constexpr uint32_t VERTICES_PER_QUAD = 4;
-        static constexpr uint32_t INDICES_PER_QUAD = 6;
-        static constexpr uint32_t QUADS_PER_BATCH = 1000;
-        static constexpr uint32_t VERTICES_PER_BATCH = QUADS_PER_BATCH * VERTICES_PER_QUAD;
-        static constexpr uint32_t INDICES_PER_BATCH = QUADS_PER_BATCH * INDICES_PER_QUAD;
-        static constexpr uint32_t MAX_TEXTURE_SLOTS = 16;
 
     private:
         FileSystem* fileSystem;
@@ -49,31 +41,22 @@ namespace Blink {
         VulkanPhysicalDevice* physicalDevice = VK_NULL_HANDLE;
         VulkanDevice* device = VK_NULL_HANDLE;
         VulkanSwapChain* swapChain = VK_NULL_HANDLE;
-        VulkanRenderPass* renderPass = VK_NULL_HANDLE;
         VulkanCommandPool* commandPool = VK_NULL_HANDLE;
         VulkanShader* vertexShader = VK_NULL_HANDLE;
         VulkanShader* fragmentShader = VK_NULL_HANDLE;
         VulkanGraphicsPipeline* graphicsPipeline = VK_NULL_HANDLE;
         VulkanVertexBuffer* vertexBuffer = VK_NULL_HANDLE;
         VulkanIndexBuffer* indexBuffer = VK_NULL_HANDLE;
-        std::vector<VulkanUniformBuffer*> uniformBuffers;
-        std::vector<VkFramebuffer> framebuffers;
         std::vector<VkCommandBuffer> commandBuffers;
-        std::vector<VkSemaphore> imageAvailableSemaphores;
-        std::vector<VkSemaphore> renderFinishedSemaphores;
-        std::vector<VkFence> inFlightFences;
+        std::vector<VulkanUniformBuffer*> uniformBuffers;
         VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
         VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
         std::vector<VkDescriptorSet> descriptorSets;
         uint32_t currentFrame = 0;
-        bool framebufferResized = false;
 
         VulkanImage* textureImage;
         VkImageView textureImageView;
         VkSampler textureSampler;
-
-        VulkanImage* depthImage;
-        VkImageView depthImageView;
 
     private:
         const std::vector<Vertex> vertices = {
@@ -102,43 +85,25 @@ namespace Blink {
 
         ~Renderer();
 
+        void render(const Frame& frame) noexcept(false);
+
+        void waitUntilIdle() const noexcept(false);
+
         void onEvent(Event& event);
 
-        void render(const Frame& frame);
-
     private:
-        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
-
-        void updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame);
-
-        bool recreateSwapChain();
-
-        void compileShaders();
-
-        bool initializeUniformBuffers();
-
-        void terminateUniformBuffers() const;
-
-        bool initializeGraphicsPipelineObjects() const;
+        void initializeGraphicsPipelineObjects() const;
 
         void terminateGraphicsPipelineObjects() const;
 
-        bool initializeDescriptorObjects();
+        void setUniformData(VulkanUniformBuffer* uniformBuffer, const Frame& frame) const;
 
-        void terminateDescriptorObjects() const;
+        void bindDescriptorSet(VkDescriptorSet descriptorSet, const VulkanCommandBuffer& commandBuffer) const;
 
-        bool initializeFramebuffers();
+        void drawIndexed(const VulkanCommandBuffer& commandBuffer) const;
 
-        void terminateFramebuffers();
+        void recompileShaders();
 
-        bool initializeCommandBuffers();
-
-        bool initializeSyncObjects();
-
-        void terminateSyncObjects() const;
-
-        bool initializeTextureImage();
-
-        bool initializeDepthResources();
+        void compileShaders();
     };
 }

@@ -50,7 +50,7 @@ namespace Blink {
     void VulkanBuffer::setData(void* src) const {
         void* dst;
         BL_ASSERT_THROW_VK_SUCCESS(device->mapMemory(memory, config.size, &dst));
-        memcpy(dst, src, (size_t) config.size);
+        memcpy(dst, src, config.size);
         device->unmapMemory(memory);
     }
 

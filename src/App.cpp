@@ -3,19 +3,10 @@
 #include "window/KeyEvent.h"
 
 namespace Blink {
-    void runApp(const AppConfig& config) {
-        Log::setLevel(config.logLevel);
-        App* app = new App(config);
-        app->run();
-        delete app;
-    }
-}
-
-namespace Blink {
     App::App(const AppConfig& config) : config(config) {
         try {
-            BL_LOG_INFO("Initializing...");
             initialize();
+            BL_LOG_INFO("Initializing...");
             initialized = true;
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Initialization error");
@@ -26,16 +17,16 @@ namespace Blink {
     }
 
     void App::initialize() {
-        BL_TRY(fileSystem = new FileSystem());
-        BL_TRY(window = new Window(config));
+        fileSystem = new FileSystem();
+        window = new Window(config);
         window->setEventListener([this](Event& event) {
-            this->onEvent(event);
+            onEvent(event);
         });
-        BL_TRY(keyboard = new Keyboard(window));
-        BL_TRY(renderer = new Renderer(config, fileSystem, window));
-        BL_TRY(luaEngine = new LuaEngine(keyboard));
-        BL_TRY(camera = new Camera(window, keyboard));
-        BL_TRY(scene = new Scene(keyboard, luaEngine));
+        keyboard = new Keyboard(window);
+        renderer = new Renderer(config, fileSystem, window);
+        luaEngine = new LuaEngine(keyboard);
+        camera = new Camera(window, keyboard);
+        scene = new Scene(keyboard, luaEngine);
     }
 
     App::~App() {
@@ -64,6 +55,7 @@ namespace Blink {
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Runtime error: {}", e.what());
         }
+        renderer->waitUntilIdle();
     }
 
     void App::update() {

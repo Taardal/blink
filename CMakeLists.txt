@@ -62,8 +62,6 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanIndexBuffer.h
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.cpp
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.h
-        ${SRC_DIR}/graphics/VulkanRenderPass.cpp
-        ${SRC_DIR}/graphics/VulkanRenderPass.h
         ${SRC_DIR}/graphics/VulkanShader.cpp
         ${SRC_DIR}/graphics/VulkanShader.h
         ${SRC_DIR}/graphics/VulkanSwapChain.cpp

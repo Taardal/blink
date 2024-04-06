@@ -26,6 +26,7 @@ namespace Blink {
         vulkanAppConfig.engineName = appConfig.name;
         vulkanAppConfig.validationLayersEnabled = true;
         BL_TRY(vulkanApp = new VulkanApp(vulkanAppConfig));
+        BL_LOG_INFO("Created Vulkan app");
 
         //
         // PHYSICAL DEVICE
@@ -34,7 +35,7 @@ namespace Blink {
         VulkanPhysicalDeviceConfig physicalDeviceConfig{};
         physicalDeviceConfig.vulkanApp = vulkanApp;
         BL_TRY(physicalDevice = new VulkanPhysicalDevice(physicalDeviceConfig));
-        VkFormat depthFormat = physicalDevice->getDepthFormat();
+        BL_LOG_INFO("Created Vulkan physical device");
 
         //
         // LOGICAL DEVICE
@@ -43,6 +44,25 @@ namespace Blink {
         VulkanDeviceConfig deviceConfig{};
         deviceConfig.physicalDevice = physicalDevice;
         BL_TRY(device = new VulkanDevice(deviceConfig));
+        BL_LOG_INFO("Created Vulkan device app");
+
+        //
+        // COMMAND POOL
+        //
+
+        VulkanCommandPoolConfig commandPoolConfig{};
+        commandPoolConfig.physicalDevice = physicalDevice;
+        commandPoolConfig.device = device;
+        BL_TRY(commandPool = new VulkanCommandPool(commandPoolConfig));
+        BL_LOG_INFO("Created Vulkan command pool");
+
+        //
+        // COMMAND BUFFERS
+        //
+
+        commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffers(&commandBuffers));
+        BL_LOG_INFO("Created [{}] Vulkan command buffer(s)", commandBuffers.size());
 
         //
         // SWAP CHAIN
@@ -53,28 +73,9 @@ namespace Blink {
         swapChainConfig.vulkanApp = vulkanApp;
         swapChainConfig.physicalDevice = physicalDevice;
         swapChainConfig.device = device;
+        swapChainConfig.commandPool = commandPool;
         BL_TRY(swapChain = new VulkanSwapChain(swapChainConfig));
-
-        VkExtent2D swapChainExtent = swapChain->getExtent();
-
-        //
-        // RENDER PASS
-        //
-
-        VulkanRenderPassConfig renderPassConfig{};
-        renderPassConfig.physicalDevice = physicalDevice;
-        renderPassConfig.device = device;
-        renderPassConfig.swapChain = swapChain;
-        BL_TRY(renderPass = new VulkanRenderPass(renderPassConfig));
-
-        //
-        // COMMAND POOL
-        //
-
-        VulkanCommandPoolConfig commandPoolConfig{};
-        commandPoolConfig.physicalDevice = physicalDevice;
-        commandPoolConfig.device = device;
-        BL_TRY(commandPool = new VulkanCommandPool(commandPoolConfig));
+        BL_LOG_INFO("Created Vulkan swap chain");
 
         //
         // VERTEX SHADER
@@ -99,7 +100,6 @@ namespace Blink {
         VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
         graphicsPipelineConfig.device = device;
         graphicsPipelineConfig.swapChain = swapChain;
-        graphicsPipelineConfig.renderPass = renderPass;
         graphicsPipelineConfig.vertexShader = vertexShader;
         graphicsPipelineConfig.fragmentShader = fragmentShader;
         BL_TRY(graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig));
@@ -139,52 +139,6 @@ namespace Blink {
             BL_ASSERT_THROW(uniformBuffer->initialize(sizeof(UniformBufferObject)));
             uniformBuffers.push_back(uniformBuffer);
         }
-
-        //
-        // DEPTH IMAGE
-        //
-
-        VkImageCreateInfo depthImageCreateInfo{};
-        depthImageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        depthImageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-        depthImageCreateInfo.extent.width = swapChainExtent.width;
-        depthImageCreateInfo.extent.height = swapChainExtent.height;
-        depthImageCreateInfo.extent.depth = 1;
-        depthImageCreateInfo.mipLevels = 1;
-        depthImageCreateInfo.arrayLayers = 1;
-        depthImageCreateInfo.format = depthFormat;
-        depthImageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        depthImageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthImageCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        depthImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        depthImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        VulkanImageConfig depthImageConfig{};
-        depthImageConfig.createInfo = &depthImageCreateInfo;
-        depthImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        depthImageConfig.physicalDevice = physicalDevice;
-        depthImageConfig.device = device;
-        depthImageConfig.commandPool = commandPool;
-
-        BL_TRY(depthImage = new VulkanImage(depthImageConfig));
-        BL_TRY(depthImage->setLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL));
-
-        //
-        // DEPTH IMAGE VIEW
-        //
-
-        VkImageViewCreateInfo depthImageViewCreateInfo{};
-        depthImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        depthImageViewCreateInfo.image = *depthImage;
-        depthImageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        depthImageViewCreateInfo.format = depthFormat;
-        depthImageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        depthImageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-        depthImageViewCreateInfo.subresourceRange.levelCount = 1;
-        depthImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-        depthImageViewCreateInfo.subresourceRange.layerCount = 1;
-
-        BL_ASSERT_THROW_VK_SUCCESS(device->createImageView(&depthImageViewCreateInfo, &depthImageView));
 
         //
         // TEXTURE IMAGE
@@ -357,84 +311,13 @@ namespace Blink {
         }
 
         //
-        // FIX ME
-        // FIX ME
-        // FIX ME
-
         // GRAPHICS PIPELINE OBJCETS (PIPELINE + SHADERS)
         //
-        // FIX ME
-        // FIX ME
-        // FIX ME
-        //
 
-        if (!initializeGraphicsPipelineObjects()) {
-            throw std::runtime_error(BL_TAG("Could not initialize graphics pipeline objects"));
-        }
-
-        //
-        // FRAMEBUFFERS
-        //
-
-        const std::vector<VkImageView>& swapChainImageViews = swapChain->getImageViews();
-        framebuffers.resize(swapChainImageViews.size());
-        for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-            std::array<VkImageView, 2> attachments = {
-                swapChainImageViews[i],
-                depthImageView
-            };
-
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = *renderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = swapChainExtent.width;
-            framebufferInfo.height = swapChainExtent.height;
-            framebufferInfo.layers = 1;
-
-            BL_ASSERT_THROW_VK_SUCCESS(device->createFramebuffer(&framebufferInfo, &framebuffers[i]));
-        }
-
-        //
-        // COMMAND BUFFERS
-        //
-
-        commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffers(&commandBuffers));
-
-        //
-        // SYNC OBJECTS
-        //
-
-        imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-
-        VkSemaphoreCreateInfo semaphoreCreateInfo{};
-        semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-        VkFenceCreateInfo fenceCreateInfo{};
-        fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            BL_ASSERT_THROW_VK_SUCCESS(device->createSemaphore(&semaphoreCreateInfo, &imageAvailableSemaphores[i]));
-            BL_ASSERT_THROW_VK_SUCCESS(device->createSemaphore(&semaphoreCreateInfo, &renderFinishedSemaphores[i]));
-            BL_ASSERT_THROW_VK_SUCCESS(device->createFence(&fenceCreateInfo, &inFlightFences[i]));
-        }
+        BL_TRY(initializeGraphicsPipelineObjects());
     }
 
     Renderer::~Renderer() {
-        device->waitUntilIdle();
-
-        //
-        // DEPTH RESOURCES
-        //
-
-        device->destroyImageView(depthImageView);
-        delete depthImage;
-
         //
         // TEXTURE RESOURCES
         //
@@ -442,24 +325,6 @@ namespace Blink {
         device->destroySampler(textureSampler);
         device->destroyImageView(textureImageView);
         delete textureImage;
-
-        //
-        // SYNC RESOURCES
-        //
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            device->destroySemaphore(imageAvailableSemaphores[i]);
-            device->destroySemaphore(renderFinishedSemaphores[i]);
-            device->destroyFence(inFlightFences[i]);
-        }
-
-        //
-        // FRAMEBUFFERS
-        //
-
-        for (VkFramebuffer framebuffer : framebuffers) {
-            device->destroyFramebuffer(framebuffer);
-        }
 
         //
         // VERTEX & INDEX BUFFERS
@@ -495,157 +360,53 @@ namespace Blink {
             delete uniformBuffer;
         }
 
-        delete commandPool;
-        delete renderPass;
         delete swapChain;
+        delete commandPool;
         delete device;
         delete physicalDevice;
         delete vulkanApp;
     }
 
-    void Renderer::onEvent(Event& event) {
-        if (event.type == EventType::WindowResize || event.type == EventType::WindowMinimize) {
-            this->framebufferResized = true;
-        }
-        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
-            compileShaders();
-            terminateGraphicsPipelineObjects();
-            if (!initializeGraphicsPipelineObjects()) {
-                throw std::runtime_error("Could not initialize graphics pipeline objects");
-            }
-        }
-    }
-
     void Renderer::render(const Frame& frame) {
-        //
-        // Resources
-        //
-
-        VkFence inFlightFence = inFlightFences[currentFrame];
-        VkSemaphore imageAvailableSemaphore = imageAvailableSemaphores[currentFrame];
-        VkSemaphore renderFinishedSemaphore = renderFinishedSemaphores[currentFrame];
-        VkCommandBuffer commandBuffer = commandBuffers[currentFrame];
-        VulkanUniformBuffer* uniformBuffer = uniformBuffers[currentFrame];
-
-        //
-        // Image acquisition
-        //
-
-        BL_ASSERT_THROW_VK_SUCCESS(device->waitForFence(&inFlightFence));
-
-        uint32_t imageIndex;
-        VkResult nextImageResult = swapChain->acquireNextImage(imageAvailableSemaphore, &imageIndex);
-        if (nextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
-            recreateSwapChain();
+        bool frameReady = swapChain->beginFrame(currentFrame);
+        if (!frameReady) {
             return;
         }
-        if (nextImageResult != VK_SUCCESS && nextImageResult != VK_SUBOPTIMAL_KHR) {
-            BL_THROW("Could not acquire next image from swap chain");
-        }
 
-        BL_ASSERT_THROW_VK_SUCCESS(device->resetFence(&inFlightFence));
+        const VulkanCommandBuffer& commandBuffer = commandBuffers[currentFrame];
+        VulkanUniformBuffer* uniformBuffer = uniformBuffers[currentFrame];
+        VkDescriptorSet descriptorSet = descriptorSets[currentFrame];
 
-        VkCommandBufferResetFlags commandBufferResetFlags = 0;
-        vkResetCommandBuffer(commandBuffer, commandBufferResetFlags);
+        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.begin());
 
-        //
-        // Command recording
-        //
-
-        recordCommandBuffer(commandBuffer, imageIndex);
-        updateUniformBuffer(uniformBuffer, frame);
-
-        //
-        // Command submission (rendering)
-        //
-
-        VkPipelineStageFlags colorOutputPipelineStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &imageAvailableSemaphore;
-        submitInfo.pWaitDstStageMask = &colorOutputPipelineStage;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
-
-        if (device->submitToGraphicsQueue(&submitInfo, inFlightFence) != VK_SUCCESS) {
-            BL_THROW("Could not submit draw command buffer");
-        }
-
-        //
-        // Image presentation
-        //
-
-        VkResult presentResult = swapChain->present(imageIndex, &renderFinishedSemaphore);
-        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR || framebufferResized) {
-            framebufferResized = false;
-            recreateSwapChain();
-        } else if (presentResult != VK_SUCCESS) {
-            BL_THROW("Could not present image to swap chain");
-        }
-
-        //
-        // Next frame
-        //
-
-        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-    }
-
-    void Renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-            BL_THROW("Could not begin recording command buffer");
-        }
-
-        renderPass->begin(commandBuffer, framebuffers.at(imageIndex));
+        swapChain->beginRenderPass(commandBuffer);
         graphicsPipeline->bind(commandBuffer);
         vertexBuffer->bind(commandBuffer);
         indexBuffer->bind(commandBuffer);
+        bindDescriptorSet(descriptorSet, commandBuffer);
+        drawIndexed(commandBuffer);
+        swapChain->endRenderPass(commandBuffer);
 
-        VkDescriptorSet descriptorSet = descriptorSets[currentFrame];
-        VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        VkPipelineLayout pipelineLayout = graphicsPipeline->getLayout();
-        constexpr uint32_t firstSet = 0;
-        constexpr uint32_t descriptorSetCount = 1;
-        constexpr uint32_t dynamicOffsetCount = 0;
-        constexpr uint32_t* dynamicOffsets = nullptr;
-        vkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint, pipelineLayout, firstSet, descriptorSetCount, &descriptorSet, dynamicOffsetCount, dynamicOffsets);
+        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.end());
 
-        const VkExtent2D& swapChainExtent = swapChain->getExtent();
+        setUniformData(uniformBuffer, frame);
 
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float) swapChainExtent.width;
-        viewport.height = (float) swapChainExtent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+        swapChain->endFrame(commandBuffer);
+        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
 
-        VkRect2D scissor{};
-        scissor.offset = { 0, 0 };
-        scissor.extent = swapChainExtent;
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    void Renderer::waitUntilIdle() const {
+        BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilIdle());
+    }
 
-        constexpr uint32_t instanceCount = 1;
-        constexpr uint32_t firstIndex = 0;
-        constexpr uint32_t vertexOffset = 0;
-        constexpr uint32_t firstInstance = 0;
-        vkCmdDrawIndexed(commandBuffer, (uint32_t) indices.size(), instanceCount, firstIndex, vertexOffset, firstInstance);
-
-        renderPass->end(commandBuffer);
-
-        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-            BL_THROW("Could not end frame");
+    void Renderer::onEvent(Event& event) {
+        swapChain->onEvent(event);
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
+            recompileShaders();
         }
     }
 
-    void Renderer::updateUniformBuffer(VulkanUniformBuffer* uniformBuffer, const Frame& frame) {
+    void Renderer::setUniformData(VulkanUniformBuffer* uniformBuffer, const Frame& frame) const {
         UniformBufferObject ubo{};
         ubo.model = frame.model;
         ubo.view = frame.view;
@@ -669,29 +430,44 @@ namespace Blink {
         uniformBuffer->setData(&ubo);
     }
 
-    bool Renderer::recreateSwapChain() {
-        window->waitUntilNotMinimized();
-        BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilIdle());
+    void Renderer::bindDescriptorSet(VkDescriptorSet descriptorSet, const VulkanCommandBuffer& commandBuffer) const {
+        VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        VkPipelineLayout pipelineLayout = graphicsPipeline->getLayout();
+        constexpr uint32_t firstSet = 0;
+        constexpr uint32_t descriptorSetCount = 1;
+        constexpr uint32_t dynamicOffsetCount = 0;
+        constexpr uint32_t* dynamicOffsets = nullptr;
+        vkCmdBindDescriptorSets(
+            commandBuffer,
+            pipelineBindPoint,
+            pipelineLayout,
+            firstSet,
+            descriptorSetCount,
+            &descriptorSet,
+            dynamicOffsetCount,
+            dynamicOffsets
+        );
+    }
 
-        terminateFramebuffers();
-        delete depthImage;
-        swapChain->terminate();
+    void Renderer::drawIndexed(const VulkanCommandBuffer& commandBuffer) const {
+        constexpr uint32_t instanceCount = 1;
+        constexpr uint32_t firstIndex = 0;
+        constexpr uint32_t vertexOffset = 0;
+        constexpr uint32_t firstInstance = 0;
+        vkCmdDrawIndexed(
+            commandBuffer,
+            (uint32_t) indices.size(),
+            instanceCount,
+            firstIndex,
+            vertexOffset,
+            firstInstance
+        );
+    }
 
-        physicalDevice->updateSwapChainInfo();
-
-        if (!swapChain->initialize()) {
-            BL_LOG_ERROR("Could not recreate swap chain");
-            return false;
-        }
-        if (!initializeDepthResources()) {
-            BL_LOG_ERROR("Could not initialize depth resources");
-            return false;
-        }
-        if (!initializeFramebuffers()) {
-            BL_LOG_ERROR("Could not recreate framebuffers");
-            return false;
-        }
-        return true;
+    void Renderer::recompileShaders() {
+        compileShaders();
+        terminateGraphicsPipelineObjects();
+        BL_TRY(initializeGraphicsPipelineObjects());
     }
 
     void Renderer::compileShaders() {
@@ -704,197 +480,10 @@ namespace Blink {
         std::system(command.c_str());
     }
 
-    bool Renderer::initializeDepthResources() {
-        // VkFormat depthFormat = findDepthFormat();
-        // VkExtent2D swapChainExtent = swapChain->getExtent();
-        //
-        // VulkanImageInfo depthImageConfig{};
-        // depthImageConfig.width = swapChainExtent.width;
-        // depthImageConfig.height = swapChainExtent.height;
-        // depthImageConfig.format = depthFormat;
-        // depthImageConfig.tiling = VK_IMAGE_TILING_OPTIMAL;
-        // depthImageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        // depthImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        // depthImageConfig.mipLevels = 1;
-        // depthImageConfig.sampleCount = VK_SAMPLE_COUNT_1_BIT;
-        //
-        // if (!depthImage->initialize(depthImageConfig)) {
-        //     BL_LOG_ERROR("Could not initialize depth image");
-        //     return false;
-        // }
-        //
-        // VkImageViewCreateInfo viewInfo{};
-        // viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        // viewInfo.image = *depthImage;
-        // viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        // viewInfo.format = depthFormat;
-        // viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        // viewInfo.subresourceRange.baseMipLevel = 0;
-        // viewInfo.subresourceRange.levelCount = 1;
-        // viewInfo.subresourceRange.baseArrayLayer = 0;
-        // viewInfo.subresourceRange.layerCount = 1;
-        //
-        // if (device->createImageView(&viewInfo, &depthImageView) != VK_SUCCESS) {
-        //     BL_LOG_ERROR("Could not create image view");
-        //     return false;
-        // }
-        //
-        // transitionImageLayout(
-        //     *depthImage,
-        //     depthFormat,
-        //     VK_IMAGE_LAYOUT_UNDEFINED,
-        //     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-        // );
-
-        return true;
-    }
-
-    bool Renderer::initializeTextureImage() {
-        // Image image = fileSystem->readImage("textures/sculpture.png");
-        //
-        // VulkanBufferConfig stagingBufferConfig{};
-        // stagingBufferConfig.size = image.size;
-        // stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        // stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        //
-        // auto* stagingBuffer = new VulkanBuffer(commandPool, device, physicalDevice);
-        // stagingBuffer->initialize(stagingBufferConfig);
-        // stagingBuffer->setData(image.pixels);
-        //
-        // image.free();
-        //
-        // VulkanImageInfo textureImageConfig{};
-        // textureImageConfig.width = image.width;
-        // textureImageConfig.height = image.height;
-        // textureImageConfig.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        // textureImageConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
-        // textureImageConfig.tiling = VK_IMAGE_TILING_OPTIMAL;
-        // textureImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        // textureImageConfig.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-        // textureImageConfig.mipLevels = 1;
-        // textureImageConfig.sampleCount = VK_SAMPLE_COUNT_1_BIT;
-        //
-        // if (!textureImage->initialize(textureImageConfig)) {
-        //     BL_LOG_ERROR("Could not initialize texture image");
-        //     return false;
-        // }
-        //
-        // transitionImageLayout(
-        //     *textureImage,
-        //     VK_FORMAT_R8G8B8A8_SRGB,
-        //     VK_IMAGE_LAYOUT_UNDEFINED,
-        //     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-        // );
-        //
-        // copyBufferToImage(
-        //     *stagingBuffer,
-        //     *textureImage,
-        //     static_cast<uint32_t>(image.width),
-        //     static_cast<uint32_t>(image.height)
-        // );
-        //
-        // transitionImageLayout(
-        //     *textureImage,
-        //     VK_FORMAT_R8G8B8A8_SRGB,
-        //     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        //     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        // );
-        //
-        // stagingBuffer->terminate();
-        //
-        // //
-        // // IMAGE VIEW
-        // //
-        //
-        // VkImageViewCreateInfo viewInfo{};
-        // viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        // viewInfo.image = *textureImage;
-        // viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        // viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        // viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        // viewInfo.subresourceRange.baseMipLevel = 0;
-        // viewInfo.subresourceRange.levelCount = 1;
-        // viewInfo.subresourceRange.baseArrayLayer = 0;
-        // viewInfo.subresourceRange.layerCount = 1;
-        //
-        // if (device->createImageView(&viewInfo, &textureImageView) != VK_SUCCESS) {
-        //     BL_LOG_ERROR("Could not create image view");
-        //     return false;
-        // }
-        //
-        // //
-        // // IMAGE SAMPLER
-        // //
-        //
-        // const VkPhysicalDeviceProperties& physicalDeviceProperties = physicalDevice->getProperties();
-        //
-        // VkSamplerCreateInfo samplerInfo{};
-        // samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        // samplerInfo.magFilter = VK_FILTER_LINEAR;
-        // samplerInfo.minFilter = VK_FILTER_LINEAR;
-        // samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        // samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        // samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        // samplerInfo.anisotropyEnable = VK_TRUE;
-        // samplerInfo.maxAnisotropy = physicalDeviceProperties.limits.maxSamplerAnisotropy;
-        // samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        // samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        // samplerInfo.compareEnable = VK_FALSE;
-        // samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        // samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        // samplerInfo.mipLodBias = 0.0f;
-        // samplerInfo.minLod = 0.0f;
-        // samplerInfo.maxLod = 0.0f;
-        //
-        // if (device->createSampler(&samplerInfo, &textureSampler) != VK_SUCCESS) {
-        //     BL_LOG_ERROR("Could not create image sampler");
-        //     return false;
-        // }
-
-        return true;
-    }
-
-    bool Renderer::initializeFramebuffers() {
-        const VkExtent2D& swapChainExtent = swapChain->getExtent();
-        const std::vector<VkImageView>& swapChainImageViews = swapChain->getImageViews();
-        framebuffers.resize(swapChainImageViews.size());
-        for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-            std::array<VkImageView, 2> attachments = {
-                swapChainImageViews[i],
-                depthImageView
-            };
-
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = *renderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = swapChainExtent.width;
-            framebufferInfo.height = swapChainExtent.height;
-            framebufferInfo.layers = 1;
-
-            if (device->createFramebuffer(&framebufferInfo, &framebuffers[i]) != VK_SUCCESS) {
-                BL_LOG_ERROR("Could not create Vulkan framebuffer");
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool Renderer::initializeGraphicsPipelineObjects() const {
-        if (!vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv"))) {
-            BL_LOG_ERROR("Could not initialize vertex shader");
-            return false;
-        }
-        if (!fragmentShader->initialize(fileSystem->readBytes("shaders/shader.frag.spv"))) {
-            BL_LOG_ERROR("Could not initialize fragment shader");
-            return false;
-        }
-        if (!graphicsPipeline->initialize(descriptorSetLayout)) {
-            BL_LOG_ERROR("Could not initialize graphics pipeline");
-            return false;
-        }
-        return true;
+    void Renderer::initializeGraphicsPipelineObjects() const {
+        BL_ASSERT_THROW(vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv")));
+        BL_ASSERT_THROW(fragmentShader->initialize(fileSystem->readBytes("shaders/shader.frag.spv")));
+        BL_ASSERT_THROW(graphicsPipeline->initialize(descriptorSetLayout));
     }
 
     void Renderer::terminateGraphicsPipelineObjects() const {
@@ -903,10 +492,5 @@ namespace Blink {
         vertexShader->terminate();
     }
 
-    void Renderer::terminateFramebuffers() {
-        for (VkFramebuffer framebuffer : framebuffers) {
-            device->destroyFramebuffer(framebuffer);
-        }
-    }
 }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "graphics/VulkanShader.h"
-#include "graphics/VulkanRenderPass.h"
 #include "graphics/VulkanSwapChain.h"
 #include "graphics/VulkanDevice.h"
 
@@ -11,7 +10,6 @@ namespace Blink {
     struct VulkanGraphicsPipelineConfig {
         VulkanShader* vertexShader = nullptr;
         VulkanShader* fragmentShader = nullptr;
-        VulkanRenderPass* renderPass = nullptr;
         VulkanSwapChain* swapChain = nullptr;
         VulkanDevice* device = nullptr;
     };

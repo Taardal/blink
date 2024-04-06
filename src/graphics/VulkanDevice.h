@@ -49,7 +49,7 @@ namespace Blink {
 
         void destroySwapChain(VkSwapchainKHR swapChain) const;
 
-        void getSwapChainImages(uint32_t* imageCount, std::vector<VkImage>* images, VkSwapchainKHR swapChain) const;
+        VkResult getSwapChainImages(VkSwapchainKHR swapChain, uint32_t* imageCount, std::vector<VkImage>* images) const;
 
         VkResult createImageView(VkImageViewCreateInfo* createInfo, VkImageView* imageView) const;
 

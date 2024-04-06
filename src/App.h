@@ -11,10 +11,6 @@
 #include "window/Event.h"
 
 namespace Blink {
-    void runApp(const AppConfig& config);
-}
-
-namespace Blink {
     class App {
     private:
         AppConfig config;
@@ -33,13 +29,13 @@ namespace Blink {
     public:
         explicit App(const AppConfig& config);
 
-        void initialize();
-
         ~App();
 
         void run();
 
     private:
+        void initialize();
+
         void update();
 
         void onEvent(Event& event) const;

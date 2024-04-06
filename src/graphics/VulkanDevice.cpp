@@ -69,10 +69,14 @@ namespace Blink {
         vkDestroySwapchainKHR(device, swapChain, BL_VULKAN_ALLOCATOR);
     }
 
-    void VulkanDevice::getSwapChainImages(uint32_t* imageCount, std::vector<VkImage>* images, VkSwapchainKHR swapChain) const {
-        vkGetSwapchainImagesKHR(device, swapChain, imageCount, nullptr);
+    VkResult VulkanDevice::getSwapChainImages(VkSwapchainKHR swapChain, uint32_t* imageCount, std::vector<VkImage>* images) const {
+        VkResult result = vkGetSwapchainImagesKHR(device, swapChain, imageCount, nullptr);
+        if (result != VK_SUCCESS) {
+            return result;
+        }
         images->resize(*imageCount);
-        vkGetSwapchainImagesKHR(device, swapChain, imageCount, images->data());
+        result = vkGetSwapchainImagesKHR(device, swapChain, imageCount, images->data());
+        return result;
     }
 
     VkResult VulkanDevice::createImageView(VkImageViewCreateInfo* createInfo, VkImageView* imageView) const {
