@@ -2,72 +2,59 @@
 #include "VulkanBuffer.h"
 
 namespace Blink {
-
-    VulkanBuffer::VulkanBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
-            : commandPool(commandPool), device(device), physicalDevice(physicalDevice) {}
-
-    VulkanBuffer::operator VkBuffer() const {
-        return buffer;
-    }
-
-    bool VulkanBuffer::initialize(const VulkanBufferConfig& config) {
-        this->config = config;
-
+    VulkanBuffer::VulkanBuffer(const VulkanBufferConfig& config) noexcept(false) : config(config) {
         VkBufferCreateInfo bufferCreateInfo{};
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferCreateInfo.size = config.size;
         bufferCreateInfo.usage = config.usage;
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (device->createBuffer(&bufferCreateInfo, &buffer) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create buffer");
-            return false;
-        }
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createBuffer(&bufferCreateInfo, &buffer));
 
-        const VkMemoryRequirements& memoryRequirements = device->getBufferMemoryRequirements(buffer);
+        const VkMemoryRequirements& memoryRequirements = config.device->getBufferMemoryRequirements(buffer);
 
         VkMemoryAllocateInfo memoryAllocateInfo{};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.allocationSize = memoryRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = physicalDevice->getMemoryType(memoryRequirements.memoryTypeBits, config.memoryProperties);
+        memoryAllocateInfo.memoryTypeIndex = config.physicalDevice->getMemoryType(
+            memoryRequirements.memoryTypeBits,
+            config.memoryProperties
+        );
 
-        if (device->allocateMemory(&memoryAllocateInfo, &memory) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not allocate buffer memory");
-            return false;
-        }
-        if (device->bindBufferMemory(buffer, memory) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not bind buffer memory");
-            return false;
-        }
-        return true;
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateMemory(&memoryAllocateInfo, &memory));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->bindBufferMemory(buffer, memory));
     }
 
-    void VulkanBuffer::terminate() {
-        device->destroyBuffer(buffer);
-        device->freeMemory(memory);
+    VulkanBuffer::~VulkanBuffer() {
+        config.device->destroyBuffer(buffer);
+        config.device->freeMemory(memory);
     }
 
-    void VulkanBuffer::setData(void* src) const {
+    VulkanBuffer::operator VkBuffer() const {
+        return buffer;
+    }
+
+    void VulkanBuffer::setData(void* src) const noexcept(false) {
         void* dst;
-        BL_ASSERT_THROW_VK_SUCCESS(device->mapMemory(memory, config.size, &dst));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->mapMemory(memory, config.size, &dst));
         memcpy(dst, src, config.size);
-        device->unmapMemory(memory);
+        config.device->unmapMemory(memory);
     }
 
-    void VulkanBuffer::copyTo(VulkanBuffer* destinationBuffer) {
-        copy(this, destinationBuffer, device, commandPool);
+    void VulkanBuffer::copyTo(VulkanBuffer* destinationBuffer) noexcept(false) {
+        copy(this, destinationBuffer, config.device, config.commandPool);
     }
 
-    void VulkanBuffer::copyFrom(VulkanBuffer* sourceBuffer) {
-        copy(sourceBuffer, this, device, commandPool);
+    void VulkanBuffer::copyFrom(VulkanBuffer* sourceBuffer) noexcept(false) {
+        copy(sourceBuffer, this, config.device, config.commandPool);
     }
 
     void VulkanBuffer::copy(
-            VulkanBuffer* sourceBuffer,
-            VulkanBuffer* destinationBuffer,
-            VulkanDevice* device,
-            VulkanCommandPool* commandPool
-    ) {
+        VulkanBuffer* sourceBuffer,
+        VulkanBuffer* destinationBuffer,
+        VulkanDevice* device,
+        VulkanCommandPool* commandPool
+    ) noexcept(false) {
         BL_ASSERT(sourceBuffer->config.size == destinationBuffer->config.size);
 
         VulkanCommandBuffer commandBuffer;

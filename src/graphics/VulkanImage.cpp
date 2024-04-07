@@ -122,12 +122,14 @@ namespace Blink {
 
     void VulkanImage::setData(const Image& image) const {
         VulkanBufferConfig stagingBufferConfig{};
+        stagingBufferConfig.physicalDevice = config.physicalDevice;
+        stagingBufferConfig.device = config.device;
+        stagingBufferConfig.commandPool = config.commandPool;
         stagingBufferConfig.size = image.size;
         stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-        VulkanBuffer stagingBuffer(config.commandPool, config.device, config.physicalDevice);
-        stagingBuffer.initialize(stagingBufferConfig);
+        VulkanBuffer stagingBuffer(stagingBufferConfig);
         stagingBuffer.setData(image.pixels);
 
         constexpr uint32_t depth = 1;
@@ -178,8 +180,6 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilGraphicsQueueIsIdle());
 
         config.commandPool->freeCommandBuffer(commandBuffer.vk_ptr());
-
-        stagingBuffer.terminate();
     }
 
     void VulkanImage::createImage() {

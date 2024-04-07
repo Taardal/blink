@@ -14,23 +14,23 @@ namespace Blink {
         VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
         VulkanCommandPool* commandPool = nullptr;
+        VkDeviceSize size = 0;
     };
 
     class VulkanVertexBuffer {
     private:
         VulkanVertexBufferConfig config;
         VulkanBuffer* buffer = nullptr;
+        VulkanBuffer* stagingBuffer = nullptr;
 
     public:
-        explicit VulkanVertexBuffer(const VulkanVertexBufferConfig& config);
+        explicit VulkanVertexBuffer(const VulkanVertexBufferConfig& config) noexcept(false);
 
         ~VulkanVertexBuffer();
 
         operator VkBuffer() const;
 
-        bool initialize(const std::vector<Vertex>& vertices);
-
-        void terminate();
+        void setData(const std::vector<Vertex>& vertices) const noexcept(false);
 
         void bind(VkCommandBuffer commandBuffer) const;
     };

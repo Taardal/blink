@@ -9,6 +9,9 @@
 namespace Blink {
 
     struct VulkanBufferConfig {
+        VulkanPhysicalDevice* physicalDevice;
+        VulkanDevice* device;
+        VulkanCommandPool* commandPool;
         VkDeviceSize size = 0;
         VkBufferUsageFlags usage = 0;
         VkMemoryPropertyFlags memoryProperties = 0;
@@ -16,29 +19,29 @@ namespace Blink {
 
     class VulkanBuffer {
     private:
-        VulkanCommandPool* commandPool;
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
         VulkanBufferConfig config;
         VkBuffer buffer = nullptr;
         VkDeviceMemory memory = nullptr;
 
     public:
-        VulkanBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        explicit VulkanBuffer(const VulkanBufferConfig& config) noexcept(false);
+
+        ~VulkanBuffer();
 
         operator VkBuffer() const;
 
-        bool initialize(const VulkanBufferConfig& config);
+        void setData(void* src) const noexcept(false);
 
-        void terminate();
+        void copyFrom(VulkanBuffer* sourceBuffer) noexcept(false);
 
-        void setData(void* src) const;
-
-        void copyFrom(VulkanBuffer* sourceBuffer);
-
-        void copyTo(VulkanBuffer* destinationBuffer);
+        void copyTo(VulkanBuffer* destinationBuffer) noexcept(false);
 
     public:
-        static void copy(VulkanBuffer* sourceBuffer, VulkanBuffer* destinationBuffer, VulkanDevice* device, VulkanCommandPool* commandPool);
+        static void copy(
+            VulkanBuffer* sourceBuffer,
+            VulkanBuffer* destinationBuffer,
+            VulkanDevice* device,
+            VulkanCommandPool* commandPool
+        ) noexcept(false);
     };
 }

@@ -3,51 +3,41 @@
 namespace Blink {
 
     VulkanIndexBuffer::VulkanIndexBuffer(const VulkanIndexBufferConfig& config) : config(config) {
+        BL_ASSERT_THROW(config.size > 0);
+
+        VulkanBufferConfig bufferConfig{};
+        bufferConfig.physicalDevice = config.physicalDevice;
+        bufferConfig.device = config.device;
+        bufferConfig.commandPool = config.commandPool;
+        bufferConfig.size = config.size;
+        bufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        bufferConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+        BL_TRY(buffer = new VulkanBuffer(bufferConfig));
+
+        VulkanBufferConfig stagingBufferConfig{};
+        stagingBufferConfig.physicalDevice = config.physicalDevice;
+        stagingBufferConfig.device = config.device;
+        stagingBufferConfig.commandPool = config.commandPool;
+        stagingBufferConfig.size = config.size;
+        stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+        BL_TRY(stagingBuffer = new VulkanBuffer(stagingBufferConfig));
     }
 
     VulkanIndexBuffer::~VulkanIndexBuffer() {
+        delete stagingBuffer;
         delete buffer;
     }
 
     VulkanIndexBuffer::operator VkBuffer() const {
-        BL_ASSERT(buffer != nullptr);
         return *buffer;
     }
 
-    bool VulkanIndexBuffer::initialize(const std::vector<uint16_t>& indices) {
-        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
-        VulkanBufferConfig stagingBufferConfig{};
-        stagingBufferConfig.size = bufferSize;
-        stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-        VulkanBuffer stagingBuffer(config.commandPool, config.device, config.physicalDevice);
-        if (!stagingBuffer.initialize(stagingBufferConfig)) {
-            BL_LOG_ERROR("Could not initialize staging buffer");
-            return false;
-        }
-
-        VulkanBufferConfig bufferConfig{};
-        bufferConfig.size = sizeof(indices[0]) * indices.size();
-        bufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-        bufferConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-        buffer = new VulkanBuffer(config.commandPool, config.device, config.physicalDevice);
-        if (!buffer->initialize(bufferConfig)) {
-            BL_LOG_ERROR("Could not initialize buffer");
-            return false;
-        }
-
-        stagingBuffer.setData((void*) indices.data());
-        stagingBuffer.copyTo(buffer);
-        stagingBuffer.terminate();
-
-        return true;
-    }
-
-    void VulkanIndexBuffer::terminate() {
-        buffer->terminate();
+    void VulkanIndexBuffer::setData(const std::vector<uint16_t>& indices) const noexcept(false) {
+        stagingBuffer->setData((void*) indices.data());
+        stagingBuffer->copyTo(buffer);
     }
 
     void VulkanIndexBuffer::bind(VkCommandBuffer commandBuffer) const {

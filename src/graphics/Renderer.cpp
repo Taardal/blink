@@ -112,8 +112,9 @@ namespace Blink {
         vertexBufferConfig.physicalDevice = physicalDevice;
         vertexBufferConfig.device = device;
         vertexBufferConfig.commandPool = commandPool;
-        vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
-        BL_ASSERT_THROW(vertexBuffer->initialize(vertices));
+        vertexBufferConfig.size = sizeof(vertices[0]) * vertices.size();
+        BL_TRY(vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig));
+        BL_TRY(vertexBuffer->setData(vertices));
 
         //
         // INDEX BUFFER
@@ -123,8 +124,9 @@ namespace Blink {
         indexBufferConfig.physicalDevice = physicalDevice;
         indexBufferConfig.device = device;
         indexBufferConfig.commandPool = commandPool;
-        indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
-        BL_ASSERT_THROW(indexBuffer->initialize(indices));
+        indexBufferConfig.size = sizeof(indices[0]) * indices.size();
+        BL_TRY(indexBuffer = new VulkanIndexBuffer(indexBufferConfig));
+        BL_TRY(indexBuffer->setData(indices));
 
         //
         // UNIFORM BUFFERS
@@ -135,9 +137,8 @@ namespace Blink {
             uniformBufferConfig.physicalDevice = physicalDevice;
             uniformBufferConfig.device = device;
             uniformBufferConfig.commandPool = commandPool;
-            auto uniformBuffer = new VulkanUniformBuffer(uniformBufferConfig);
-            BL_ASSERT_THROW(uniformBuffer->initialize(sizeof(UniformBufferObject)));
-            uniformBuffers.push_back(uniformBuffer);
+            uniformBufferConfig.size = sizeof(UniformBufferObject);
+            BL_TRY(uniformBuffers.push_back(new VulkanUniformBuffer(uniformBufferConfig)));
         }
 
         //
@@ -301,9 +302,7 @@ namespace Blink {
         // VERTEX & INDEX BUFFERS
         //
 
-        indexBuffer->terminate();
         delete indexBuffer;
-        vertexBuffer->terminate();
         delete vertexBuffer;
 
         //
@@ -327,9 +326,9 @@ namespace Blink {
         //
 
         for (VulkanUniformBuffer* uniformBuffer : uniformBuffers) {
-            uniformBuffer->terminate();
             delete uniformBuffer;
         }
+        uniformBuffers.clear();
 
         delete swapChain;
         delete commandPool;
