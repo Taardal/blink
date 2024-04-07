@@ -34,8 +34,7 @@ namespace Blink {
         return vkEndCommandBuffer(commandBuffer);
     }
 
-    void VulkanCommandBuffer::reset() const {
-        VkCommandBufferResetFlags flags = 0;
-        vkResetCommandBuffer(commandBuffer, flags);
+    void VulkanCommandBuffer::reset(VkCommandBufferResetFlags resetFlags) const {
+        vkResetCommandBuffer(commandBuffer, resetFlags);
     }
 }

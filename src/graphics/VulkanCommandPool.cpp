@@ -30,28 +30,36 @@ namespace Blink {
         return config.device->allocateCommandBuffers(&allocateInfo, commandBuffers);
     }
 
-    VkResult VulkanCommandPool::allocateCommandBuffers(std::vector<VkCommandBuffer>* commandBuffers) const {
-        return allocateCommandBuffers(commandBuffers->size(), commandBuffers->data());
-    }
-
-    VkResult VulkanCommandPool::allocateCommandBuffer(VkCommandBuffer* commandBuffer) const {
-        return allocateCommandBuffers(1, commandBuffer);
-    }
-
-    VkResult VulkanCommandPool::allocateCommandBuffer(VulkanCommandBuffer* commandBuffer) const {
-        return allocateCommandBuffers(1, commandBuffer->vk_ptr());
-    }
-
     void VulkanCommandPool::freeCommandBuffers(uint32_t count, VkCommandBuffer* commandBuffers) const {
         config.device->freeCommandBuffers(count, commandBuffers, commandPool);
+    }
+
+    VkResult VulkanCommandPool::allocateCommandBuffers(std::vector<VkCommandBuffer>* commandBuffers) const {
+        return allocateCommandBuffers(commandBuffers->size(), commandBuffers->data());
     }
 
     void VulkanCommandPool::freeCommandBuffers(std::vector<VkCommandBuffer>* commandBuffers) const {
         freeCommandBuffers(commandBuffers->size(), commandBuffers->data());
     }
 
+    VkResult VulkanCommandPool::allocateCommandBuffers(std::vector<VulkanCommandBuffer>* commandBuffers) const {
+        return allocateCommandBuffers(commandBuffers->size(), (VkCommandBuffer*) commandBuffers->data());
+    }
+
+    void VulkanCommandPool::freeCommandBuffers(std::vector<VulkanCommandBuffer>* commandBuffers) const {
+        freeCommandBuffers(commandBuffers->size(), (VkCommandBuffer*) commandBuffers->data());
+    }
+
+    VkResult VulkanCommandPool::allocateCommandBuffer(VkCommandBuffer* commandBuffer) const {
+        return allocateCommandBuffers(1, commandBuffer);
+    }
+
     void VulkanCommandPool::freeCommandBuffer(VkCommandBuffer* commandBuffer) const {
         freeCommandBuffers(1, commandBuffer);
+    }
+
+    VkResult VulkanCommandPool::allocateCommandBuffer(VulkanCommandBuffer* commandBuffer) const {
+        return allocateCommandBuffers(1, commandBuffer->vk_ptr());
     }
 
     void VulkanCommandPool::freeCommandBuffer(VulkanCommandBuffer* commandBuffer) const {

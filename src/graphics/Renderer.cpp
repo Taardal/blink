@@ -35,7 +35,7 @@ namespace Blink {
         VulkanPhysicalDeviceConfig physicalDeviceConfig{};
         physicalDeviceConfig.vulkanApp = vulkanApp;
         BL_TRY(physicalDevice = new VulkanPhysicalDevice(physicalDeviceConfig));
-        BL_LOG_INFO("Created Vulkan physical device");
+        BL_LOG_INFO("Created physical device");
 
         //
         // LOGICAL DEVICE
@@ -44,7 +44,7 @@ namespace Blink {
         VulkanDeviceConfig deviceConfig{};
         deviceConfig.physicalDevice = physicalDevice;
         BL_TRY(device = new VulkanDevice(deviceConfig));
-        BL_LOG_INFO("Created Vulkan device app");
+        BL_LOG_INFO("Created device");
 
         //
         // COMMAND POOL
@@ -54,7 +54,7 @@ namespace Blink {
         commandPoolConfig.physicalDevice = physicalDevice;
         commandPoolConfig.device = device;
         BL_TRY(commandPool = new VulkanCommandPool(commandPoolConfig));
-        BL_LOG_INFO("Created Vulkan command pool");
+        BL_LOG_INFO("Created command pool");
 
         //
         // COMMAND BUFFERS
@@ -62,7 +62,7 @@ namespace Blink {
 
         commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
         BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffers(&commandBuffers));
-        BL_LOG_INFO("Created [{}] Vulkan command buffer(s)", commandBuffers.size());
+        BL_LOG_INFO("Created [{}] command buffer(s)", commandBuffers.size());
 
         //
         // SWAP CHAIN
@@ -75,7 +75,7 @@ namespace Blink {
         swapChainConfig.device = device;
         swapChainConfig.commandPool = commandPool;
         BL_TRY(swapChain = new VulkanSwapChain(swapChainConfig));
-        BL_LOG_INFO("Created Vulkan swap chain");
+        BL_LOG_INFO("Created swap chain");
 
         //
         // VERTEX BUFFER
@@ -88,6 +88,7 @@ namespace Blink {
         vertexBufferConfig.size = sizeof(vertices[0]) * vertices.size();
         BL_TRY(vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig));
         BL_TRY(vertexBuffer->setData(vertices));
+        BL_LOG_INFO("Created vertex buffer");
 
         //
         // INDEX BUFFER
@@ -100,6 +101,7 @@ namespace Blink {
         indexBufferConfig.size = sizeof(indices[0]) * indices.size();
         BL_TRY(indexBuffer = new VulkanIndexBuffer(indexBufferConfig));
         BL_TRY(indexBuffer->setData(indices));
+        BL_LOG_INFO("Created index buffer");
 
         //
         // UNIFORM BUFFERS
@@ -113,6 +115,7 @@ namespace Blink {
             uniformBufferConfig.size = sizeof(UniformBufferObject);
             BL_TRY(uniformBuffers.push_back(new VulkanUniformBuffer(uniformBufferConfig)));
         }
+        BL_LOG_INFO("Created [{}] uniform buffer(s)", uniformBuffers.size());
 
         //
         // TEXTURE IMAGE
@@ -164,8 +167,10 @@ namespace Blink {
 
         BL_ASSERT_THROW_VK_SUCCESS(device->createSampler(&textureSamplerCreateInfo, &textureSampler));
 
+        BL_LOG_INFO("Created texture sampler");
+
         //
-        // DESCRIPTOR LAYOUTS
+        // DESCRIPTOR LAYOUT
         //
 
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
@@ -192,7 +197,7 @@ namespace Blink {
 
         BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorSetLayout(&layoutInfo, &descriptorSetLayout));
 
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+        BL_LOG_INFO("Created descriptor layout");
 
         //
         // DESCRIPTOR POOL
@@ -212,9 +217,13 @@ namespace Blink {
 
         BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorPool(&poolInfo, &descriptorPool));
 
+        BL_LOG_INFO("Created descriptor pool");
+
         //
         // DESCRIPTOR SETS
         //
+
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
 
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -258,33 +267,65 @@ namespace Blink {
 
             device->updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data());
         }
+        BL_LOG_INFO("Created [{}] descriptor set(s)", descriptorSets.size());
+
+        //
+        // GRAPHICS PIPELINE OBJECTS
+        //
 
         BL_TRY(createGraphicsPipelineObjects());
+        BL_LOG_INFO("Created vertex shader");
+        BL_LOG_INFO("Created fragment shader");
+        BL_LOG_INFO("Created graphics pipeline");
     }
 
     Renderer::~Renderer() {
+        //
+        // GRAPHICS PIPELINE OBJECTS
+        //
+
+        BL_LOG_INFO("Created graphics pipeline");
+        BL_LOG_INFO("Created fragment shader");
+        BL_LOG_INFO("Created vertex shader");
         destroyGraphicsPipelineObjects();
 
         //
-        // TEXTURE RESOURCES
-        //
-
-        device->destroySampler(textureSampler);
-        delete textureImage;
-
-        //
-        // VERTEX & INDEX BUFFERS
+        // INDEX BUFFER
         //
 
         delete indexBuffer;
-        delete vertexBuffer;
+        BL_LOG_INFO("Destroyed index buffer");
 
         //
-        // DESCRIPTOR RESOURCES
+        // VERTEX BUFFER
+        //
+
+        delete vertexBuffer;
+        BL_LOG_INFO("Destroyed vertex buffer");
+
+        //
+        // DESCRIPTOR POOL
         //
 
         device->destroyDescriptorPool(descriptorPool);
+        BL_LOG_INFO("Destroyed descriptor pool");
+
         device->destroyDescriptorSetLayout(descriptorSetLayout);
+        BL_LOG_INFO("Destroyed descriptor set layout");
+
+        //
+        // TEXTURE SAMPLER
+        //
+
+        device->destroySampler(textureSampler);
+        BL_LOG_INFO("Destroyed texture sampler");
+
+        //
+        // TEXTURE IMAGE
+        //
+
+        delete textureImage;
+        BL_LOG_INFO("Created texture image");
 
         //
         // UNIFORM BUFFERS
@@ -294,12 +335,22 @@ namespace Blink {
             delete uniformBuffer;
         }
         uniformBuffers.clear();
+        BL_LOG_INFO("Destroyed uniform buffers");
 
         delete swapChain;
+        BL_LOG_INFO("Destroyed swap chain");
+
         delete commandPool;
+        BL_LOG_INFO("Destroyed command pool");
+
         delete device;
+        BL_LOG_INFO("Destroyed device");
+
         delete physicalDevice;
+        BL_LOG_INFO("Destroyed physical device");
+
         delete vulkanApp;
+        BL_LOG_INFO("Destroyed Vulkan app");
     }
 
     void Renderer::render(const Frame& frame) {

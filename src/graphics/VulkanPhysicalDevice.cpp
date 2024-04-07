@@ -54,11 +54,11 @@ namespace Blink {
         return vkCreateDevice(deviceInfo.physicalDevice, createInfo, BL_VULKAN_ALLOCATOR, device);
     }
 
-    uint32_t VulkanPhysicalDevice::getMemoryType(uint32_t memoryType, VkMemoryPropertyFlags requiredMemoryProperties) const {
+    uint32_t VulkanPhysicalDevice::getMemoryTypeIndex(const VkMemoryRequirements& memoryRequirements, VkMemoryPropertyFlags requiredMemoryProperties) const {
         VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
         vkGetPhysicalDeviceMemoryProperties(deviceInfo.physicalDevice, &physicalDeviceMemoryProperties);
         for (uint32_t memoryTypeIndex = 0; memoryTypeIndex < physicalDeviceMemoryProperties.memoryTypeCount; memoryTypeIndex++) {
-            bool memoryTypeIsSuitable = (memoryType & (1 << memoryTypeIndex)) > 0;
+            bool memoryTypeIsSuitable = (memoryRequirements.memoryTypeBits & (1 << memoryTypeIndex)) > 0;
             if (!memoryTypeIsSuitable) {
                 continue;
             }

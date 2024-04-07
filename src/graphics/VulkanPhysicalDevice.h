@@ -57,7 +57,7 @@ namespace Blink {
 
         VkResult createDevice(VkDeviceCreateInfo* createInfo, VkDevice* device) const;
 
-        uint32_t getMemoryType(uint32_t memoryType, VkMemoryPropertyFlags requiredMemoryProperties) const;
+        uint32_t getMemoryTypeIndex(const VkMemoryRequirements& memoryRequirements, VkMemoryPropertyFlags requiredMemoryProperties) const;
 
     private:
         VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& physicalDevices, const std::vector<const char*>& requiredExtensions) const;

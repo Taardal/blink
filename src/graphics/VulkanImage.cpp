@@ -206,14 +206,11 @@ namespace Blink {
 
     void VulkanImage::initializeImageMemory() {
         VkMemoryRequirements memoryRequirements = config.device->getImageMemoryRequirements(image);
-        uint32_t memoryTypeIndex = config.physicalDevice->getMemoryType(
-            memoryRequirements.memoryTypeBits,
-            config.memoryProperties
-        );
+
         VkMemoryAllocateInfo memoryAllocateInfo{};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.allocationSize = memoryRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+        memoryAllocateInfo.memoryTypeIndex = config.physicalDevice->getMemoryTypeIndex(memoryRequirements, config.memoryProperties);
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateMemory(&memoryAllocateInfo, &deviceMemory));
         BL_ASSERT_THROW_VK_SUCCESS(config.device->bindImageMemory(image, deviceMemory));

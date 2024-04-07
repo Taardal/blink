@@ -47,7 +47,7 @@ namespace Blink {
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
         VulkanVertexBuffer* vertexBuffer = nullptr;
         VulkanIndexBuffer* indexBuffer = nullptr;
-        std::vector<VkCommandBuffer> commandBuffers;
+        std::vector<VulkanCommandBuffer> commandBuffers;
         std::vector<VulkanUniformBuffer*> uniformBuffers;
         VkDescriptorSetLayout descriptorSetLayout = nullptr;
         VkDescriptorPool descriptorPool = nullptr;

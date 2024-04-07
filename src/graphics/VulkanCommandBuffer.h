@@ -25,6 +25,6 @@ namespace Blink {
 
         VkResult end() const;
 
-        void reset() const;
+        void reset(VkCommandBufferResetFlags resetFlags = 0) const;
     };
 }
