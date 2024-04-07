@@ -78,33 +78,6 @@ namespace Blink {
         BL_LOG_INFO("Created Vulkan swap chain");
 
         //
-        // VERTEX SHADER
-        //
-
-        VulkanShaderConfig vertexShaderConfig{};
-        vertexShaderConfig.device = device;
-        BL_TRY(vertexShader = new VulkanShader(vertexShaderConfig));
-
-        //
-        // FRAGMENT SHADER
-        //
-
-        VulkanShaderConfig fragmentShaderConfig{};
-        fragmentShaderConfig.device = device;
-        BL_TRY(fragmentShader = new VulkanShader(fragmentShaderConfig));
-
-        //
-        // GRAPHICS PIPELINE
-        //
-
-        VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
-        graphicsPipelineConfig.device = device;
-        graphicsPipelineConfig.swapChain = swapChain;
-        graphicsPipelineConfig.vertexShader = vertexShader;
-        graphicsPipelineConfig.fragmentShader = fragmentShader;
-        BL_TRY(graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig));
-
-        //
         // VERTEX BUFFER
         //
 
@@ -208,10 +181,13 @@ namespace Blink {
         samplerLayoutBinding.pImmutableSamplers = nullptr;
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
+            uboLayoutBinding,
+            samplerLayoutBinding
+        };
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.bindingCount = (uint32_t) bindings.size();
         layoutInfo.pBindings = bindings.data();
 
         BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorSetLayout(&layoutInfo, &descriptorSetLayout));
@@ -224,15 +200,15 @@ namespace Blink {
 
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[0].descriptorCount = (uint32_t) MAX_FRAMES_IN_FLIGHT;
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].descriptorCount = (uint32_t) MAX_FRAMES_IN_FLIGHT;
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.poolSizeCount = (uint32_t) poolSizes.size();
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolInfo.maxSets = (uint32_t) MAX_FRAMES_IN_FLIGHT;
 
         BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorPool(&poolInfo, &descriptorPool));
 
@@ -283,14 +259,12 @@ namespace Blink {
             device->updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data());
         }
 
-        //
-        // GRAPHICS PIPELINE OBJCETS (PIPELINE + SHADERS)
-        //
-
-        BL_TRY(initializeGraphicsPipelineObjects());
+        BL_TRY(createGraphicsPipelineObjects());
     }
 
     Renderer::~Renderer() {
+        destroyGraphicsPipelineObjects();
+
         //
         // TEXTURE RESOURCES
         //
@@ -304,15 +278,6 @@ namespace Blink {
 
         delete indexBuffer;
         delete vertexBuffer;
-
-        //
-        // GRAPHICS PIPELINE & SHADERS
-        //
-
-        terminateGraphicsPipelineObjects();
-        delete graphicsPipeline;
-        delete fragmentShader;
-        delete vertexShader;
 
         //
         // DESCRIPTOR RESOURCES
@@ -433,12 +398,13 @@ namespace Blink {
     }
 
     void Renderer::recompileShaders() {
+        BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilIdle());
         compileShaders();
-        terminateGraphicsPipelineObjects();
-        BL_TRY(initializeGraphicsPipelineObjects());
+        destroyGraphicsPipelineObjects();
+        BL_TRY(createGraphicsPipelineObjects());
     }
 
-    void Renderer::compileShaders() {
+    void Renderer::compileShaders() const {
         std::stringstream ss;
         ss << "cmake";
         ss << " -D SHADERS_SOURCE_DIR=" << CMAKE_SHADERS_SOURCE_DIR;
@@ -448,16 +414,30 @@ namespace Blink {
         std::system(command.c_str());
     }
 
-    void Renderer::initializeGraphicsPipelineObjects() const {
-        BL_ASSERT_THROW(vertexShader->initialize(fileSystem->readBytes("shaders/shader.vert.spv")));
-        BL_ASSERT_THROW(fragmentShader->initialize(fileSystem->readBytes("shaders/shader.frag.spv")));
-        BL_ASSERT_THROW(graphicsPipeline->initialize(descriptorSetLayout));
+    void Renderer::createGraphicsPipelineObjects() {
+        VulkanShaderConfig vertexShaderConfig{};
+        vertexShaderConfig.device = device;
+        vertexShaderConfig.bytes = fileSystem->readBytes("shaders/shader.vert.spv");
+        BL_TRY(vertexShader = new VulkanShader(vertexShaderConfig));
+
+        VulkanShaderConfig fragmentShaderConfig{};
+        fragmentShaderConfig.device = device;
+        fragmentShaderConfig.bytes = fileSystem->readBytes("shaders/shader.frag.spv");
+        BL_TRY(fragmentShader = new VulkanShader(fragmentShaderConfig));
+
+        VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
+        graphicsPipelineConfig.device = device;
+        graphicsPipelineConfig.swapChain = swapChain;
+        graphicsPipelineConfig.vertexShader = vertexShader;
+        graphicsPipelineConfig.fragmentShader = fragmentShader;
+        graphicsPipelineConfig.descriptorSetLayout = descriptorSetLayout;
+        BL_TRY(graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig));
     }
 
-    void Renderer::terminateGraphicsPipelineObjects() const {
-        graphicsPipeline->terminate();
-        fragmentShader->terminate();
-        vertexShader->terminate();
+    void Renderer::destroyGraphicsPipelineObjects() const {
+        delete graphicsPipeline;
+        delete fragmentShader;
+        delete vertexShader;
     }
 
 }

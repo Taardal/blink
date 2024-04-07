@@ -17,7 +17,7 @@ namespace Blink {
     };
 
     struct VulkanPhysicalDeviceInfo {
-        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+        VkPhysicalDevice physicalDevice = nullptr;
         VkPhysicalDeviceProperties properties{};
         VkPhysicalDeviceFeatures features{};
         std::vector<VkExtensionProperties> extensions{};

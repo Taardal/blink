@@ -5,20 +5,20 @@
 
 namespace Blink {
     VulkanImage::VulkanImage(const VulkanImageConfig& config) : config(config), currentLayout(config.layout) {
-        if (config.image == VK_NULL_HANDLE) {
+        if (config.image == nullptr) {
             BL_TRY(createImage());
             BL_TRY(initializeImageMemory());
         }
-        if (config.imageView == VK_NULL_HANDLE) {
+        if (config.imageView == nullptr) {
             BL_TRY(createImageView());
         }
     }
 
     VulkanImage::~VulkanImage() {
-        if (imageView != VK_NULL_HANDLE) {
+        if (imageView != nullptr) {
             config.device->destroyImageView(imageView);
         }
-        if (image != VK_NULL_HANDLE) {
+        if (image != nullptr) {
             config.device->freeMemory(deviceMemory);
             config.device->destroyImage(image);
         }
@@ -29,11 +29,11 @@ namespace Blink {
     }
 
     VkImage VulkanImage::getImage() const {
-        return image != VK_NULL_HANDLE ? image : config.image;
+        return image != nullptr ? image : config.image;
     }
 
     VkImageView VulkanImage::getImageView() const {
-        return imageView != VK_NULL_HANDLE ? imageView : config.imageView;
+        return imageView != nullptr ? imageView : config.imageView;
     }
 
     void VulkanImage::setLayout(VkImageLayout layout) {
@@ -90,9 +90,9 @@ namespace Blink {
 
         constexpr VkDependencyFlags dependencyFlags = 0;
         constexpr uint32_t memoryBarrierCount = 0;
-        constexpr VkMemoryBarrier* memoryBarriers = VK_NULL_HANDLE;
+        constexpr VkMemoryBarrier* memoryBarriers = nullptr;
         constexpr uint32_t bufferMemoryBarrierCount = 0;
-        constexpr VkBufferMemoryBarrier* bufferMemoryBarriers = VK_NULL_HANDLE;
+        constexpr VkBufferMemoryBarrier* bufferMemoryBarriers = nullptr;
         constexpr uint32_t imageMemoryBarrierCount = 1;
         vkCmdPipelineBarrier(
                 commandBuffer,

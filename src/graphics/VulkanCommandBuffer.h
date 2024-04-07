@@ -6,7 +6,7 @@ namespace Blink {
 
     class VulkanCommandBuffer {
     private:
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+        VkCommandBuffer commandBuffer = nullptr;
 
     public:
         VulkanCommandBuffer() = default;

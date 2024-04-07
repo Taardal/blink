@@ -13,8 +13,8 @@ namespace Blink {
         VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
         VulkanCommandPool* commandPool = nullptr;
-        VkImage image = VK_NULL_HANDLE;
-        VkImageView imageView = VK_NULL_HANDLE;
+        VkImage image = nullptr;
+        VkImageView imageView = nullptr;
         VkMemoryPropertyFlags memoryProperties{};
         VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
         VkFormat format = VK_FORMAT_UNDEFINED;
@@ -27,9 +27,9 @@ namespace Blink {
     class VulkanImage {
     private:
         VulkanImageConfig config;
-        VkImage image = VK_NULL_HANDLE;
-        VkImageView imageView = VK_NULL_HANDLE;
-        VkDeviceMemory deviceMemory = VK_NULL_HANDLE;
+        VkImage image = nullptr;
+        VkImageView imageView = nullptr;
+        VkDeviceMemory deviceMemory = nullptr;
         VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     public:

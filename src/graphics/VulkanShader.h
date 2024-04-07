@@ -7,27 +7,26 @@
 namespace Blink {
     struct VulkanShaderConfig {
         VulkanDevice* device = nullptr;
+        std::vector<char> bytes;
     };
 
     class VulkanShader {
     private:
         VulkanShaderConfig config;
-        VkShaderModule shaderModule = VK_NULL_HANDLE;
-        VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+        VkShaderModule shaderModule = nullptr;
+        VkDescriptorSetLayout descriptorSetLayout = nullptr;
 
     public:
-        explicit VulkanShader(const VulkanShaderConfig& config);
+        explicit VulkanShader(const VulkanShaderConfig& config) noexcept(false);
+
+        ~VulkanShader();
 
         operator VkShaderModule() const;
-
-        bool initialize(const std::vector<char>& bytes);
-
-        void terminate();
 
         VkDescriptorSetLayout getLayout() const;
 
         void setLayout(VkDescriptorSetLayout layout);
 
-        void setLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+        void setLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings) noexcept(false);
     };
 }

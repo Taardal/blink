@@ -3,26 +3,16 @@
 
 namespace Blink {
     VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanGraphicsPipelineConfig& config) : config(config) {
-    }
-
-    VkPipelineLayout VulkanGraphicsPipeline::getLayout() const {
-        return layout;
-    }
-
-    bool VulkanGraphicsPipeline::initialize(VkDescriptorSetLayout descriptorSetLayout) {
-        VulkanShader* vertexShader = config.vertexShader;
-        VulkanShader* fragmentShader = config.fragmentShader;
-
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
         vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertexShaderStageCreateInfo.module = *vertexShader;
+        vertexShaderStageCreateInfo.module = *config.vertexShader;
         vertexShaderStageCreateInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo fragmentShaderStageCreateInfo{};
         fragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragmentShaderStageCreateInfo.module = *fragmentShader;
+        fragmentShaderStageCreateInfo.module = *config.fragmentShader;
         fragmentShaderStageCreateInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {
@@ -95,12 +85,9 @@ namespace Blink {
         VkPipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         layoutCreateInfo.setLayoutCount = 1;
-        layoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+        layoutCreateInfo.pSetLayouts = &config.descriptorSetLayout;
 
-        if (config.device->createPipelineLayout(&layoutCreateInfo, &layout) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create pipeline layout");
-            return false;
-        }
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createPipelineLayout(&layoutCreateInfo, &layout));
 
         VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
         pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -118,17 +105,16 @@ namespace Blink {
         pipelineCreateInfo.subpass = 0;
         pipelineCreateInfo.pDepthStencilState = &depthStencil;
 
-        if (config.device->createGraphicsPipeline(&pipelineCreateInfo, &pipeline) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create pipeline");
-            return false;
-        }
-
-        return true;
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createGraphicsPipeline(&pipelineCreateInfo, &pipeline));
     }
 
-    void VulkanGraphicsPipeline::terminate() {
+    VulkanGraphicsPipeline::~VulkanGraphicsPipeline() {
         config.device->destroyGraphicsPipeline(pipeline);
         config.device->destroyPipelineLayout(layout);
+    }
+
+    VkPipelineLayout VulkanGraphicsPipeline::getLayout() const {
+        return layout;
     }
 
     void VulkanGraphicsPipeline::bind(VkCommandBuffer commandBuffer) const {

@@ -32,32 +32,31 @@ namespace Blink {
 
     class Renderer {
     private:
-        static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+        static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
 
     private:
         FileSystem* fileSystem;
         Window* window;
-        VulkanApp* vulkanApp = VK_NULL_HANDLE;
-        VulkanPhysicalDevice* physicalDevice = VK_NULL_HANDLE;
-        VulkanDevice* device = VK_NULL_HANDLE;
-        VulkanSwapChain* swapChain = VK_NULL_HANDLE;
-        VulkanCommandPool* commandPool = VK_NULL_HANDLE;
-        VulkanShader* vertexShader = VK_NULL_HANDLE;
-        VulkanShader* fragmentShader = VK_NULL_HANDLE;
-        VulkanGraphicsPipeline* graphicsPipeline = VK_NULL_HANDLE;
-        VulkanVertexBuffer* vertexBuffer = VK_NULL_HANDLE;
-        VulkanIndexBuffer* indexBuffer = VK_NULL_HANDLE;
+        VulkanApp* vulkanApp = nullptr;
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanSwapChain* swapChain = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+        VulkanShader* vertexShader = nullptr;
+        VulkanShader* fragmentShader = nullptr;
+        VulkanGraphicsPipeline* graphicsPipeline = nullptr;
+        VulkanVertexBuffer* vertexBuffer = nullptr;
+        VulkanIndexBuffer* indexBuffer = nullptr;
         std::vector<VkCommandBuffer> commandBuffers;
         std::vector<VulkanUniformBuffer*> uniformBuffers;
-        VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-        VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+        VkDescriptorSetLayout descriptorSetLayout = nullptr;
+        VkDescriptorPool descriptorPool = nullptr;
         std::vector<VkDescriptorSet> descriptorSets;
         uint32_t currentFrame = 0;
 
+    private:
         VulkanImage* textureImage;
         VkSampler textureSampler;
-
-    private:
         const std::vector<Vertex> vertices = {
             {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
             {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
@@ -69,7 +68,6 @@ namespace Blink {
             {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
             {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
         };
-
         const std::vector<uint16_t> indices = {
             0, 1, 2, 2, 3, 0,
             4, 5, 6, 6, 7, 4
@@ -91,10 +89,6 @@ namespace Blink {
         void onEvent(Event& event);
 
     private:
-        void initializeGraphicsPipelineObjects() const;
-
-        void terminateGraphicsPipelineObjects() const;
-
         void setUniformData(VulkanUniformBuffer* uniformBuffer, const Frame& frame) const;
 
         void bindDescriptorSet(VkDescriptorSet descriptorSet, const VulkanCommandBuffer& commandBuffer) const;
@@ -103,6 +97,10 @@ namespace Blink {
 
         void recompileShaders();
 
-        void compileShaders();
+        void compileShaders() const;
+
+        void createGraphicsPipelineObjects();
+
+        void destroyGraphicsPipelineObjects() const;
     };
 }

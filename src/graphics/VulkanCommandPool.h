@@ -13,7 +13,7 @@ namespace Blink {
     class VulkanCommandPool {
     private:
         VulkanCommandPoolConfig config;
-        VkCommandPool commandPool = VK_NULL_HANDLE;
+        VkCommandPool commandPool = nullptr;
 
     public:
         explicit VulkanCommandPool(const VulkanCommandPoolConfig& config);

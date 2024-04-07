@@ -31,7 +31,7 @@ namespace Blink {
 
         VkQueue getGraphicsQueue() const;
 
-        VkResult submitToGraphicsQueue(VkSubmitInfo* submitInfo, VkFence fence = VK_NULL_HANDLE) const;
+        VkResult submitToGraphicsQueue(VkSubmitInfo* submitInfo, VkFence fence = nullptr) const;
 
         VkResult waitUntilGraphicsQueueIsIdle() const;
 

@@ -6,7 +6,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
-#define BL_VULKAN_ALLOCATOR VK_NULL_HANDLE
+#define BL_VULKAN_ALLOCATOR nullptr
 
 #define BL_ASSERT_VK_SUCCESS(expression) BL_ASSERT(expression == VK_SUCCESS)
 #define BL_ASSERT_THROW_VK_SUCCESS(expression) BL_ASSERT_THROW(expression == VK_SUCCESS)
@@ -22,9 +22,9 @@ namespace Blink {
     class VulkanApp {
     private:
         VulkanAppConfig config;
-        VkInstance vulkanInstance = VK_NULL_HANDLE;
-        VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
-        VkSurfaceKHR surface = VK_NULL_HANDLE;
+        VkInstance vulkanInstance = nullptr;
+        VkDebugUtilsMessengerEXT debugMessenger = nullptr;
+        VkSurfaceKHR surface = nullptr;
 
     public:
         VulkanApp(const VulkanAppConfig& config);

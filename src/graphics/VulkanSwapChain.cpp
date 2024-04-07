@@ -177,7 +177,7 @@ namespace Blink {
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createInfo.presentMode = presentMode;
         createInfo.clipped = VK_TRUE;
-        createInfo.oldSwapchain = VK_NULL_HANDLE;
+        createInfo.oldSwapchain = nullptr;
 
         if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily) {
             std::vector<uint32_t> queueFamilyIndexValues = {
@@ -188,7 +188,7 @@ namespace Blink {
             createInfo.queueFamilyIndexCount = queueFamilyIndexValues.size();
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         } else {
-            createInfo.pQueueFamilyIndices = VK_NULL_HANDLE;
+            createInfo.pQueueFamilyIndices = nullptr;
             createInfo.queueFamilyIndexCount = 0;
             createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         }
@@ -294,7 +294,7 @@ namespace Blink {
         };
         VkRenderPassCreateInfo renderPassCreateInfo{};
         renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(attachmentDescriptions.size());
+        renderPassCreateInfo.attachmentCount = (uint32_t) attachmentDescriptions.size();
         renderPassCreateInfo.pAttachments = attachmentDescriptions.data();
         renderPassCreateInfo.subpassCount = 1;
         renderPassCreateInfo.pSubpasses = &subpassDescription;
@@ -330,7 +330,7 @@ namespace Blink {
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             framebufferInfo.renderPass = renderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.attachmentCount = (uint32_t) attachments.size();
             framebufferInfo.pAttachments = attachments.data();
             framebufferInfo.width = extent.width;
             framebufferInfo.height = extent.height;

@@ -23,19 +23,19 @@ namespace Blink {
         VkPresentModeKHR presentMode{};
         VkExtent2D extent{};
         uint32_t imageCount = 0;
-        VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+        VkSwapchainKHR swapChain = nullptr;
         std::vector<VulkanImage*> colorImages;
         VulkanImage* depthImage = nullptr;
-        VkRenderPass renderPass = VK_NULL_HANDLE;
+        VkRenderPass renderPass = nullptr;
         std::array<VkClearValue, 2> clearValues;
         std::vector<VkFramebuffer> framebuffers;
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
         std::vector<VkFence> inFlightFences;
         uint32_t currentImageIndex = 0;
-        VkFence currentInFlightFence = VK_NULL_HANDLE;
-        VkSemaphore currentImageAvailableSemaphore = VK_NULL_HANDLE;
-        VkSemaphore currentRenderFinishedSemaphore = VK_NULL_HANDLE;
+        VkFence currentInFlightFence = nullptr;
+        VkSemaphore currentImageAvailableSemaphore = nullptr;
+        VkSemaphore currentRenderFinishedSemaphore = nullptr;
         bool windowResized = false;
 
     public:

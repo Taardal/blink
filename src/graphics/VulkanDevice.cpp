@@ -10,11 +10,11 @@ namespace Blink {
         }
         BL_LOG_INFO("Created logical device");
         this->graphicsQueue = getDeviceQueue(queueFamilyIndices.graphicsFamily.value());
-        if (graphicsQueue == VK_NULL_HANDLE) {
+        if (graphicsQueue == nullptr) {
             BL_THROW("Could not get graphics queue");
         }
         this->presentQueue = getDeviceQueue(queueFamilyIndices.presentFamily.value());
-        if (presentQueue == VK_NULL_HANDLE) {
+        if (presentQueue == nullptr) {
             BL_THROW("Could not get present queue");
         }
     }
@@ -113,7 +113,7 @@ namespace Blink {
 
     VkResult VulkanDevice::createGraphicsPipeline(VkGraphicsPipelineCreateInfo* createInfo, VkPipeline* pipeline) const {
         constexpr uint32_t count = 1;
-        VkPipelineCache cache = VK_NULL_HANDLE;
+        VkPipelineCache cache = nullptr;
         return vkCreateGraphicsPipelines(device, cache, count, createInfo, BL_VULKAN_ALLOCATOR, pipeline);
     }
 
@@ -178,7 +178,7 @@ namespace Blink {
 
     VkResult VulkanDevice::acquireSwapChainImage(VkSwapchainKHR swapChain, VkSemaphore semaphore, uint32_t* imageIndex) const {
         uint64_t timeout = UINT64_MAX;
-        VkFence fence = VK_NULL_HANDLE;
+        VkFence fence = nullptr;
         return vkAcquireNextImageKHR(device, swapChain, timeout, semaphore, fence, imageIndex);
     }
 
