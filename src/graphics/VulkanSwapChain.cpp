@@ -35,36 +35,42 @@ namespace Blink {
 
     void VulkanSwapChain::onEvent(Event& event) {
         if (event.type == EventType::WindowResize || event.type == EventType::WindowMinimize) {
-            framebufferResized = true;
+            windowResized = true;
         }
     }
 
     bool VulkanSwapChain::beginFrame(uint32_t frameIndex) noexcept(false) {
-        inFlightFence = inFlightFences[frameIndex];
-        imageAvailableSemaphore = imageAvailableSemaphores[frameIndex];
-        renderFinishedSemaphore = renderFinishedSemaphores[frameIndex];
+        currentInFlightFence = inFlightFences[frameIndex];
+        currentImageAvailableSemaphore = imageAvailableSemaphores[frameIndex];
+        currentRenderFinishedSemaphore = renderFinishedSemaphores[frameIndex];
 
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->waitForFence(&inFlightFence));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->waitForFence(&currentInFlightFence));
 
-        VkResult nextImageResult = config.device->acquireSwapChainImage(swapChain, imageAvailableSemaphore, &imageIndex);
+        VkResult nextImageResult = config.device->acquireSwapChainImage(swapChain, currentImageAvailableSemaphore, &currentImageIndex);
+
+        // VK_ERROR_OUT_OF_DATE_KHR:
+        // - The swap chain has become incompatible with the surface and can no longer be used for rendering.
+        // - Usually happens after a window resize.
         if (nextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
-            recreate();
+            recreateSwapChain();
             return false;
         }
+        // VK_SUBOPTIMAL_KHR:
+        // - The swap chain can still be used to successfully present to the surface, but the surface properties are no longer matched exactly.
         if (nextImageResult != VK_SUCCESS && nextImageResult != VK_SUBOPTIMAL_KHR) {
             BL_THROW("Could not acquire next image from swap chain");
         }
 
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->resetFence(&inFlightFence));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->resetFence(&currentInFlightFence));
 
         return true;
     }
 
-    void VulkanSwapChain::beginRenderPass(const VulkanCommandBuffer& commandBuffer) noexcept(false) {
+    void VulkanSwapChain::beginRenderPass(const VulkanCommandBuffer& commandBuffer) const {
         VkRenderPassBeginInfo renderPassBeginInfo{};
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassBeginInfo.renderPass = renderPass;
-        renderPassBeginInfo.framebuffer = framebuffers[imageIndex];
+        renderPassBeginInfo.framebuffer = framebuffers[currentImageIndex];
         renderPassBeginInfo.renderArea.offset = {0, 0};
         renderPassBeginInfo.renderArea.extent = extent;
         renderPassBeginInfo.clearValueCount = (uint32_t) clearValues.size();
@@ -89,7 +95,7 @@ namespace Blink {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
 
-    void VulkanSwapChain::endRenderPass(const VulkanCommandBuffer& commandBuffer) noexcept(false) {
+    void VulkanSwapChain::endRenderPass(const VulkanCommandBuffer& commandBuffer) const {
         vkCmdEndRenderPass(commandBuffer);
     }
 
@@ -99,35 +105,35 @@ namespace Blink {
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &imageAvailableSemaphore;
+        submitInfo.pWaitSemaphores = &currentImageAvailableSemaphore;
         submitInfo.pWaitDstStageMask = &colorOutputPipelineStage;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = commandBuffer.vk_ptr();
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
+        submitInfo.pSignalSemaphores = &currentRenderFinishedSemaphore;
 
-        if (config.device->submitToGraphicsQueue(&submitInfo, inFlightFence) != VK_SUCCESS) {
+        if (config.device->submitToGraphicsQueue(&submitInfo, currentInFlightFence) != VK_SUCCESS) {
             BL_THROW("Could not submit draw command buffer");
         }
 
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
+        presentInfo.pWaitSemaphores = &currentRenderFinishedSemaphore;
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = &swapChain;
-        presentInfo.pImageIndices = &imageIndex;
+        presentInfo.pImageIndices = &currentImageIndex;
 
         VkResult presentResult = config.device->submitToPresentQueue(&presentInfo);
-        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR || framebufferResized) {
-            framebufferResized = false;
-            recreate();
+        if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR || windowResized) {
+            windowResized = false;
+            recreateSwapChain();
         } else if (presentResult != VK_SUCCESS) {
             BL_THROW("Could not present image to swap chain");
         }
     }
 
-    void VulkanSwapChain::recreate() {
+    void VulkanSwapChain::recreateSwapChain() {
         config.window->waitUntilNotMinimized();
         BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilIdle());
 
@@ -195,81 +201,48 @@ namespace Blink {
     }
 
     void VulkanSwapChain::createColorImages() {
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->getSwapChainImages(swapChain, &imageCount, &colorImages));
-        colorImageViews.resize(imageCount);
+        std::vector<VkImage> swapChainImages;
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->getSwapChainImages(swapChain, &imageCount, &swapChainImages));
         for (size_t i = 0; i < imageCount; i++) {
-            VkImageViewCreateInfo createInfo{};
-            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            createInfo.image = colorImages[i];
-            createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            createInfo.format = surfaceFormat.format;
-            createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            createInfo.subresourceRange.baseMipLevel = 0;
-            createInfo.subresourceRange.levelCount = 1;
-            createInfo.subresourceRange.baseArrayLayer = 0;
-            createInfo.subresourceRange.layerCount = 1;
-            BL_ASSERT_THROW_VK_SUCCESS(config.device->createImageView(&createInfo, &colorImageViews[i]));
+            VulkanImageConfig imageConfig{};
+            imageConfig.image = swapChainImages[i];
+            imageConfig.format = surfaceFormat.format;
+            imageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageConfig.physicalDevice = config.physicalDevice;
+            imageConfig.device = config.device;
+            imageConfig.commandPool = config.commandPool;
+            auto image = new VulkanImage(imageConfig);
+            colorImages.push_back(image);
         }
     }
 
     void VulkanSwapChain::destroyColorImages() {
-        for (VkImageView colorImageView : colorImageViews) {
-            config.device->destroyImageView(colorImageView);
+        for (VulkanImage* colorImage : colorImages) {
+            delete colorImage;
         }
-        colorImageViews.clear();
-
-        // Color images (VkImage) are destroyed with VkSwapChainKHR object
         colorImages.clear();
     }
 
     void VulkanSwapChain::createDepthImage() {
         VkFormat depthFormat = config.physicalDevice->getDepthFormat();
 
-        VkImageCreateInfo depthImageCreateInfo{};
-        depthImageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        depthImageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-        depthImageCreateInfo.extent.width = extent.width;
-        depthImageCreateInfo.extent.height = extent.height;
-        depthImageCreateInfo.extent.depth = 1;
-        depthImageCreateInfo.mipLevels = 1;
-        depthImageCreateInfo.arrayLayers = 1;
-        depthImageCreateInfo.format = depthFormat;
-        depthImageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        depthImageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthImageCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        depthImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        depthImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
         VulkanImageConfig depthImageConfig{};
-        depthImageConfig.createInfo = &depthImageCreateInfo;
-        depthImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         depthImageConfig.physicalDevice = config.physicalDevice;
         depthImageConfig.device = config.device;
         depthImageConfig.commandPool = config.commandPool;
+        depthImageConfig.width = extent.width;
+        depthImageConfig.height = extent.height;
+        depthImageConfig.format = depthFormat;
+        depthImageConfig.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthImageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        depthImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        depthImageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 
         BL_TRY(depthImage = new VulkanImage(depthImageConfig));
         BL_TRY(depthImage->setLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL));
-
-        VkImageViewCreateInfo depthImageViewCreateInfo{};
-        depthImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        depthImageViewCreateInfo.image = *depthImage;
-        depthImageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        depthImageViewCreateInfo.format = depthFormat;
-        depthImageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        depthImageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-        depthImageViewCreateInfo.subresourceRange.levelCount = 1;
-        depthImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-        depthImageViewCreateInfo.subresourceRange.layerCount = 1;
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->createImageView(&depthImageViewCreateInfo, &depthImageView));
     }
 
     void VulkanSwapChain::destroyDepthImage() const {
-        config.device->destroyImageView(depthImageView);
         delete depthImage;
     }
 
@@ -342,7 +315,7 @@ namespace Blink {
         clearValues[1].depthStencil = clearDepthStencilValue;
     }
 
-    void VulkanSwapChain::destroyRenderPass() {
+    void VulkanSwapChain::destroyRenderPass() const {
         return config.device->destroyRenderPass(renderPass);
     }
 
@@ -350,8 +323,8 @@ namespace Blink {
         framebuffers.resize(imageCount);
         for (size_t i = 0; i < imageCount; i++) {
             std::array<VkImageView, 2> attachments = {
-                    colorImageViews[i],
-                    depthImageView
+                    colorImages[i]->getImageView(),
+                    depthImage->getImageView()
             };
 
             VkFramebufferCreateInfo framebufferInfo{};
@@ -367,7 +340,7 @@ namespace Blink {
         }
     }
 
-    void VulkanSwapChain::destroyFramebuffers() {
+    void VulkanSwapChain::destroyFramebuffers() const {
         for (VkFramebuffer framebuffer : framebuffers) {
             config.device->destroyFramebuffer(framebuffer);
         }
@@ -392,7 +365,7 @@ namespace Blink {
         }
     }
 
-    void VulkanSwapChain::destroySyncObjects() {
+    void VulkanSwapChain::destroySyncObjects() const {
         for (size_t i = 0; i < imageCount; i++) {
             config.device->destroySemaphore(imageAvailableSemaphores[i]);
             config.device->destroySemaphore(renderFinishedSemaphores[i]);

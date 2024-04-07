@@ -55,7 +55,6 @@ namespace Blink {
         uint32_t currentFrame = 0;
 
         VulkanImage* textureImage;
-        VkImageView textureImageView;
         VkSampler textureSampler;
 
     private:

@@ -146,27 +146,16 @@ namespace Blink {
 
         Image image = fileSystem->readImage("textures/sculpture.png");
 
-        VkImageCreateInfo textureImageCreateInfo{};
-        textureImageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        textureImageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-        textureImageCreateInfo.extent.width = image.width;
-        textureImageCreateInfo.extent.height = image.height;
-        textureImageCreateInfo.extent.depth = 1;
-        textureImageCreateInfo.mipLevels = 1;
-        textureImageCreateInfo.arrayLayers = 1;
-        textureImageCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        textureImageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        textureImageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        textureImageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        textureImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        textureImageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
         VulkanImageConfig textureImageConfig{};
-        textureImageConfig.createInfo = &textureImageCreateInfo;
-        textureImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         textureImageConfig.physicalDevice = physicalDevice;
         textureImageConfig.device = device;
         textureImageConfig.commandPool = commandPool;
+        textureImageConfig.width = image.width;
+        textureImageConfig.height = image.height;
+        textureImageConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
+        textureImageConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        textureImageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+        textureImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
         BL_TRY(textureImage = new VulkanImage(textureImageConfig));
         BL_TRY(textureImage->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL));
@@ -174,23 +163,6 @@ namespace Blink {
         BL_TRY(textureImage->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
 
         image.free();
-
-        //
-        // TEXTURE IMAGE VIEW
-        //
-
-        VkImageViewCreateInfo textureImageViewCreateInfo{};
-        textureImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        textureImageViewCreateInfo.image = *textureImage;
-        textureImageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        textureImageViewCreateInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        textureImageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        textureImageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-        textureImageViewCreateInfo.subresourceRange.levelCount = 1;
-        textureImageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-        textureImageViewCreateInfo.subresourceRange.layerCount = 1;
-
-        BL_ASSERT_THROW_VK_SUCCESS(device->createImageView(&textureImageViewCreateInfo, &textureImageView));
 
         //
         // TEXTURE SAMPLER
@@ -286,7 +258,7 @@ namespace Blink {
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = textureImageView;
+            imageInfo.imageView = textureImage->getImageView();
             imageInfo.sampler = textureSampler;
 
             std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
@@ -323,7 +295,6 @@ namespace Blink {
         //
 
         device->destroySampler(textureSampler);
-        device->destroyImageView(textureImageView);
         delete textureImage;
 
         //
@@ -368,8 +339,7 @@ namespace Blink {
     }
 
     void Renderer::render(const Frame& frame) {
-        bool frameReady = swapChain->beginFrame(currentFrame);
-        if (!frameReady) {
+        if (!swapChain->beginFrame(currentFrame)) {
             return;
         }
 
@@ -400,10 +370,11 @@ namespace Blink {
     }
 
     void Renderer::onEvent(Event& event) {
-        swapChain->onEvent(event);
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
             recompileShaders();
+            return;
         }
+        swapChain->onEvent(event);
     }
 
     void Renderer::setUniformData(VulkanUniformBuffer* uniformBuffer, const Frame& frame) const {
@@ -412,7 +383,6 @@ namespace Blink {
         ubo.view = frame.view;
         ubo.proj = frame.projection;
 
-        //
         // GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
         // The easiest way to compensate for that is to flip the sign on the scaling factor of the Y rotationAxis in the projection matrix.
         // If we don't do this, then the image will be rendered upside down.
@@ -424,7 +394,6 @@ namespace Blink {
         // VkPipelineRasterizationStateCreateInfo rasterizationState{};
         // rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
         // rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        //
         ubo.proj[1][1] *= -1;
 
         uniformBuffer->setData(&ubo);

@@ -24,21 +24,19 @@ namespace Blink {
         VkExtent2D extent{};
         uint32_t imageCount = 0;
         VkSwapchainKHR swapChain = VK_NULL_HANDLE;
-        std::vector<VkImage> colorImages;
-        std::vector<VkImageView> colorImageViews;
+        std::vector<VulkanImage*> colorImages;
         VulkanImage* depthImage = nullptr;
-        VkImageView depthImageView;
         VkRenderPass renderPass = VK_NULL_HANDLE;
         std::array<VkClearValue, 2> clearValues;
         std::vector<VkFramebuffer> framebuffers;
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
         std::vector<VkFence> inFlightFences;
-        uint32_t imageIndex = 0;
-        VkFence inFlightFence = VK_NULL_HANDLE;
-        VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
-        VkSemaphore renderFinishedSemaphore = VK_NULL_HANDLE;
-        bool framebufferResized = false;
+        uint32_t currentImageIndex = 0;
+        VkFence currentInFlightFence = VK_NULL_HANDLE;
+        VkSemaphore currentImageAvailableSemaphore = VK_NULL_HANDLE;
+        VkSemaphore currentRenderFinishedSemaphore = VK_NULL_HANDLE;
+        bool windowResized = false;
 
     public:
         explicit VulkanSwapChain(const VulkanSwapChainConfig& config) noexcept(false);
@@ -55,14 +53,14 @@ namespace Blink {
 
         bool beginFrame(uint32_t frameIndex) noexcept(false);
 
-        void beginRenderPass(const VulkanCommandBuffer& commandBuffer) noexcept(false);
+        void beginRenderPass(const VulkanCommandBuffer& commandBuffer) const;
 
-        void endRenderPass(const VulkanCommandBuffer& commandBuffer) noexcept(false);
+        void endRenderPass(const VulkanCommandBuffer& commandBuffer) const;
 
         void endFrame(const VulkanCommandBuffer& commandBuffer) noexcept(false);
 
     private:
-        void recreate() noexcept(false);
+        void recreateSwapChain() noexcept(false);
 
         void createSwapChain() noexcept(false);
 
@@ -78,15 +76,15 @@ namespace Blink {
 
         void createRenderPass() noexcept(false);
 
-        void destroyRenderPass();
+        void destroyRenderPass() const;
 
         void createFramebuffers() noexcept(false);
 
-        void destroyFramebuffers();
+        void destroyFramebuffers() const;
 
         void createSyncObjects() noexcept(false);
 
-        void destroySyncObjects();
+        void destroySyncObjects() const;
 
         VkSurfaceFormatKHR getMostSuitableSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const;
 

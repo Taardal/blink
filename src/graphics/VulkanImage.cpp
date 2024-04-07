@@ -4,39 +4,42 @@
 #include "VulkanCommandPool.h"
 
 namespace Blink {
-    VulkanImage::VulkanImage(const VulkanImageConfig& config) : config(config) {
-        this->layout = config.createInfo->initialLayout;
-        this->format = config.createInfo->format;
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->createImage(config.createInfo, &image));
-
-        VkMemoryRequirements memoryRequirements = config.device->getImageMemoryRequirements(image);
-        uint32_t memoryTypeIndex = config.physicalDevice->getMemoryType(
-                memoryRequirements.memoryTypeBits,
-                config.memoryProperties
-        );
-        VkMemoryAllocateInfo memoryAllocateInfo{};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memoryAllocateInfo.allocationSize = memoryRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateMemory(&memoryAllocateInfo, &deviceMemory));
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->bindImageMemory(image, deviceMemory));
+    VulkanImage::VulkanImage(const VulkanImageConfig& config) : config(config), currentLayout(config.layout) {
+        if (config.image == VK_NULL_HANDLE) {
+            BL_TRY(createImage());
+            BL_TRY(initializeImageMemory());
+        }
+        if (config.imageView == VK_NULL_HANDLE) {
+            BL_TRY(createImageView());
+        }
     }
 
     VulkanImage::~VulkanImage() {
-        config.device->destroyImage(image);
-        config.device->freeMemory(deviceMemory);
+        if (imageView != VK_NULL_HANDLE) {
+            config.device->destroyImageView(imageView);
+        }
+        if (image != VK_NULL_HANDLE) {
+            config.device->freeMemory(deviceMemory);
+            config.device->destroyImage(image);
+        }
     }
 
     VulkanImage::operator VkImage() const {
-        return image;
+        return getImage();
+    }
+
+    VkImage VulkanImage::getImage() const {
+        return image != VK_NULL_HANDLE ? image : config.image;
+    }
+
+    VkImageView VulkanImage::getImageView() const {
+        return imageView != VK_NULL_HANDLE ? imageView : config.imageView;
     }
 
     void VulkanImage::setLayout(VkImageLayout layout) {
-        VkImageLayout oldLayout = this->layout;
+        VkImageLayout oldLayout = this->currentLayout;
         VkImageLayout newLayout = layout;
-        this->layout = newLayout;
+        this->currentLayout = newLayout;
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -44,7 +47,7 @@ namespace Blink {
         barrier.newLayout = newLayout;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = image;
+        barrier.image = getImage();
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = 1;
         barrier.subresourceRange.baseArrayLayer = 0;
@@ -52,7 +55,7 @@ namespace Blink {
 
         if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-            if (hasStencilComponent(format)) {
+            if (hasStencilComponent(config.format)) {
                 barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
             }
         } else {
@@ -117,7 +120,7 @@ namespace Blink {
         config.commandPool->freeCommandBuffer(commandBuffer.vk_ptr());
     }
 
-    void VulkanImage::setData(const Image& image) {
+    void VulkanImage::setData(const Image& image) const {
         VulkanBufferConfig stagingBufferConfig{};
         stagingBufferConfig.size = image.size;
         stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -158,8 +161,8 @@ namespace Blink {
         vkCmdCopyBufferToImage(
                 commandBuffer,
                 stagingBuffer,
-                this->image,
-                this->layout,
+                getImage(),
+                currentLayout,
                 regionCount,
                 &region
         );
@@ -179,7 +182,59 @@ namespace Blink {
         stagingBuffer.terminate();
     }
 
-    bool VulkanImage::hasStencilComponent(VkFormat format) const {
+    void VulkanImage::createImage() {
+        BL_ASSERT_THROW(config.width > 0);
+        BL_ASSERT_THROW(config.height > 0);
+
+        VkImageCreateInfo imageCreateInfo{};
+        imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageCreateInfo.extent.width = config.width;
+        imageCreateInfo.extent.height = config.height;
+        imageCreateInfo.extent.depth = 1;
+        imageCreateInfo.mipLevels = 1;
+        imageCreateInfo.arrayLayers = 1;
+        imageCreateInfo.format = config.format;
+        imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageCreateInfo.initialLayout = config.layout;
+        imageCreateInfo.usage = config.usage;
+        imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createImage(&imageCreateInfo, &image));
+    }
+
+    void VulkanImage::initializeImageMemory() {
+        VkMemoryRequirements memoryRequirements = config.device->getImageMemoryRequirements(image);
+        uint32_t memoryTypeIndex = config.physicalDevice->getMemoryType(
+            memoryRequirements.memoryTypeBits,
+            config.memoryProperties
+        );
+        VkMemoryAllocateInfo memoryAllocateInfo{};
+        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memoryAllocateInfo.allocationSize = memoryRequirements.size;
+        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateMemory(&memoryAllocateInfo, &deviceMemory));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->bindImageMemory(image, deviceMemory));
+    }
+
+    void VulkanImage::createImageView() {
+        VkImageViewCreateInfo imageViewCreateInfo{};
+        imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        imageViewCreateInfo.image = getImage();
+        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        imageViewCreateInfo.format = config.format;
+        imageViewCreateInfo.subresourceRange.aspectMask = config.aspect;
+        imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+        imageViewCreateInfo.subresourceRange.levelCount = 1;
+        imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+        imageViewCreateInfo.subresourceRange.layerCount = 1;
+
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createImageView(&imageViewCreateInfo, &imageView));
+    }
+
+    bool VulkanImage::hasStencilComponent(VkFormat format) {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
