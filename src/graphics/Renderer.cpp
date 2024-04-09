@@ -138,8 +138,8 @@ namespace Blink {
     }
 
     void Renderer::onEvent(Event& event) {
-        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
-            recompileShaders();
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::F2) {
+            reloadShaders();
             return;
         }
         swapChain->onEvent(event);
@@ -201,11 +201,12 @@ namespace Blink {
         );
     }
 
-    void Renderer::recompileShaders() {
+    void Renderer::reloadShaders() {
         BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilIdle());
         compileShaders();
         destroyGraphicsPipelineObjects();
         BL_TRY(createGraphicsPipelineObjects());
+        BL_LOG_INFO("Reloaded shaders");
     }
 
     void Renderer::compileShaders() const {

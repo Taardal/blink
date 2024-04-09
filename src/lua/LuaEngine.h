@@ -20,7 +20,7 @@ namespace Blink {
 
         ~LuaEngine();
 
-        void reload(entt::registry* entityRegistry) const;
+        void reloadScripts(entt::registry* entityRegistry) const;
 
         void createEntityBindings(entt::registry* entityRegistry) const;
 

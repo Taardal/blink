@@ -34,24 +34,6 @@ namespace Blink {
 
     std::string Keyboard::getKeyName(Key key) {
         switch (key) {
-            case Key::Space:
-                return "Space";
-            case Key::Escape:
-                return "Escape";
-            case Key::Enter:
-                return "Enter";
-            case Key::Tab:
-                return "Tab";
-            case Key::Backspace:
-                return "Backspace";
-            case Key::Up:
-                return "Up";
-            case Key::Down:
-                return "Down";
-            case Key::Left:
-                return "Left";
-            case Key::Right:
-                return "Right";
             case Key::A:
                 return "A";
             case Key::B:
@@ -140,6 +122,48 @@ namespace Blink {
                 return "Numpad_8";
             case Key::Numpad_9:
                 return "Numpad_9";
+            case Key::F1:
+                return "F1";
+            case Key::F2:
+                return "F2";
+            case Key::F3:
+                return "F3";
+            case Key::F4:
+                return "F4";
+            case Key::F5:
+                return "F5";
+            case Key::F6:
+                return "F6";
+            case Key::F7:
+                return "F7";
+            case Key::F8:
+                return "F8";
+            case Key::F9:
+                return "F9";
+            case Key::F10:
+                return "F10";
+            case Key::F11:
+                return "F11";
+            case Key::F12:
+                return "F12";
+            case Key::Space:
+                return "Space";
+            case Key::Escape:
+                return "Escape";
+            case Key::Enter:
+                return "Enter";
+            case Key::Tab:
+                return "Tab";
+            case Key::Backspace:
+                return "Backspace";
+            case Key::Up:
+                return "Up";
+            case Key::Down:
+                return "Down";
+            case Key::Left:
+                return "Left";
+            case Key::Right:
+                return "Right";
             default:
                 return "";
         }
@@ -147,15 +171,6 @@ namespace Blink {
 
     std::vector<Key> Keyboard::createKeys() {
         return {
-            Key::Space,
-            Key::Escape,
-            Key::Enter,
-            Key::Tab,
-            Key::Backspace,
-            Key::Up,
-            Key::Down,
-            Key::Left,
-            Key::Right,
             Key::A,
             Key::B,
             Key::C,
@@ -200,20 +215,32 @@ namespace Blink {
             Key::Numpad_7,
             Key::Numpad_8,
             Key::Numpad_9,
+            Key::F1,
+            Key::F2,
+            Key::F3,
+            Key::F4,
+            Key::F5,
+            Key::F6,
+            Key::F7,
+            Key::F8,
+            Key::F9,
+            Key::F10,
+            Key::F11,
+            Key::F12,
+            Key::Space,
+            Key::Escape,
+            Key::Enter,
+            Key::Tab,
+            Key::Backspace,
+            Key::Up,
+            Key::Down,
+            Key::Left,
+            Key::Right,
         };
     }
 
     std::unordered_map<std::string, Key> Keyboard::createKeysByName() {
         return {
-            { "Space", Key::Space },
-            { "Escape", Key::Escape },
-            { "Enter", Key::Enter },
-            { "Tab", Key::Tab },
-            { "Backspace", Key::Backspace },
-            { "Up", Key::Up },
-            { "Down", Key::Down },
-            { "Left", Key::Left },
-            { "Right", Key::Right },
             { "A", Key::A },
             { "B", Key::B },
             { "C", Key::C },
@@ -258,20 +285,32 @@ namespace Blink {
             { "Numpad_7", Key::Numpad_7 },
             { "Numpad_8", Key::Numpad_8 },
             { "Numpad_9", Key::Numpad_9 },
+            { "F1", Key::F1 },
+            { "F2", Key::F2 },
+            { "F3", Key::F3 },
+            { "F4", Key::F4 },
+            { "F5", Key::F5 },
+            { "F6", Key::F6 },
+            { "F7", Key::F7 },
+            { "F8", Key::F8 },
+            { "F9", Key::F9 },
+            { "F10", Key::F10 },
+            { "F11", Key::F11 },
+            { "F12", Key::F12 },
+            { "Space", Key::Space },
+            { "Escape", Key::Escape },
+            { "Enter", Key::Enter },
+            { "Tab", Key::Tab },
+            { "Backspace", Key::Backspace },
+            { "Up", Key::Up },
+            { "Down", Key::Down },
+            { "Left", Key::Left },
+            { "Right", Key::Right },
         };
     }
 
     std::unordered_map<Key, std::string> Keyboard::createNamesByKey() {
         return {
-            { Key::Space, "Space" },
-            { Key::Escape, "Escape" },
-            { Key::Enter, "Enter" },
-            { Key::Tab, "Tab" },
-            { Key::Backspace, "Backspace" },
-            { Key::Up, "Up" },
-            { Key::Down, "Down" },
-            { Key::Left, "Left" },
-            { Key::Right, "Right" },
             { Key::A, "A" },
             { Key::B, "B" },
             { Key::C, "C" },
@@ -316,6 +355,27 @@ namespace Blink {
             { Key::Numpad_7, "Numpad_7" },
             { Key::Numpad_8, "Numpad_8" },
             { Key::Numpad_9, "Numpad_9" },
+            { Key::F1, "F1" },
+            { Key::F2, "F2" },
+            { Key::F3, "F3" },
+            { Key::F4, "F4" },
+            { Key::F5, "F5" },
+            { Key::F6, "F6" },
+            { Key::F7, "F7" },
+            { Key::F8, "F8" },
+            { Key::F9, "F9" },
+            { Key::F10, "F10" },
+            { Key::F11, "F11" },
+            { Key::F12, "F12" },
+            { Key::Space, "Space" },
+            { Key::Escape, "Escape" },
+            { Key::Enter, "Enter" },
+            { Key::Tab, "Tab" },
+            { Key::Backspace, "Backspace" },
+            { Key::Up, "Up" },
+            { Key::Down, "Down" },
+            { Key::Left, "Left" },
+            { Key::Right, "Right" },
         };
     }
 }

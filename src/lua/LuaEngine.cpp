@@ -27,9 +27,10 @@ namespace Blink {
         lua_close(L);
     }
 
-    void LuaEngine::reload(entt::registry* entityRegistry) const {
+    void LuaEngine::reloadScripts(entt::registry* entityRegistry) const {
         compileLuaFiles();
         createEntityBindings(entityRegistry);
+        BL_LOG_INFO("Reloaded Lua scripts");
     }
 
     void LuaEngine::createEntityBindings(entt::registry* entityRegistry) const {

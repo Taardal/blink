@@ -97,7 +97,7 @@ namespace Blink {
 
         void drawIndexed(const VulkanCommandBuffer& commandBuffer) const;
 
-        void recompileShaders();
+        void reloadShaders();
 
         void compileShaders() const;
 

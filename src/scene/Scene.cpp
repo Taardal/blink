@@ -13,6 +13,13 @@ namespace Blink {
         registry.clear();
     }
 
+    void Scene::onEvent(Event& event) {
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::F1) {
+            config.luaEngine->reloadScripts(&registry);
+            BL_LOG_INFO("Recreated entity bindings");
+        }
+    }
+
     glm::mat4 Scene::update(double timestep) {
         config.luaEngine->updateEntityBindings(&registry, timestep);
 
@@ -32,16 +39,6 @@ namespace Blink {
         glm::mat4 scale = glm::mat4(1.0f);
 
         return translation * rotation * scale;
-    }
-
-    void Scene::onEvent(Event& event) {
-        if (event.type != EventType::KeyPressed) {
-            return;
-        }
-        if (event.as<KeyPressedEvent>().key == Key::P) {
-            config.luaEngine->reload(&registry);
-            BL_LOG_INFO("Recreated entity bindings");
-        }
     }
 
     void Scene::initializeEntityComponents() {
