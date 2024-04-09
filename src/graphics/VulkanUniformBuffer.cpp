@@ -5,7 +5,6 @@ namespace Blink {
         BL_ASSERT_THROW(config.size > 0);
 
         VulkanBufferConfig bufferConfig{};
-        bufferConfig.physicalDevice = config.physicalDevice;
         bufferConfig.device = config.device;
         bufferConfig.commandPool = config.commandPool;
         bufferConfig.size = config.size;

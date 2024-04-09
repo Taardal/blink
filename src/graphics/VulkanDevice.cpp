@@ -3,29 +3,28 @@
 
 namespace Blink {
 
-    VulkanDevice::VulkanDevice(const VulkanDeviceConfig& config) : config(config) {
+    VulkanDevice::VulkanDevice(const VulkanDeviceConfig& config) noexcept(false) : config(config) {
         const QueueFamilyIndices& queueFamilyIndices = config.physicalDevice->getQueueFamilyIndices();
-        if (!createDevice(queueFamilyIndices)) {
-            BL_THROW("Could not create logical device");
-        }
-        BL_LOG_INFO("Created logical device");
+
+        BL_TRY(createDevice(queueFamilyIndices));
+
         this->graphicsQueue = getDeviceQueue(queueFamilyIndices.graphicsFamily.value());
-        if (graphicsQueue == nullptr) {
-            BL_THROW("Could not get graphics queue");
-        }
+        BL_ASSERT_THROW(graphicsQueue != nullptr);
+
         this->presentQueue = getDeviceQueue(queueFamilyIndices.presentFamily.value());
-        if (presentQueue == nullptr) {
-            BL_THROW("Could not get present queue");
-        }
+        BL_ASSERT_THROW(presentQueue != nullptr);
     }
 
     VulkanDevice::~VulkanDevice() {
         destroyDevice();
-        BL_LOG_INFO("Destroyed logical device");
     }
 
     VulkanDevice::operator VkDevice() const {
         return device;
+    }
+
+    VulkanPhysicalDevice* VulkanDevice::getPhysicalDevice() const {
+        return config.physicalDevice;
     }
 
     VkQueue VulkanDevice::getGraphicsQueue() const {
@@ -272,7 +271,7 @@ namespace Blink {
         vkDestroySampler(device, sampler, BL_VULKAN_ALLOCATOR);
     }
 
-    bool VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) {
+    void VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) noexcept(false) {
         const VkPhysicalDeviceFeatures features = config.physicalDevice->getFeatures();
 
         std::vector<const char*> extensionNames;
@@ -305,11 +304,13 @@ namespace Blink {
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
         createInfo.queueCreateInfoCount = (uint32_t) queueCreateInfos.size();
 
-        return config.physicalDevice->createDevice(&createInfo, &device) == VK_SUCCESS;
+        BL_ASSERT_VK_SUCCESS(config.physicalDevice->createDevice(&createInfo, &device));
+        BL_LOG_INFO("Created device");
     }
 
     void VulkanDevice::destroyDevice() const {
         vkDestroyDevice(device, BL_VULKAN_ALLOCATOR);
+        BL_LOG_INFO("Destroyed device");
     }
 
     VkQueue VulkanDevice::getDeviceQueue(uint32_t queueFamilyIndex) const {

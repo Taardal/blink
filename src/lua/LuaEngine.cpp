@@ -8,7 +8,7 @@
 #include <lua.hpp>
 
 namespace Blink {
-    LuaEngine::LuaEngine(Keyboard* keyboard) : L(luaL_newstate()), keyboard(keyboard) {
+    LuaEngine::LuaEngine(const LuaEngineConfig& config) : config(config), L(luaL_newstate()) {
         // Enable Lua standard libraries
         luaL_openlibs(L);
 
@@ -87,7 +87,7 @@ namespace Blink {
     }
 
     void LuaEngine::createGlobalBindings() const {
-        KeyboardLuaBinding::initialize(L, keyboard);
+        KeyboardLuaBinding::initialize(L, config.keyboard);
     }
 
     void LuaEngine::compileLuaFiles() {

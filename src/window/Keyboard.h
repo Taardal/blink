@@ -60,15 +60,19 @@ namespace Blink {
         Numpad_9 = GLFW_KEY_KP_9,
     };
 
+    struct KeyboardConfig {
+        Window* window = nullptr;
+    };
+
     class Keyboard {
     private:
-        Window* window;
+        KeyboardConfig config;
         std::vector<Key> keys;
         std::unordered_map<std::string, Key> keysByName;
         std::unordered_map<Key, std::string> namesByKey;
 
     public:
-        explicit Keyboard(Window* window);
+        explicit Keyboard(const KeyboardConfig& config);
 
         const std::vector<Key>& getKeys() const {
             return keys;

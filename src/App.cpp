@@ -18,15 +18,42 @@ namespace Blink {
 
     void App::initialize() {
         fileSystem = new FileSystem();
-        window = new Window(config);
-        window->setEventListener([this](Event& event) {
+
+        WindowConfig windowConfig{};
+        windowConfig.title = config.name;
+        windowConfig.width = config.windowWidth;
+        windowConfig.height = config.windowHeight;
+        windowConfig.resizable = config.windowResizable;
+        windowConfig.maximized = config.windowMaximized;
+        windowConfig.onEvent = [this](Event& event) {
             onEvent(event);
-        });
-        keyboard = new Keyboard(window);
-        renderer = new Renderer(config, fileSystem, window);
-        luaEngine = new LuaEngine(keyboard);
-        camera = new Camera(window, keyboard);
-        scene = new Scene(keyboard, luaEngine);
+        };
+        BL_TRY(window = new Window(windowConfig));
+
+        KeyboardConfig keyboardConfig{};
+        keyboardConfig.window = window;
+        BL_TRY(keyboard = new Keyboard(keyboardConfig));
+
+        RendererConfig rendererConfig{};
+        rendererConfig.applicationName = config.name;
+        rendererConfig.engineName = config.name;
+        rendererConfig.fileSystem = fileSystem;
+        rendererConfig.window = window;
+        BL_TRY(renderer = new Renderer(rendererConfig));
+
+        LuaEngineConfig luaEngineConfig{};
+        luaEngineConfig.keyboard = keyboard;
+        BL_TRY(luaEngine = new LuaEngine(luaEngineConfig));
+
+        CameraConfig cameraConfig{};
+        cameraConfig.window = window;
+        cameraConfig.keyboard = keyboard;
+        BL_TRY(camera = new Camera(cameraConfig));
+
+        SceneConfig sceneConfig{};
+        sceneConfig.keyboard = keyboard;
+        sceneConfig.luaEngine = luaEngine;
+        BL_TRY(scene = new Scene(sceneConfig));
     }
 
     App::~App() {

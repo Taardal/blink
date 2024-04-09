@@ -1,25 +1,23 @@
 #include "Keyboard.h"
 
 namespace Blink {
-    Keyboard::Keyboard(
-        Window* window
-    ) : window(window),
+    Keyboard::Keyboard(const KeyboardConfig& config) : config(config),
         keys(createKeys()),
         keysByName(createKeysByName()),
         namesByKey(createNamesByKey()) {
     }
 
     bool Keyboard::isPressed(Key key) const {
-        return window->isKeyPressed((uint16_t) key);
+        return config.window->isKeyPressed((uint16_t) key);
     }
 
     bool Keyboard::isPressed(uint16_t key) const {
-        return window->isKeyPressed(key);
+        return config.window->isKeyPressed(key);
     }
 
     bool Keyboard::isPressed(const std::string& keyName) const {
         Key key = keysByName.at(keyName);
-        return window->isKeyPressed((uint16_t) key);
+        return config.window->isKeyPressed((uint16_t) key);
     }
 
     std::string Keyboard::getName(Key key) const {

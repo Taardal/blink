@@ -3,7 +3,8 @@
 
 namespace Blink {
     VulkanCommandPool::VulkanCommandPool(const VulkanCommandPoolConfig& config) : config(config) {
-        const QueueFamilyIndices& queueFamilyIndices = config.physicalDevice->getQueueFamilyIndices();
+        VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
+        const QueueFamilyIndices& queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
 
         VkCommandPoolCreateInfo commandPoolCreateInfo{};
         commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;

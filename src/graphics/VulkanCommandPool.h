@@ -1,13 +1,11 @@
 #pragma once
 
 #include "VulkanDevice.h"
-#include "VulkanPhysicalDevice.h"
 #include "VulkanCommandBuffer.h"
 
 namespace Blink {
     struct VulkanCommandPoolConfig {
         VulkanDevice* device = nullptr;
-        VulkanPhysicalDevice* physicalDevice = nullptr;
     };
 
     class VulkanCommandPool {

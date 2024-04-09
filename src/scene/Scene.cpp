@@ -4,15 +4,9 @@
 #include "window/KeyEvent.h"
 
 namespace Blink {
-    Scene::Scene(
-        Keyboard* keyboard,
-        LuaEngine* luaEngine
-    ) : keyboard(keyboard),
-        luaEngine(luaEngine),
-        player(registry.create())
-    {
+    Scene::Scene(const SceneConfig& config) : config(config), player(registry.create()) {
         initializeEntityComponents();
-        luaEngine->createEntityBindings(&registry);
+        config.luaEngine->createEntityBindings(&registry);
     }
 
     Scene::~Scene() {
@@ -20,7 +14,7 @@ namespace Blink {
     }
 
     glm::mat4 Scene::update(double timestep) {
-        luaEngine->updateEntityBindings(&registry, timestep);
+        config.luaEngine->updateEntityBindings(&registry, timestep);
 
         // TRANSLATION
         auto& transformComponent = registry.get<TransformComponent>(player);
@@ -45,7 +39,7 @@ namespace Blink {
             return;
         }
         if (event.as<KeyPressedEvent>().key == Key::P) {
-            luaEngine->reload(&registry);
+            config.luaEngine->reload(&registry);
             BL_LOG_INFO("Recreated entity bindings");
         }
     }

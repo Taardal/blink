@@ -3,21 +3,19 @@
 
 namespace Blink {
 
-    VulkanPhysicalDevice::VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config) : config(config) {
+    VulkanPhysicalDevice::VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config) noexcept(false) : config(config) {
         std::vector<VkPhysicalDevice> availableDevices = config.vulkanApp->getPhysicalDevices();
-        if (availableDevices.empty()) {
-            BL_THROW("Could not find any physical devices");
-        }
+        BL_ASSERT_THROW(!availableDevices.empty());
+
         std::vector<const char*> requiredExtensions = {
                 VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };
         if (Environment::isMacOS()) {
             requiredExtensions.push_back("VK_KHR_portability_subset");
         }
-        VulkanPhysicalDeviceInfo mostSuitableDeviceInfo = getMostSuitableDevice(availableDevices, requiredExtensions);
-        if (mostSuitableDeviceInfo.physicalDevice == nullptr) {
-            BL_THROW("Could not get any suitable device");
-        }
+        const VulkanPhysicalDeviceInfo& mostSuitableDeviceInfo = getMostSuitableDevice(availableDevices, requiredExtensions);
+        BL_ASSERT_THROW(mostSuitableDeviceInfo.physicalDevice != nullptr);
+
         this->deviceInfo = mostSuitableDeviceInfo;
         BL_LOG_INFO("Using physical device [{}]", mostSuitableDeviceInfo.properties.deviceName);
     }
@@ -42,7 +40,7 @@ namespace Blink {
         return deviceInfo.swapChainInfo;
     }
 
-    const VkFormat VulkanPhysicalDevice::getDepthFormat() const {
+    VkFormat VulkanPhysicalDevice::getDepthFormat() const {
         return deviceInfo.depthFormat;
     }
 
@@ -54,7 +52,10 @@ namespace Blink {
         return vkCreateDevice(deviceInfo.physicalDevice, createInfo, BL_VULKAN_ALLOCATOR, device);
     }
 
-    uint32_t VulkanPhysicalDevice::getMemoryTypeIndex(const VkMemoryRequirements& memoryRequirements, VkMemoryPropertyFlags requiredMemoryProperties) const {
+    uint32_t VulkanPhysicalDevice::getMemoryTypeIndex(
+        const VkMemoryRequirements& memoryRequirements,
+        VkMemoryPropertyFlags requiredMemoryProperties
+    ) const {
         VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
         vkGetPhysicalDeviceMemoryProperties(deviceInfo.physicalDevice, &physicalDeviceMemoryProperties);
         for (uint32_t memoryTypeIndex = 0; memoryTypeIndex < physicalDeviceMemoryProperties.memoryTypeCount; memoryTypeIndex++) {
@@ -72,7 +73,10 @@ namespace Blink {
         return -1;
     }
 
-    VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getMostSuitableDevice(const std::vector<VkPhysicalDevice>& physicalDevices, const std::vector<const char*>& requiredExtensions) const {
+    VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getMostSuitableDevice(
+        const std::vector<VkPhysicalDevice>& physicalDevices,
+        const std::vector<const char*>& requiredExtensions
+    ) const {
         std::multimap<uint32_t , VulkanPhysicalDeviceInfo> devicesByRating;
         for (VkPhysicalDevice physicalDevice : physicalDevices) {
             VulkanPhysicalDeviceInfo deviceInfo = getDeviceInfo(physicalDevice, requiredExtensions);
@@ -86,7 +90,10 @@ namespace Blink {
         return devicesByRating.rbegin()->second;
     }
 
-    VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getDeviceInfo(VkPhysicalDevice physicalDevice, const std::vector<const char*>& requiredExtensions) const {
+    VulkanPhysicalDeviceInfo VulkanPhysicalDevice::getDeviceInfo(
+        VkPhysicalDevice physicalDevice,
+        const std::vector<const char*>& requiredExtensions
+    ) const {
         VkPhysicalDeviceProperties properties;
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 
@@ -105,7 +112,10 @@ namespace Blink {
         return deviceInfo;
     }
 
-    std::vector<VkExtensionProperties> VulkanPhysicalDevice::findExtensions(VkPhysicalDevice physicalDevice, const std::vector<const char*>& requiredExtensions) const {
+    std::vector<VkExtensionProperties> VulkanPhysicalDevice::findExtensions(
+        VkPhysicalDevice physicalDevice,
+        const std::vector<const char*>& requiredExtensions
+    ) const {
         const char* layerName = nullptr;
         uint32_t extensionCount = 0;
         vkEnumerateDeviceExtensionProperties(physicalDevice, layerName, &extensionCount, nullptr);
@@ -185,7 +195,10 @@ namespace Blink {
         return VK_FORMAT_UNDEFINED;
     }
 
-    uint32_t VulkanPhysicalDevice::getSuitabilityRating(const VulkanPhysicalDeviceInfo& physicalDeviceInfo, const std::vector<const char*>& requiredExtensions) const {
+    uint32_t VulkanPhysicalDevice::getSuitabilityRating(
+        const VulkanPhysicalDeviceInfo& physicalDeviceInfo,
+        const std::vector<const char*>& requiredExtensions
+    ) const {
         if (!hasRequiredFeatures(physicalDeviceInfo.features)) {
             BL_LOG_DEBUG("[{}] does not have required device features", physicalDeviceInfo.properties.deviceName);
             return 0;
@@ -213,7 +226,10 @@ namespace Blink {
         return rating;
     }
 
-    bool VulkanPhysicalDevice::hasRequiredExtensions(const std::vector<const char*>& extensions, const std::vector<VkExtensionProperties>& availableExtensions) const {
+    bool VulkanPhysicalDevice::hasRequiredExtensions(
+        const std::vector<const char*>& extensions,
+        const std::vector<VkExtensionProperties>& availableExtensions
+    ) const {
         for (const char* extension: extensions) {
             bool extensionFound = false;
             for (const VkExtensionProperties& availableExtension: availableExtensions) {

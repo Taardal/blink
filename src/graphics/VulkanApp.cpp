@@ -23,44 +23,33 @@ namespace Blink {
 
 namespace Blink {
 
-    VulkanApp::VulkanApp(const VulkanAppConfig& config) : config(config) {
-        if (!config.window->isVulkanSupported()) {
-            BL_THROW("Vulkan is not supported");
-        }
+    VulkanApp::VulkanApp(const VulkanAppConfig& config) noexcept(false) : config(config) {
+        BL_ASSERT_THROW(config.window->isVulkanSupported());
+
         std::vector<const char*> requiredExtensions = config.window->getRequiredVulkanExtensions();
-        if (std::count(requiredExtensions.begin(), requiredExtensions.end(), "VK_KHR_surface") == 0) {
-            BL_THROW("Vulkan surface extension is not supported");
-        }
+        BL_ASSERT_THROW(std::count(requiredExtensions.begin(), requiredExtensions.end(), "VK_KHR_surface") > 0);
+
 #ifdef BL_PLATFORM_MACOS
         requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 #endif
         if (config.validationLayersEnabled) {
             requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
-        if (!hasExtensions(requiredExtensions)) {
-            BL_THROW("Could not find required extensions");
-        }
+        BL_ASSERT_THROW(hasExtensions(requiredExtensions));
+
         std::vector<const char*> validationLayers;
         VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
         if (config.validationLayersEnabled) {
             validationLayers.push_back("VK_LAYER_KHRONOS_validation");
-            if (!hasValidationLayers(validationLayers)) {
-                BL_THROW("Could not find validation layers");
-            }
+            BL_ASSERT_THROW(hasValidationLayers(validationLayers));
             debugMessengerCreateInfo = getDebugMessengerCreateInfo();
         }
-        if (!createInstance(requiredExtensions, validationLayers, debugMessengerCreateInfo)) {
-            BL_THROW("Could not create Vulkan instance");
-        }
-        BL_LOG_INFO("Created Vulkan instance");
+
+        BL_TRY(createInstance(requiredExtensions, validationLayers, debugMessengerCreateInfo));
         if (config.validationLayersEnabled) {
-            if (!createDebugMessenger(debugMessengerCreateInfo)) {
-                BL_THROW("Could not create debug messenger");
-            }
+            BL_TRY(createDebugMessenger(debugMessengerCreateInfo));
         }
-        if (!createSurface()) {
-            BL_THROW("Could not create surface");
-        }
+        BL_TRY(createSurface());
     }
 
     VulkanApp::~VulkanApp() {
@@ -69,14 +58,13 @@ namespace Blink {
             destroyDebugMessenger();
         }
         destroyInstance();
-        BL_LOG_INFO("Destroyed Vulkan instance");
     }
 
     std::vector<VkPhysicalDevice> VulkanApp::getPhysicalDevices() const {
         uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, nullptr);
+        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
         std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, devices.data());
+        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
         return devices;
     }
 
@@ -84,11 +72,11 @@ namespace Blink {
         return surface;
     }
 
-    bool VulkanApp::createInstance(
+    void VulkanApp::createInstance(
         const std::vector<const char*>& requiredExtensions,
         const std::vector<const char*>& validationLayers,
         const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo
-    ) {
+    ) noexcept(false) {
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = config.applicationName.c_str();
@@ -111,39 +99,39 @@ namespace Blink {
             createInfo.ppEnabledLayerNames = validationLayers.data();
         }
 
-        return vkCreateInstance(&createInfo, BL_VULKAN_ALLOCATOR, &vulkanInstance) == VK_SUCCESS;
+        BL_ASSERT_VK_SUCCESS(vkCreateInstance(&createInfo, BL_VULKAN_ALLOCATOR, &instance));
+        BL_LOG_INFO("Created instance");
     }
 
-    void VulkanApp::destroyInstance() {
-        vkDestroyInstance(vulkanInstance, BL_VULKAN_ALLOCATOR);
+    void VulkanApp::destroyInstance() const {
+        vkDestroyInstance(instance, BL_VULKAN_ALLOCATOR);
+        BL_LOG_INFO("Destroyed instance");
     }
 
-    bool VulkanApp::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) {
-        const char* functionName = "vkCreateDebugUtilsMessengerEXT";
-        auto function = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vulkanInstance, functionName);
-        if (function == nullptr) {
-            BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
-            return false;
-        }
-        return function(vulkanInstance, &debugMessengerCreateInfo, BL_VULKAN_ALLOCATOR, &debugMessenger) == VK_SUCCESS;
+    void VulkanApp::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) noexcept(false) {
+        auto createDebugMessenger = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+        BL_ASSERT_THROW(createDebugMessenger != nullptr);
+        BL_ASSERT_VK_SUCCESS(createDebugMessenger(instance, &debugMessengerCreateInfo, BL_VULKAN_ALLOCATOR, &debugMessenger));
+        BL_LOG_INFO("Created debug messenger");
     }
 
-    void VulkanApp::destroyDebugMessenger() {
-        const char* functionName = "vkDestroyDebugUtilsMessengerEXT";
-        auto function = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(vulkanInstance, functionName);
-        if (function == nullptr) {
-            BL_LOG_ERROR("Could not look up address of extension function [{0}]", functionName);
+    void VulkanApp::destroyDebugMessenger() const {
+        auto destroyDebugMessenger = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+        if (destroyDebugMessenger == nullptr) {
             return;
         }
-        function(vulkanInstance, debugMessenger, BL_VULKAN_ALLOCATOR);
+        destroyDebugMessenger(instance, debugMessenger, BL_VULKAN_ALLOCATOR);
+        BL_LOG_INFO("Destroyed debug messenger");
     }
 
-    bool VulkanApp::createSurface() {
-        return config.window->createVulkanSurface(vulkanInstance, &surface, BL_VULKAN_ALLOCATOR) == VK_SUCCESS;
+    void VulkanApp::createSurface() noexcept(false) {
+        BL_ASSERT_VK_SUCCESS(config.window->createVulkanSurface(instance, &surface, BL_VULKAN_ALLOCATOR));
+        BL_LOG_INFO("Created surface");
     }
 
     void VulkanApp::destroySurface() const {
-        vkDestroySurfaceKHR(vulkanInstance, surface, BL_VULKAN_ALLOCATOR);
+        vkDestroySurfaceKHR(instance, surface, BL_VULKAN_ALLOCATOR);
+        BL_LOG_INFO("Destroyed surface");
     }
 
     bool VulkanApp::hasValidationLayers(const std::vector<const char*>& validationLayers) const {

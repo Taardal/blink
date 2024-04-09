@@ -18,7 +18,6 @@ namespace Blink {
         destroyDepthImage();
         destroyColorImages();
         destroySwapChain();
-        BL_LOG_INFO("Destroyed swap chain");
     }
 
     VulkanSwapChain::operator VkSwapchainKHR() const {
@@ -142,7 +141,7 @@ namespace Blink {
         destroyColorImages();
         destroySwapChain();
 
-        config.physicalDevice->updateSwapChainInfo();
+        config.device->getPhysicalDevice()->updateSwapChainInfo();
 
         BL_TRY(createSwapChain());
         BL_TRY(createColorImages());
@@ -153,9 +152,9 @@ namespace Blink {
     }
 
     void VulkanSwapChain::createSwapChain() {
-        VkSurfaceKHR surface = config.vulkanApp->getSurface();
-        const SwapChainInfo& swapChainInfo = config.physicalDevice->getSwapChainInfo();
-        const QueueFamilyIndices& queueFamilyIndices = config.physicalDevice->getQueueFamilyIndices();
+        VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
+        const SwapChainInfo& swapChainInfo = physicalDevice->getSwapChainInfo();
+        const QueueFamilyIndices& queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
 
         surfaceFormat = getMostSuitableSurfaceFormat(swapChainInfo.surfaceFormats);
         presentMode = getMostSuitablePresentMode(swapChainInfo.presentModes);
@@ -167,7 +166,7 @@ namespace Blink {
         VkSwapchainCreateInfoKHR createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createInfo.minImageCount = imageCount;
-        createInfo.surface = surface;
+        createInfo.surface = config.vulkanApp->getSurface();
         createInfo.imageFormat = surfaceFormat.format;
         createInfo.imageColorSpace = surfaceFormat.colorSpace;
         createInfo.imageExtent = extent;
@@ -194,10 +193,12 @@ namespace Blink {
         }
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createSwapChain(&createInfo, &swapChain));
+        BL_LOG_INFO("Created swap chain");
     }
 
     void VulkanSwapChain::destroySwapChain() const {
-        return config.device->destroySwapChain(swapChain);
+        config.device->destroySwapChain(swapChain);
+        BL_LOG_INFO("Destroyed swap chain");
     }
 
     void VulkanSwapChain::createColorImages() {
@@ -208,7 +209,6 @@ namespace Blink {
             imageConfig.image = swapChainImages[i];
             imageConfig.format = surfaceFormat.format;
             imageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageConfig.physicalDevice = config.physicalDevice;
             imageConfig.device = config.device;
             imageConfig.commandPool = config.commandPool;
             auto image = new VulkanImage(imageConfig);
@@ -224,10 +224,9 @@ namespace Blink {
     }
 
     void VulkanSwapChain::createDepthImage() {
-        VkFormat depthFormat = config.physicalDevice->getDepthFormat();
+        VkFormat depthFormat = config.device->getPhysicalDevice()->getDepthFormat();
 
         VulkanImageConfig depthImageConfig{};
-        depthImageConfig.physicalDevice = config.physicalDevice;
         depthImageConfig.device = config.device;
         depthImageConfig.commandPool = config.commandPool;
         depthImageConfig.width = extent.width;
@@ -262,7 +261,7 @@ namespace Blink {
         colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription depthAttachmentDescription{};
-        depthAttachmentDescription.format = config.physicalDevice->getDepthFormat();
+        depthAttachmentDescription.format = config.device->getPhysicalDevice()->getDepthFormat();
         depthAttachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
         depthAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

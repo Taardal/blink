@@ -7,15 +7,19 @@
 #include <glm/glm.hpp>
 
 namespace Blink {
+    struct SceneConfig {
+        Keyboard* keyboard = nullptr;
+        LuaEngine* luaEngine = nullptr;
+    };
+
     class Scene {
     private:
-        Keyboard* keyboard;
-        LuaEngine* luaEngine;
+        SceneConfig config;
         entt::registry registry;
         entt::entity player;
 
     public:
-        Scene(Keyboard* keyboard, LuaEngine* luaEngine);
+        explicit Scene(const SceneConfig& config);
 
         ~Scene();
 

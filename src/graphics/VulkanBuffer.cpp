@@ -13,10 +13,13 @@ namespace Blink {
 
         const VkMemoryRequirements& memoryRequirements = config.device->getBufferMemoryRequirements(buffer);
 
+        VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
+        uint32_t memoryTypeIndex = physicalDevice->getMemoryTypeIndex(memoryRequirements, config.memoryProperties);
+
         VkMemoryAllocateInfo memoryAllocateInfo{};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.allocationSize = memoryRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = config.physicalDevice->getMemoryTypeIndex(memoryRequirements, config.memoryProperties);
+        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateMemory(&memoryAllocateInfo, &memory));
         BL_ASSERT_THROW_VK_SUCCESS(config.device->bindBufferMemory(buffer, memory));

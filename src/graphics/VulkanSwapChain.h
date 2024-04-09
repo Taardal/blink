@@ -1,7 +1,6 @@
 #pragma once
 
 #include "VulkanApp.h"
-#include "VulkanPhysicalDevice.h"
 #include "VulkanDevice.h"
 #include "VulkanCommandPool.h"
 #include "VulkanImage.h"
@@ -10,7 +9,6 @@ namespace Blink {
     struct VulkanSwapChainConfig {
         Window* window = nullptr;
         VulkanApp* vulkanApp = nullptr;
-        VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
         VulkanCommandPool* commandPool = nullptr;
         uint32_t frameCount = 0;

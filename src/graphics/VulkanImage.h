@@ -1,6 +1,5 @@
 #pragma once
 
-#include "VulkanPhysicalDevice.h"
 #include "VulkanDevice.h"
 #include "VulkanCommandPool.h"
 #include "VulkanBuffer.h"
@@ -10,7 +9,6 @@
 
 namespace Blink {
     struct VulkanImageConfig {
-        VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
         VulkanCommandPool* commandPool = nullptr;
         VkImage image = nullptr;

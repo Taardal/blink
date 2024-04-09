@@ -6,13 +6,17 @@
 #include <lua.hpp>
 
 namespace Blink {
+    struct LuaEngineConfig {
+        Keyboard* keyboard;
+    };
+
     class LuaEngine {
     private:
+        LuaEngineConfig config;
         lua_State* L;
-        Keyboard* keyboard;
 
     public:
-        explicit LuaEngine(Keyboard* keyboard);
+        explicit LuaEngine(const LuaEngineConfig& config);
 
         ~LuaEngine();
 

@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.h>
 
 namespace Blink {
-
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
@@ -39,7 +38,7 @@ namespace Blink {
         VulkanPhysicalDeviceInfo deviceInfo{};
 
     public:
-        explicit VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config);
+        explicit VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config) noexcept(false);
 
         const std::vector<VkExtensionProperties>& getExtensions() const;
 
@@ -47,7 +46,7 @@ namespace Blink {
 
         const VkPhysicalDeviceProperties& getProperties() const;
 
-        const VkFormat getDepthFormat() const;
+        VkFormat getDepthFormat() const;
 
         const QueueFamilyIndices& getQueueFamilyIndices() const;
 
@@ -57,14 +56,26 @@ namespace Blink {
 
         VkResult createDevice(VkDeviceCreateInfo* createInfo, VkDevice* device) const;
 
-        uint32_t getMemoryTypeIndex(const VkMemoryRequirements& memoryRequirements, VkMemoryPropertyFlags requiredMemoryProperties) const;
+        uint32_t getMemoryTypeIndex(
+            const VkMemoryRequirements& memoryRequirements,
+            VkMemoryPropertyFlags requiredMemoryProperties
+        ) const;
 
     private:
-        VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& physicalDevices, const std::vector<const char*>& requiredExtensions) const;
+        VulkanPhysicalDeviceInfo getMostSuitableDevice(
+            const std::vector<VkPhysicalDevice>& physicalDevices,
+            const std::vector<const char*>& requiredExtensions
+        ) const;
 
-        VulkanPhysicalDeviceInfo getDeviceInfo(VkPhysicalDevice physicalDevice, const std::vector<const char*>& requiredExtensions) const;
+        VulkanPhysicalDeviceInfo getDeviceInfo(
+            VkPhysicalDevice physicalDevice,
+            const std::vector<const char*>& requiredExtensions
+        ) const;
 
-        std::vector<VkExtensionProperties> findExtensions(VkPhysicalDevice physicalDevice, const std::vector<const char*>& requiredExtensions) const;
+        std::vector<VkExtensionProperties> findExtensions(
+            VkPhysicalDevice physicalDevice,
+            const std::vector<const char*>& requiredExtensions
+        ) const;
 
         QueueFamilyIndices findQueueFamilyIndices(VkPhysicalDevice physicalDevice) const;
 
@@ -72,9 +83,15 @@ namespace Blink {
 
         VkFormat findDepthFormat(VkPhysicalDevice physicalDevice) const;
 
-        uint32_t getSuitabilityRating(const VulkanPhysicalDeviceInfo& physicalDeviceInfo, const std::vector<const char*>& requiredExtensions) const;
+        uint32_t getSuitabilityRating(
+            const VulkanPhysicalDeviceInfo& physicalDeviceInfo,
+            const std::vector<const char*>& requiredExtensions
+        ) const;
 
-        bool hasRequiredExtensions(const std::vector<const char*>& extensions, const std::vector<VkExtensionProperties>& availableExtensions) const;
+        bool hasRequiredExtensions(
+            const std::vector<const char*>& extensions,
+            const std::vector<VkExtensionProperties>& availableExtensions
+        ) const;
 
         bool hasRequiredQueueFamilyIndices(const QueueFamilyIndices& queueFamilyIndices) const;
 

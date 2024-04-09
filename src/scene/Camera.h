@@ -6,10 +6,14 @@
 #include <glm/glm.hpp>
 
 namespace Blink {
+    struct CameraConfig {
+        Window* window = nullptr;
+        Keyboard* keyboard = nullptr;
+    };
+
     class Camera {
     private:
-        Window* window;
-        Keyboard* keyboard;
+        CameraConfig config;
         glm::vec3 position = {2.0f, 2.0f, 4.0f};
         glm::vec3 frontDirection = {0.0f, 0.0f, 0.0f};
         glm::vec3 upDirection = {0.0f, 0.0f, 0.0f};
@@ -26,7 +30,7 @@ namespace Blink {
         float farClip = 10.0f;
 
     public:
-        Camera(Window* window, Keyboard* keyboard);
+        explicit Camera(const CameraConfig& config);
 
         glm::mat4 getViewMatrix() const;
 

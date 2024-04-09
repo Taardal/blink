@@ -7,7 +7,6 @@
 namespace Blink {
 
     struct VulkanUniformBufferConfig {
-        VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
         VulkanCommandPool* commandPool = nullptr;
         VkDeviceSize size = 0;

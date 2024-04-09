@@ -2,7 +2,6 @@
 
 #include "VulkanCommandPool.h"
 #include "VulkanDevice.h"
-#include "VulkanPhysicalDevice.h"
 #include "VulkanBuffer.h"
 #include "Vertex.h"
 
@@ -11,7 +10,6 @@
 namespace Blink {
 
     struct VulkanVertexBufferConfig {
-        VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
         VulkanCommandPool* commandPool = nullptr;
         VkDeviceSize size = 0;

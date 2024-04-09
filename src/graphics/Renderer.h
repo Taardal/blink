@@ -30,33 +30,39 @@ namespace Blink {
         glm::mat4 projection;
     };
 
+    struct RendererConfig {
+        std::string applicationName;
+        std::string engineName;
+        FileSystem* fileSystem = nullptr;
+        Window* window = nullptr;
+    };
+
     class Renderer {
     private:
         static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
 
     private:
-        FileSystem* fileSystem;
-        Window* window;
+        RendererConfig config;
         VulkanApp* vulkanApp = nullptr;
         VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
-        VulkanSwapChain* swapChain = nullptr;
         VulkanCommandPool* commandPool = nullptr;
-        VulkanShader* vertexShader = nullptr;
-        VulkanShader* fragmentShader = nullptr;
-        VulkanGraphicsPipeline* graphicsPipeline = nullptr;
+        std::vector<VulkanCommandBuffer> commandBuffers;
+        VulkanSwapChain* swapChain = nullptr;
         VulkanVertexBuffer* vertexBuffer = nullptr;
         VulkanIndexBuffer* indexBuffer = nullptr;
-        std::vector<VulkanCommandBuffer> commandBuffers;
         std::vector<VulkanUniformBuffer*> uniformBuffers;
+        VulkanImage* textureImage;
+        VkSampler textureSampler;
         VkDescriptorSetLayout descriptorSetLayout = nullptr;
         VkDescriptorPool descriptorPool = nullptr;
         std::vector<VkDescriptorSet> descriptorSets;
+        VulkanShader* vertexShader = nullptr;
+        VulkanShader* fragmentShader = nullptr;
+        VulkanGraphicsPipeline* graphicsPipeline = nullptr;
         uint32_t currentFrame = 0;
 
     private:
-        VulkanImage* textureImage;
-        VkSampler textureSampler;
         const std::vector<Vertex> vertices = {
             {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
             {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
@@ -74,22 +80,18 @@ namespace Blink {
         };
 
     public:
-        Renderer(
-            const AppConfig& appConfig,
-            FileSystem* fileSystem,
-            Window* window
-        ) noexcept(false);
+        explicit Renderer(const RendererConfig& config) noexcept(false);
 
         ~Renderer();
 
-        void render(const Frame& frame) noexcept(false);
-
         void waitUntilIdle() const noexcept(false);
+
+        void render(const Frame& frame) noexcept(false);
 
         void onEvent(Event& event);
 
     private:
-        void setUniformData(VulkanUniformBuffer* uniformBuffer, const Frame& frame) const;
+        void setUniformData(const VulkanUniformBuffer* uniformBuffer, const Frame& frame) const;
 
         void bindDescriptorSet(VkDescriptorSet descriptorSet, const VulkanCommandBuffer& commandBuffer) const;
 
@@ -98,6 +100,14 @@ namespace Blink {
         void recompileShaders();
 
         void compileShaders() const;
+
+        void createTextureSampler();
+
+        void createDescriptorSetLayout();
+
+        void createDescriptorPool();
+
+        void createDescriptorSets();
 
         void createGraphicsPipelineObjects();
 

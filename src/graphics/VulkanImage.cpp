@@ -122,7 +122,6 @@ namespace Blink {
 
     void VulkanImage::setData(const Image& image) const {
         VulkanBufferConfig stagingBufferConfig{};
-        stagingBufferConfig.physicalDevice = config.physicalDevice;
         stagingBufferConfig.device = config.device;
         stagingBufferConfig.commandPool = config.commandPool;
         stagingBufferConfig.size = image.size;
@@ -207,10 +206,13 @@ namespace Blink {
     void VulkanImage::initializeImageMemory() {
         VkMemoryRequirements memoryRequirements = config.device->getImageMemoryRequirements(image);
 
+        VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
+        uint32_t memoryTypeIndex = physicalDevice->getMemoryTypeIndex(memoryRequirements, config.memoryProperties);
+
         VkMemoryAllocateInfo memoryAllocateInfo{};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.allocationSize = memoryRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = config.physicalDevice->getMemoryTypeIndex(memoryRequirements, config.memoryProperties);
+        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateMemory(&memoryAllocateInfo, &deviceMemory));
         BL_ASSERT_THROW_VK_SUCCESS(config.device->bindImageMemory(image, deviceMemory));

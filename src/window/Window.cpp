@@ -7,35 +7,32 @@
 #include "GLFW/glfw3.h"
 
 namespace Blink {
-    Window::Window(const AppConfig& config) {
-        bool glfwInitialized = glfwInit();
-        if (!glfwInitialized) {
-            throw std::runtime_error("Could not initialize GLFW");
-        }
+    Window::Window(const WindowConfig& config) {
+        BL_ASSERT_THROW(glfwInit());
         BL_LOG_INFO("Initialized GLFW");
 
         glfwSetErrorCallback(onGlfwError);
 
-        // Because GLFW was originally designed to create an OpenGL context, and we're using Vulkan,
-        // we need to tell it to _not_ create an OpenGL context
+        // GLFW was originally designed to create an OpenGL context.
+        // Because we are using Vulkan, we need to explicitly tell GLFW to _NOT_ create an OpenGL context
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        glfwWindowHint(GLFW_RESIZABLE, config.windowResizable);
-        glfwWindowHint(GLFW_MAXIMIZED, config.windowMaximized);
+        glfwWindowHint(GLFW_RESIZABLE, config.resizable);
+        glfwWindowHint(GLFW_MAXIMIZED, config.maximized);
 
         GLFWmonitor* fullscreenMonitor = nullptr;
         GLFWwindow* sharedWindow = nullptr;
         glfwWindow = glfwCreateWindow(
-            config.windowWidth,
-            config.windowHeight,
-            config.name.c_str(),
+            config.width,
+            config.height,
+            config.title.c_str(),
             fullscreenMonitor,
             sharedWindow
         );
-        if (!glfwWindow) {
-            throw std::runtime_error("Could not create GLFW window");
-        }
+        BL_ASSERT_THROW(glfwWindow != nullptr);
         BL_LOG_INFO("Created GLFW window");
+
+        userPointer.onEvent = config.onEvent;
 
         glfwSetWindowUserPointer(glfwWindow, &userPointer);
         glfwSetKeyCallback(glfwWindow, onKeyChange);
@@ -50,10 +47,6 @@ namespace Blink {
         BL_LOG_INFO("Destroyed GLFW window");
         glfwTerminate();
         BL_LOG_INFO("Terminated GLFW");
-    }
-
-    void Window::setEventListener(const std::function<void(Event&)>& onEvent) {
-        userPointer.onEvent = onEvent;
     }
 
     double Window::update() const {
