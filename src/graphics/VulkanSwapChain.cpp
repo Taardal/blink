@@ -45,6 +45,9 @@ namespace Blink {
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->waitForFence(&currentInFlightFence));
 
+  VulkanDevice* foo = nullptr;
+  foo->waitUntilIdle();
+
         VkResult nextImageResult = config.device->acquireSwapChainImage(swapChain, currentImageAvailableSemaphore, &currentImageIndex);
 
         // VK_ERROR_OUT_OF_DATE_KHR:

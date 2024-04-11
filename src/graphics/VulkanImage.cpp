@@ -28,6 +28,10 @@ namespace Blink {
         return getImage();
     }
 
+    VulkanImage::operator VkImageView() const {
+        return getImageView();
+    }
+
     VkImage VulkanImage::getImage() const {
         return image != nullptr ? image : config.image;
     }

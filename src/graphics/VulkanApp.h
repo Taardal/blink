@@ -1,8 +1,6 @@
 #pragma once
 
-#include "AppConfig.h"
 #include "window/Window.h"
-#include "system/Log.h"
 #include <vulkan/vulkan.h>
 #include <vector>
 

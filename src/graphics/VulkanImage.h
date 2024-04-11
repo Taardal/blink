@@ -37,6 +37,8 @@ namespace Blink {
 
         operator VkImage() const;
 
+        operator VkImageView() const;
+
         VkImage getImage() const;
 
         VkImageView getImageView() const;

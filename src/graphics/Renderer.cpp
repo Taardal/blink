@@ -241,7 +241,6 @@ namespace Blink {
         textureSamplerCreateInfo.maxLod = 0.0f;
 
         BL_ASSERT_THROW_VK_SUCCESS(device->createSampler(&textureSamplerCreateInfo, &textureSampler));
-
     }
 
     void Renderer::createDescriptorSetLayout() {
@@ -255,7 +254,6 @@ namespace Blink {
         samplerLayoutBinding.binding = 1;
         samplerLayoutBinding.descriptorCount = 1;
         samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
@@ -285,19 +283,19 @@ namespace Blink {
         poolInfo.maxSets = (uint32_t) MAX_FRAMES_IN_FLIGHT;
 
         BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorPool(&poolInfo, &descriptorPool));
-
     }
 
     void Renderer::createDescriptorSets() {
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+        descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(descriptorSets.size(), descriptorSetLayout);
 
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.descriptorPool = descriptorPool;
-        descriptorSetAllocateInfo.descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+        descriptorSetAllocateInfo.descriptorSetCount = descriptorSets.size();
         descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
 
-        descriptorSets.resize(descriptorSetAllocateInfo.descriptorSetCount);
         BL_ASSERT_THROW_VK_SUCCESS(device->allocateDescriptorSets(&descriptorSetAllocateInfo, descriptorSets.data()));
 
         for (size_t i = 0; i < descriptorSets.size(); i++) {

@@ -1,15 +1,30 @@
 #pragma once
 
-#include <numbers>
+#include "graphics/VulkanImage.h"
+#include "graphics/VulkanDevice.h"
+#include "graphics/VulkanCommandPool.h"
+#include "system/FileSystem.h"
 
 namespace Blink {
+    struct TextureConfig {
+        std::string path = "";
+        FileSystem* fileSystem = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+    };
+
     class Texture {
     private:
-        uint32_t id = 0;
+        TextureConfig config;
+        VulkanImage* vulkanImage = nullptr;
 
     public:
-        bool initialize();
+        explicit Texture(const TextureConfig& config);
 
-        void terminate() const;
+        operator VulkanImage*() const;
+
+        operator VkImage() const;
+
+        operator VkImageView() const;
     };
 }
