@@ -6,7 +6,7 @@ namespace Blink {
     VulkanDevice::VulkanDevice(const VulkanDeviceConfig& config) noexcept(false) : config(config) {
         const QueueFamilyIndices& queueFamilyIndices = config.physicalDevice->getQueueFamilyIndices();
 
-        BL_TRY(createDevice(queueFamilyIndices));
+        BL_EXECUTE_THROW(createDevice(queueFamilyIndices));
 
         this->graphicsQueue = getDeviceQueue(queueFamilyIndices.graphicsFamily.value());
         BL_ASSERT_THROW(graphicsQueue != nullptr);

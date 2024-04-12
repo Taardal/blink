@@ -45,11 +45,11 @@ namespace Blink {
             debugMessengerCreateInfo = getDebugMessengerCreateInfo();
         }
 
-        BL_TRY(createInstance(requiredExtensions, validationLayers, debugMessengerCreateInfo));
+        BL_EXECUTE_THROW(createInstance(requiredExtensions, validationLayers, debugMessengerCreateInfo));
         if (config.validationLayersEnabled) {
-            BL_TRY(createDebugMessenger(debugMessengerCreateInfo));
+            BL_EXECUTE_THROW(createDebugMessenger(debugMessengerCreateInfo));
         }
-        BL_TRY(createSurface());
+        BL_EXECUTE_THROW(createSurface());
     }
 
     VulkanApp::~VulkanApp() {

@@ -3,12 +3,12 @@
 namespace Blink {
 
     VulkanSwapChain::VulkanSwapChain(const VulkanSwapChainConfig& config) : config(config) {
-        BL_TRY(createSwapChain());
-        BL_TRY(createColorImages());
-        BL_TRY(createDepthImage());
-        BL_TRY(createRenderPass());
-        BL_TRY(createFramebuffers());
-        BL_TRY(createSyncObjects());
+        createSwapChain();
+        createColorImages();
+        createDepthImage();
+        createRenderPass();
+        createFramebuffers();
+        createSyncObjects();
     }
 
     VulkanSwapChain::~VulkanSwapChain() {
@@ -45,9 +45,6 @@ namespace Blink {
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->waitForFence(&currentInFlightFence));
 
-  VulkanDevice* foo = nullptr;
-  foo->waitUntilIdle();
-
         VkResult nextImageResult = config.device->acquireSwapChainImage(swapChain, currentImageAvailableSemaphore, &currentImageIndex);
 
         // VK_ERROR_OUT_OF_DATE_KHR:
@@ -64,7 +61,6 @@ namespace Blink {
         }
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->resetFence(&currentInFlightFence));
-
         return true;
     }
 
@@ -146,10 +142,10 @@ namespace Blink {
 
         config.device->getPhysicalDevice()->updateSwapChainInfo();
 
-        BL_TRY(createSwapChain());
-        BL_TRY(createColorImages());
-        BL_TRY(createDepthImage());
-        BL_TRY(createFramebuffers());
+        createSwapChain();
+        createColorImages();
+        createDepthImage();
+        createFramebuffers();
 
         BL_LOG_INFO("Recreated swap chain");
     }
@@ -240,8 +236,8 @@ namespace Blink {
         depthImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         depthImageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-        BL_TRY(depthImage = new VulkanImage(depthImageConfig));
-        BL_TRY(depthImage->setLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL));
+        depthImage = new VulkanImage(depthImageConfig);
+        depthImage->setLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
 
     void VulkanSwapChain::destroyDepthImage() const {
@@ -349,6 +345,8 @@ namespace Blink {
     }
 
     void VulkanSwapChain::createSyncObjects() {
+        BL_THROW("NOTICE ME");
+
         imageAvailableSemaphores.resize(imageCount);
         renderFinishedSemaphores.resize(imageCount);
         inFlightFences.resize(imageCount);

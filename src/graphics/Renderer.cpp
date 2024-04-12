@@ -11,19 +11,19 @@ namespace Blink {
         vulkanAppConfig.applicationName = config.applicationName;
         vulkanAppConfig.engineName = config.engineName;
         vulkanAppConfig.validationLayersEnabled = true;
-        BL_TRY(vulkanApp = new VulkanApp(vulkanAppConfig));
+        vulkanApp = new VulkanApp(vulkanAppConfig);
 
         VulkanPhysicalDeviceConfig physicalDeviceConfig{};
         physicalDeviceConfig.vulkanApp = vulkanApp;
-        BL_TRY(physicalDevice = new VulkanPhysicalDevice(physicalDeviceConfig));
+        physicalDevice = new VulkanPhysicalDevice(physicalDeviceConfig);
 
         VulkanDeviceConfig deviceConfig{};
         deviceConfig.physicalDevice = physicalDevice;
-        BL_TRY(device = new VulkanDevice(deviceConfig));
+        device = new VulkanDevice(deviceConfig);
 
         VulkanCommandPoolConfig commandPoolConfig{};
         commandPoolConfig.device = device;
-        BL_TRY(commandPool = new VulkanCommandPool(commandPoolConfig));
+        commandPool = new VulkanCommandPool(commandPoolConfig);
 
         commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
         BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffers(&commandBuffers));
@@ -33,28 +33,28 @@ namespace Blink {
         swapChainConfig.vulkanApp = vulkanApp;
         swapChainConfig.device = device;
         swapChainConfig.commandPool = commandPool;
-        BL_TRY(swapChain = new VulkanSwapChain(swapChainConfig));
+        swapChain = new VulkanSwapChain(swapChainConfig);
 
         VulkanVertexBufferConfig vertexBufferConfig{};
         vertexBufferConfig.device = device;
         vertexBufferConfig.commandPool = commandPool;
         vertexBufferConfig.size = sizeof(vertices[0]) * vertices.size();
-        BL_TRY(vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig));
-        BL_TRY(vertexBuffer->setData(vertices));
+        vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
+        vertexBuffer->setData(vertices);
 
         VulkanIndexBufferConfig indexBufferConfig{};
         indexBufferConfig.device = device;
         indexBufferConfig.commandPool = commandPool;
         indexBufferConfig.size = sizeof(indices[0]) * indices.size();
-        BL_TRY(indexBuffer = new VulkanIndexBuffer(indexBufferConfig));
-        BL_TRY(indexBuffer->setData(indices));
+        indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
+        indexBuffer->setData(indices);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             VulkanUniformBufferConfig uniformBufferConfig{};
             uniformBufferConfig.device = device;
             uniformBufferConfig.commandPool = commandPool;
             uniformBufferConfig.size = sizeof(UniformBufferObject);
-            BL_TRY(uniformBuffers.push_back(new VulkanUniformBuffer(uniformBufferConfig)));
+            uniformBuffers.push_back(new VulkanUniformBuffer(uniformBufferConfig));
         }
 
         Image image = config.fileSystem->readImage("textures/sculpture.png");
@@ -69,18 +69,18 @@ namespace Blink {
         textureImageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
         textureImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-        BL_TRY(textureImage = new VulkanImage(textureImageConfig));
-        BL_TRY(textureImage->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL));
-        BL_TRY(textureImage->setData(image));
-        BL_TRY(textureImage->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
+        textureImage = new VulkanImage(textureImageConfig);
+        textureImage->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        textureImage->setData(image);
+        textureImage->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         image.free();
 
-        BL_TRY(createTextureSampler());
-        BL_TRY(createDescriptorSetLayout());
-        BL_TRY(createDescriptorPool());
-        BL_TRY(createDescriptorSets());
-        BL_TRY(createGraphicsPipelineObjects());
+        createTextureSampler();
+        createDescriptorSetLayout();
+        createDescriptorPool();
+        createDescriptorSets();
+        createGraphicsPipelineObjects();
     }
 
     Renderer::~Renderer() {
@@ -205,7 +205,7 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilIdle());
         compileShaders();
         destroyGraphicsPipelineObjects();
-        BL_TRY(createGraphicsPipelineObjects());
+        createGraphicsPipelineObjects();
         BL_LOG_INFO("Reloaded shaders");
     }
 
@@ -337,12 +337,12 @@ namespace Blink {
         VulkanShaderConfig vertexShaderConfig{};
         vertexShaderConfig.device = device;
         vertexShaderConfig.bytes = config.fileSystem->readBytes("shaders/shader.vert.spv");
-        BL_TRY(vertexShader = new VulkanShader(vertexShaderConfig));
+        vertexShader = new VulkanShader(vertexShaderConfig);
 
         VulkanShaderConfig fragmentShaderConfig{};
         fragmentShaderConfig.device = device;
         fragmentShaderConfig.bytes = config.fileSystem->readBytes("shaders/shader.frag.spv");
-        BL_TRY(fragmentShader = new VulkanShader(fragmentShaderConfig));
+        fragmentShader = new VulkanShader(fragmentShaderConfig);
 
         VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
         graphicsPipelineConfig.device = device;
@@ -350,7 +350,7 @@ namespace Blink {
         graphicsPipelineConfig.vertexShader = vertexShader;
         graphicsPipelineConfig.fragmentShader = fragmentShader;
         graphicsPipelineConfig.descriptorSetLayout = descriptorSetLayout;
-        BL_TRY(graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig));
+        graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig);
     }
 
     void Renderer::destroyGraphicsPipelineObjects() const {

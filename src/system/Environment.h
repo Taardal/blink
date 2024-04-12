@@ -8,6 +8,8 @@
     #endif
 #elif defined(__APPLE__) || defined(__MACH__)
     #define BL_PLATFORM_MACOS
+#elif defined(__linux__) || defined(__unix__)
+    #define BL_PLATFORM_LINUX
 #else
     #error "Unknown platform"
 #endif

@@ -11,14 +11,15 @@
 #define BL_FUNCTION_NAME __func__
 #define BL_LINE_NUMBER __LINE__
 
-#define BL_TAG(message) ::Blink::Log::formatMessage(BL_FILENAME, BL_FUNCTION_NAME, BL_LINE_NUMBER, message)
+#define BL_TAG() ::Blink::Log::tag(BL_FILENAME, BL_FUNCTION_NAME, BL_LINE_NUMBER)
+#define BL_TAG_MESSAGE(message) ::Blink::Log::tagMessage(BL_FILENAME, BL_FUNCTION_NAME, BL_LINE_NUMBER, message)
 
-#define BL_LOG_TRACE(message, ...) ::Blink::Log::trace(BL_TAG(message), ##__VA_ARGS__)
-#define BL_LOG_DEBUG(message, ...) ::Blink::Log::debug(BL_TAG(message), ##__VA_ARGS__)
-#define BL_LOG_INFO(message, ...) ::Blink::Log::info(BL_TAG(message), ##__VA_ARGS__)
-#define BL_LOG_WARN(message, ...) ::Blink::Log::warn(BL_TAG(message), ##__VA_ARGS__)
-#define BL_LOG_ERROR(message, ...) ::Blink::Log::error(BL_TAG(message), ##__VA_ARGS__)
-#define BL_LOG_CRITICAL(message, ...) ::Blink::Log::critical(BL_TAG(message), ##__VA_ARGS__)
+#define BL_LOG_TRACE(message, ...) ::Blink::Log::trace(BL_TAG_MESSAGE(message), ##__VA_ARGS__)
+#define BL_LOG_DEBUG(message, ...) ::Blink::Log::debug(BL_TAG_MESSAGE(message), ##__VA_ARGS__)
+#define BL_LOG_INFO(message, ...) ::Blink::Log::info(BL_TAG_MESSAGE(message), ##__VA_ARGS__)
+#define BL_LOG_WARN(message, ...) ::Blink::Log::warn(BL_TAG_MESSAGE(message), ##__VA_ARGS__)
+#define BL_LOG_ERROR(message, ...) ::Blink::Log::error(BL_TAG_MESSAGE(message), ##__VA_ARGS__)
+#define BL_LOG_CRITICAL(message, ...) ::Blink::Log::critical(BL_TAG_MESSAGE(message), ##__VA_ARGS__)
 
 namespace Blink {
     enum class LogLevel {
@@ -33,6 +34,12 @@ namespace Blink {
 
     class Log {
     public:
+        static void setLevel(LogLevel level);
+
+        static std::string tag(const char* filename, const char* functionName, uint32_t lineNumber);
+
+        static std::string tagMessage(const char* filename, const char* functionName, uint32_t lineNumber, std::string_view message);
+
         template<typename... T>
         static void trace(std::string_view message, const T&... args) {
             spdlog::trace(message, args...);
@@ -79,15 +86,6 @@ namespace Blink {
                 trace(message, args...);
             }
         }
-
-        static void setLevel(LogLevel level);
-
-        static std::string formatMessage(
-            const char* filename,
-            const char* functionName,
-            uint32_t lineNumber,
-            std::string_view message
-        );
 
     private:
         static spdlog::level::level_enum getSpdLogLevel(LogLevel level);

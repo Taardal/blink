@@ -3,20 +3,44 @@
 #include "Log.h"
 #include <iostream>
 
+#define BL_THROW(message) throw Error(message, BL_TAG())
+
+#define BL_ASSERT_THROW(expression) \
+    if (expression) {\
+        /* Continue */\
+    } else {\
+        throw Error(std::string("Assertion failed: ") + #expression, BL_TAG());\
+    }
+
+#define BL_EXECUTE_THROW(expression) \
+    try {\
+        expression;\
+    } catch (const Error& e) { \
+        throw Error(#expression, BL_TAG(), std::make_shared<Error>(e));\
+    } catch (const std::exception& e) {\
+        throw Error(#expression, BL_TAG(), std::make_shared<Error>(e.what()));\
+    }
+
 namespace Blink {
-    class Error : public std::exception {
+    struct StacktraceEntry {
+        std::string message;
+        std::string tag;
+    };
+
+    class Error final : public std::exception {
     private:
-        std::string errorMessage;
+        std::string message;
+        std::string tag;
         std::shared_ptr<Error> previousError = nullptr;
 
     public:
-        Error(const std::string& message, std::shared_ptr<Error> previousError = nullptr);
+        Error(const std::string& message, const std::string& tag = "", const std::shared_ptr<Error>& previousError = nullptr);
 
         const char* what() const noexcept override;
 
-        std::vector<std::string> getStack() const;
+        std::vector<StacktraceEntry> getStacktrace() const;
 
-        void printStack(::Blink::LogLevel logLevel = LogLevel::Error) const;
+        void printStacktrace() const;
     };
 
 }

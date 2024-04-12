@@ -93,6 +93,8 @@ add_executable(
         ${SRC_DIR}/system/Log.h
         ${SRC_DIR}/system/Random.cpp
         ${SRC_DIR}/system/Random.h
+        ${SRC_DIR}/system/Signal.cpp
+        ${SRC_DIR}/system/Signal.h
         ${SRC_DIR}/system/Uuid.cpp
         ${SRC_DIR}/system/Uuid.h
         ${SRC_DIR}/utils/size.h

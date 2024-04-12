@@ -10,14 +10,14 @@ namespace Blink {
             initialized = true;
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Initialization error");
-            e.printStack();
+            e.printStacktrace();
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Initialization error: {}", e.what());
         }
     }
 
     void App::initialize() {
-        fileSystem = new FileSystem();
+        BL_EXECUTE_THROW(fileSystem = new FileSystem());
 
         WindowConfig windowConfig{};
         windowConfig.title = config.name;
@@ -28,32 +28,32 @@ namespace Blink {
         windowConfig.onEvent = [this](Event& event) {
             onEvent(event);
         };
-        BL_TRY(window = new Window(windowConfig));
+        BL_EXECUTE_THROW(window = new Window(windowConfig));
 
         KeyboardConfig keyboardConfig{};
         keyboardConfig.window = window;
-        BL_TRY(keyboard = new Keyboard(keyboardConfig));
+        BL_EXECUTE_THROW(keyboard = new Keyboard(keyboardConfig));
 
         RendererConfig rendererConfig{};
         rendererConfig.applicationName = config.name;
         rendererConfig.engineName = config.name;
         rendererConfig.fileSystem = fileSystem;
         rendererConfig.window = window;
-        BL_TRY(renderer = new Renderer(rendererConfig));
+        BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
 
         LuaEngineConfig luaEngineConfig{};
         luaEngineConfig.keyboard = keyboard;
-        BL_TRY(luaEngine = new LuaEngine(luaEngineConfig));
+        BL_EXECUTE_THROW(luaEngine = new LuaEngine(luaEngineConfig));
 
         CameraConfig cameraConfig{};
         cameraConfig.window = window;
         cameraConfig.keyboard = keyboard;
-        BL_TRY(camera = new Camera(cameraConfig));
+        BL_EXECUTE_THROW(camera = new Camera(cameraConfig));
 
         SceneConfig sceneConfig{};
         sceneConfig.keyboard = keyboard;
         sceneConfig.luaEngine = luaEngine;
-        BL_TRY(scene = new Scene(sceneConfig));
+        BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
     }
 
     App::~App() {
@@ -78,7 +78,7 @@ namespace Blink {
             }
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Runtime error");
-            e.printStack();
+            e.printStacktrace();
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Runtime error: {}", e.what());
         }

@@ -11,8 +11,7 @@ namespace Blink {
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createBuffer(&bufferCreateInfo, &buffer));
 
-        VulkanDevice* device = nullptr;
-        const VkMemoryRequirements& memoryRequirements = device->getBufferMemoryRequirements(buffer);
+        const VkMemoryRequirements& memoryRequirements = config.device->getBufferMemoryRequirements(buffer);
 
         VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
         uint32_t memoryTypeIndex = physicalDevice->getMemoryTypeIndex(memoryRequirements, config.memoryProperties);
