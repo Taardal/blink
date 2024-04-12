@@ -4,7 +4,7 @@
 using namespace Blink;
 
 int main() {
-    addSignalHandlers();
+    addErrorSignalHandlers();
 
     Log::setLevel(LogLevel::Debug);
 

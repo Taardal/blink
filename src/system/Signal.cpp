@@ -1,20 +1,20 @@
 #include "Signal.h"
 
 namespace Blink {
-    void addSignalHandlers() {
+    void addErrorSignalHandlers() {
         // (Segmentation fault): Invalid memory access.
-        signal(SIGSEGV, onSignal);
+        signal(SIGSEGV, onErrorSignal);
         // (Abort): Abnormal termination initiated by the program itself.
-        signal(SIGABRT, onSignal);
+        signal(SIGABRT, onErrorSignal);
         // (Illegal instruction): Attempt to execute an illegal instruction.
-        signal(SIGILL, onSignal);
+        signal(SIGILL, onErrorSignal);
         // (Floating-point exception): Arithmetic exceptions like division by zero or floating-point overflow.
-        signal(SIGFPE, onSignal);
+        signal(SIGFPE, onErrorSignal);
         // (Bus error): Attempt to access memory that the CPU cannot physically address.
-        signal(SIGBUS, onSignal);
+        signal(SIGBUS, onErrorSignal);
     }
 
-    void onSignal(int signal) {
+    void onErrorSignal(int signal) {
         std::string signalName = getSignalName(signal);
         fprintf(stderr, "Signal [%s]:\n", signalName.c_str());
         fprintf(stderr, "Stacktrace:\n");
@@ -62,7 +62,7 @@ namespace Blink {
         }
         for (int i = 0; i < stackSize; i++) {
             ::std::string symbol(symbols[i]);
-            demangleUnixSymbol(symbol);
+            demangleUnixSymbol(&symbol);
             fprintf(stderr, "%s\n", symbol.c_str());
         }
         free(symbols);
@@ -73,32 +73,26 @@ namespace Blink {
     // We want to "demangle" (i.e. decode) this information to make it human-readable.
     //
     // Mangled symbol:
-    // ---
-    // 10  blink  0x0000000102cbfe5c  _ZN5Blink3App10initializeEv + 1960
+    //   10  blink  0x0000000102cbfe5c  _ZN5Blink3App10initializeEv + 1960
     //
     // Demangled symbol:
-    // ---
-    // 10  blink  0x00000001028b3e50  Blink::App::initialize() + 1960
+    //   10  blink  0x00000001028b3e50  Blink::App::initialize() + 1960
     //
     // Segments:
-    // ---
-    // [stack index]
-    // [binary name]
-    // [return address (in hexadecimal)]
-    // [function name + offset into the function (in hexadecimal)]
-    void demangleUnixSymbol(::std::string& symbol) {
+    //   [stack index]  [binary name]  [return address (in hexadecimal)]  [function name] + [offset into the function (in hexadecimal)]
+    void demangleUnixSymbol(::std::string* symbol) {
 
         // Find segment before the mangled function name
-        size_t returnAddressStartIndex = symbol.find("0x");
+        size_t returnAddressStartIndex = symbol->find("0x");
         size_t returnAddressEndIndex = returnAddressStartIndex + 18; // 18 = return address length
 
         // Find function name start and end
         size_t functionNameStartIndex = returnAddressEndIndex + 1; // 1 = space
-        size_t functionNameEndIndex = symbol.find(" + ");
+        size_t functionNameEndIndex = symbol->find(" + ");
         size_t functionNameLength = functionNameEndIndex - functionNameStartIndex;
 
         // Extract the mangled function name
-        ::std::string functionName = symbol.substr(functionNameStartIndex, functionNameLength);
+        ::std::string functionName = symbol->substr(functionNameStartIndex, functionNameLength);
 
         // Demangling status:
         // [0] The demangling operation succeeded
@@ -119,7 +113,7 @@ namespace Blink {
 
         bool successfullyDemangled = demanglingStatus == 0 && demangledFunctionName != nullptr;
         if (successfullyDemangled) {
-            symbol.replace(functionNameStartIndex, functionNameLength, demangledFunctionName);
+            symbol->replace(functionNameStartIndex, functionNameLength, demangledFunctionName);
         }
 
         free(demangledFunctionName);

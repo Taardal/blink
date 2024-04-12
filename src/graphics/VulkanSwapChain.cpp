@@ -345,8 +345,6 @@ namespace Blink {
     }
 
     void VulkanSwapChain::createSyncObjects() {
-        BL_THROW("NOTICE ME");
-
         imageAvailableSemaphores.resize(imageCount);
         renderFinishedSemaphores.resize(imageCount);
         inFlightFences.resize(imageCount);
