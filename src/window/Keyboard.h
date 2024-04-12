@@ -5,15 +5,6 @@
 namespace Blink {
     enum class Key {
         None = 0,
-        Space = GLFW_KEY_SPACE,
-        Escape = GLFW_KEY_ESCAPE,
-        Enter = GLFW_KEY_ENTER,
-        Tab = GLFW_KEY_TAB,
-        Backspace = GLFW_KEY_BACKSPACE,
-        Up = GLFW_KEY_UP,
-        Down = GLFW_KEY_DOWN,
-        Left = GLFW_KEY_LEFT,
-        Right = GLFW_KEY_RIGHT,
         A = GLFW_KEY_A,
         B = GLFW_KEY_B,
         C = GLFW_KEY_C,
@@ -58,17 +49,42 @@ namespace Blink {
         Numpad_7 = GLFW_KEY_KP_7,
         Numpad_8 = GLFW_KEY_KP_8,
         Numpad_9 = GLFW_KEY_KP_9,
+        F1 = GLFW_KEY_F1,
+        F2 = GLFW_KEY_F2,
+        F3 = GLFW_KEY_F3,
+        F4 = GLFW_KEY_F4,
+        F5 = GLFW_KEY_F5,
+        F6 = GLFW_KEY_F6,
+        F7 = GLFW_KEY_F7,
+        F8 = GLFW_KEY_F8,
+        F9 = GLFW_KEY_F9,
+        F10 = GLFW_KEY_F10,
+        F11 = GLFW_KEY_F11,
+        F12 = GLFW_KEY_F12,
+        Space = GLFW_KEY_SPACE,
+        Escape = GLFW_KEY_ESCAPE,
+        Enter = GLFW_KEY_ENTER,
+        Tab = GLFW_KEY_TAB,
+        Backspace = GLFW_KEY_BACKSPACE,
+        Up = GLFW_KEY_UP,
+        Down = GLFW_KEY_DOWN,
+        Left = GLFW_KEY_LEFT,
+        Right = GLFW_KEY_RIGHT,
+    };
+
+    struct KeyboardConfig {
+        Window* window = nullptr;
     };
 
     class Keyboard {
     private:
-        Window* window;
+        KeyboardConfig config;
         std::vector<Key> keys;
         std::unordered_map<std::string, Key> keysByName;
         std::unordered_map<Key, std::string> namesByKey;
 
     public:
-        explicit Keyboard(Window* window);
+        explicit Keyboard(const KeyboardConfig& config);
 
         const std::vector<Key>& getKeys() const {
             return keys;

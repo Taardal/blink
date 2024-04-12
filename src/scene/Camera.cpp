@@ -2,8 +2,8 @@
 #include "scene/Camera.h"
 
 namespace Blink {
-    Camera::Camera(Window* window, Keyboard* keyboard) : window(window), keyboard(keyboard) {
-        WindowSize windowSize = window->getSizeInPixels();
+    Camera::Camera(const CameraConfig& config) : config(config) {
+        WindowSize windowSize = config.window->getSizeInPixels();
         aspectRatio = (float) windowSize.width / (float) windowSize.height;
         updateDirections();
     }
@@ -24,41 +24,41 @@ namespace Blink {
 
     void Camera::processKeyboardInput(float timestep) {
         float velocity = moveSpeed * timestep;
-        if (keyboard->isPressed(Key::W)) {
+        if (config.keyboard->isPressed(Key::W)) {
             position += frontDirection * velocity;
         }
-        if (keyboard->isPressed(Key::S)) {
+        if (config.keyboard->isPressed(Key::S)) {
             position -= frontDirection * velocity;
         }
-        if (keyboard->isPressed(Key::A)) {
+        if (config.keyboard->isPressed(Key::A)) {
             position -= rightDirection * velocity;
         }
-        if (keyboard->isPressed(Key::D)) {
+        if (config.keyboard->isPressed(Key::D)) {
             position += rightDirection * velocity;
         }
-        if (keyboard->isPressed(Key::Space)) {
+        if (config.keyboard->isPressed(Key::Space)) {
             position += worldUpDirection * velocity;
         }
-        if (keyboard->isPressed(Key::C)) {
+        if (config.keyboard->isPressed(Key::C)) {
             position -= worldUpDirection * velocity;
         }
 
-        if (keyboard->isPressed(Key::Up)) {
+        if (config.keyboard->isPressed(Key::Up)) {
             pitch += lookSpeed;
         }
-        if (keyboard->isPressed(Key::Down)) {
+        if (config.keyboard->isPressed(Key::Down)) {
             pitch -= lookSpeed;
         }
-        if (keyboard->isPressed(Key::Left)) {
+        if (config.keyboard->isPressed(Key::Left)) {
             yaw -= lookSpeed;
         }
-        if (keyboard->isPressed(Key::Right)) {
+        if (config.keyboard->isPressed(Key::Right)) {
             yaw += lookSpeed;
         }
-        if (keyboard->isPressed(Key::Q)) {
+        if (config.keyboard->isPressed(Key::Q)) {
             roll += lookSpeed;
         }
-        if (keyboard->isPressed(Key::E)) {
+        if (config.keyboard->isPressed(Key::E)) {
             roll -= lookSpeed;
         }
         // Clamp pitch to prevent camera flipping

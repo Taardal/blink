@@ -2,28 +2,30 @@
 
 #include "VulkanCommandPool.h"
 #include "VulkanDevice.h"
-#include "VulkanPhysicalDevice.h"
 #include "VulkanBuffer.h"
 
 namespace Blink {
 
+    struct VulkanIndexBufferConfig {
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+        VkDeviceSize size = 0;
+    };
+
     class VulkanIndexBuffer {
     private:
-        VulkanCommandPool* commandPool;
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
+        VulkanIndexBufferConfig config;
         VulkanBuffer* buffer = nullptr;
+        VulkanBuffer* stagingBuffer = nullptr;
 
     public:
-        VulkanIndexBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        explicit VulkanIndexBuffer(const VulkanIndexBufferConfig& config) noexcept(false);
 
         ~VulkanIndexBuffer();
 
         operator VkBuffer() const;
 
-        bool initialize(const std::vector<uint16_t>& indices);
-
-        void terminate();
+        void setData(const std::vector<uint16_t>& indices) const noexcept(false);
 
         void bind(VkCommandBuffer commandBuffer) const;
     };

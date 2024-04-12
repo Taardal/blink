@@ -11,31 +11,47 @@ namespace Blink {
         uint32_t queueFamilyIndex = -1;
     };
 
+    struct VulkanDeviceConfig {
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+    };
+
     class VulkanDevice {
     private:
-        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDeviceConfig config;
         VkDevice device = nullptr;
         VkQueue graphicsQueue = nullptr;
         VkQueue presentQueue = nullptr;
 
     public:
-        explicit VulkanDevice(VulkanPhysicalDevice* physicalDevice);
+        explicit VulkanDevice(const VulkanDeviceConfig& config) noexcept(false);
 
         ~VulkanDevice();
 
         operator VkDevice() const;
 
+        VulkanPhysicalDevice* getPhysicalDevice() const;
+
         VkQueue getGraphicsQueue() const;
+
+        VkResult submitToGraphicsQueue(VkSubmitInfo* submitInfo, VkFence fence = nullptr) const;
+
+        VkResult waitUntilGraphicsQueueIsIdle() const;
 
         VkQueue getPresentQueue() const;
 
-        void waitUntilIdle() const;
+        VkResult submitToPresentQueue(VkPresentInfoKHR* presentInfo) const;
+
+        VkResult waitUntilPresentQueueIsIdle() const;
+
+        VkResult waitUntilIdle() const;
+
+        VkResult waitUntilQueueIsIdle(VkQueue queue) const;
 
         VkResult createSwapChain(VkSwapchainCreateInfoKHR* createInfo, VkSwapchainKHR* swapchain) const;
 
         void destroySwapChain(VkSwapchainKHR swapChain) const;
 
-        void getSwapChainImages(uint32_t* imageCount, std::vector<VkImage>* images, VkSwapchainKHR swapChain) const;
+        VkResult getSwapChainImages(VkSwapchainKHR swapChain, uint32_t* imageCount, std::vector<VkImage>* images) const;
 
         VkResult createImageView(VkImageViewCreateInfo* createInfo, VkImageView* imageView) const;
 
@@ -77,11 +93,11 @@ namespace Blink {
 
         void destroyFence(VkFence fence) const;
 
-        void waitForFence(VkFence* fence) const;
+        VkResult waitForFence(VkFence* fence) const;
 
-        void resetFences(uint32_t count, VkFence* fences) const;
+        VkResult resetFences(uint32_t count, VkFence* fences) const;
 
-        void resetFence(VkFence* fence) const;
+        VkResult resetFence(VkFence* fence) const;
 
         VkResult acquireSwapChainImage(VkSwapchainKHR swapChain, VkSemaphore semaphore, uint32_t* imageIndex) const;
 
@@ -95,9 +111,9 @@ namespace Blink {
 
         void freeMemory(VkDeviceMemory memory) const;
 
-        void bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const;
+        VkResult bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const;
 
-        void mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const;
+        VkResult mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const;
 
         void unmapMemory(VkDeviceMemory memory) const;
 
@@ -117,7 +133,7 @@ namespace Blink {
 
         VkMemoryRequirements getImageMemoryRequirements(VkImage image) const;
 
-        void bindImageMemory(VkImage image, VkDeviceMemory memory) const;
+        VkResult bindImageMemory(VkImage image, VkDeviceMemory memory) const;
 
         void destroyImage(VkImage image) const;
 
@@ -127,10 +143,10 @@ namespace Blink {
 
     private:
 
-        bool createDevice(const QueueFamilyIndices& queueFamilyIndices);
+        void createDevice(const QueueFamilyIndices& queueFamilyIndices) noexcept(false);
 
         void destroyDevice() const;
 
-        VkQueue getDeviceQueue(uint32_t queueFamilyIndex, uint32_t queueIndex = 0) const;
+        VkQueue getDeviceQueue(uint32_t queueFamilyIndex) const;
     };
 }

@@ -1,55 +1,95 @@
 #pragma once
 
-#include "VulkanDevice.h"
-#include "VulkanPhysicalDevice.h"
 #include "VulkanApp.h"
+#include "VulkanDevice.h"
+#include "VulkanCommandPool.h"
+#include "VulkanImage.h"
 
 namespace Blink {
+    struct VulkanSwapChainConfig {
+        Window* window = nullptr;
+        VulkanApp* vulkanApp = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+        uint32_t frameCount = 0;
+    };
+
     class VulkanSwapChain {
     private:
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
-        VulkanApp* vulkan;
-        Window* window;
+        VulkanSwapChainConfig config;
         VkSurfaceFormatKHR surfaceFormat{};
         VkPresentModeKHR presentMode{};
         VkExtent2D extent{};
-        VkSwapchainKHR swapChain = VK_NULL_HANDLE;
-        std::vector<VkImage> images;
-        std::vector<VkImageView> imageViews;
+        uint32_t imageCount = 0;
+        VkSwapchainKHR swapChain = nullptr;
+        std::vector<VulkanImage*> colorImages;
+        VulkanImage* depthImage = nullptr;
+        VkRenderPass renderPass = nullptr;
+        std::array<VkClearValue, 2> clearValues;
+        std::vector<VkFramebuffer> framebuffers;
+        std::vector<VkSemaphore> imageAvailableSemaphores;
+        std::vector<VkSemaphore> renderFinishedSemaphores;
+        std::vector<VkFence> inFlightFences;
+        uint32_t currentImageIndex = 0;
+        VkFence currentInFlightFence = nullptr;
+        VkSemaphore currentImageAvailableSemaphore = nullptr;
+        VkSemaphore currentRenderFinishedSemaphore = nullptr;
+        bool windowResized = false;
 
     public:
-        VulkanSwapChain(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice, VulkanApp* vulkan, Window* window);
+        explicit VulkanSwapChain(const VulkanSwapChainConfig& config) noexcept(false);
 
         ~VulkanSwapChain();
 
         operator VkSwapchainKHR() const;
 
-        const VkSurfaceFormatKHR& getSurfaceFormat() const;
+        VkRenderPass getRenderPass() const;
 
         const VkExtent2D& getExtent() const;
 
-        const std::vector<VkImageView>& getImageViews() const;
+        void onEvent(Event& event);
 
-        bool initialize();
+        bool beginFrame(uint32_t frameIndex) noexcept(false);
 
-        void terminate();
+        void beginRenderPass(const VulkanCommandBuffer& commandBuffer) const;
 
-        VkResult acquireNextImage(VkSemaphore semaphore, uint32_t* imageIndex) const;
+        void endRenderPass(const VulkanCommandBuffer& commandBuffer) const;
+
+        void endFrame(const VulkanCommandBuffer& commandBuffer) noexcept(false);
 
     private:
-        bool createSwapChain(uint32_t imageCount, const SwapChainInfo& swapChainInfo, const QueueFamilyIndices& queueFamilyIndices, VkSurfaceKHR surface);
+        void recreateSwapChain() noexcept(false);
 
-        VkSurfaceFormatKHR chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const;
+        void createSwapChain() noexcept(false);
 
-        VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) const;
+        void destroySwapChain() const;
 
-        VkExtent2D chooseExtent(const VkSurfaceCapabilitiesKHR& surfaceCapabilities) const;
+        void createColorImages() noexcept(false);
 
-        uint32_t getImageCount(const VkSurfaceCapabilitiesKHR& surfaceCapabilities) const;
+        void destroyColorImages();
 
-        bool findImages(uint32_t imageCount);
+        void createDepthImage() noexcept(false);
 
-        bool createImageViews();
+        void destroyDepthImage() const;
+
+        void createRenderPass() noexcept(false);
+
+        void destroyRenderPass() const;
+
+        void createFramebuffers() noexcept(false);
+
+        void destroyFramebuffers() const;
+
+        void createSyncObjects() noexcept(false);
+
+        void destroySyncObjects() const;
+
+        VkSurfaceFormatKHR getMostSuitableSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) const;
+
+        VkPresentModeKHR getMostSuitablePresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) const;
+
+        VkExtent2D getMostSuitableExtent(const VkSurfaceCapabilitiesKHR& surfaceCapabilities) const;
+
+        uint32_t getMostSuitableImageCount(const VkSurfaceCapabilitiesKHR& surfaceCapabilities) const;
     };
 }

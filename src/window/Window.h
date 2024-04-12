@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AppConfig.h"
 #include "Event.h"
 
 #include <GLFW/glfw3.h>
@@ -10,6 +9,15 @@ namespace Blink {
     struct WindowSize {
         int32_t width;
         int32_t height;
+    };
+
+    struct WindowConfig {
+        std::string title;
+        int32_t width;
+        int32_t height;
+        bool maximized;
+        bool resizable;
+        std::function<void(Event&)> onEvent;
     };
 
     class Window {
@@ -23,11 +31,9 @@ namespace Blink {
         UserPointer userPointer;
 
     public:
-        explicit Window(const AppConfig& config);
+        explicit Window(const WindowConfig& config);
 
         ~Window();
-
-        void setEventListener(const std::function<void(Event&)>& onEvent);
 
         double update() const;
 

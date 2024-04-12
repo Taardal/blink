@@ -2,22 +2,23 @@
 #include <sstream>
 
 namespace Blink {
-    void Log::SetLevel(LogLevel level) {
-        spdlog::set_level(GetSpdLogLevel(level));
+    void Log::setLevel(LogLevel level) {
+        spdlog::set_level(getSpdLogLevel(level));
     }
 
-    std::string Log::Format(
-        const char* filename,
-        const char* functionName,
-        uint32_t lineNumber,
-        std::string_view message
-    ) {
+    std::string Log::tag(const char* filename, const char* functionName, uint32_t lineNumber) {
+        std::stringstream ss;
+        ss << filename << ":" << functionName << ":" << lineNumber;
+        return ss.str();
+    }
+
+    std::string Log::tagMessage(const char* filename, const char* functionName, uint32_t lineNumber, std::string_view message) {
         std::stringstream ss;
         ss << "[" << filename << ":" << functionName << ":" << lineNumber << "] - " << message;
         return ss.str();
     }
 
-    spdlog::level::level_enum Log::GetSpdLogLevel(LogLevel level) {
+    spdlog::level::level_enum Log::getSpdLogLevel(LogLevel level) {
         switch (level) {
             case LogLevel::Critical:
                 return spdlog::level::critical;

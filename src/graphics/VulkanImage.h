@@ -1,38 +1,62 @@
 #pragma once
 
-#include "graphics/VulkanPhysicalDevice.h"
-#include "graphics/VulkanDevice.h"
+#include "VulkanDevice.h"
+#include "VulkanCommandPool.h"
+#include "VulkanBuffer.h"
+#include "system/FileSystem.h"
 
 #include <vulkan/vulkan.h>
 
 namespace Blink {
     struct VulkanImageConfig {
-        uint32_t width;
-        uint32_t height;
-        uint32_t mipLevels;
-        VkFormat format;
-        VkImageTiling tiling;
-        VkImageUsageFlags usage;
-        VkMemoryPropertyFlags memoryProperties;
-        VkImageLayout layout;
-        VkSampleCountFlagBits sampleCount;
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+        VkImage image = nullptr;
+        VkImageView imageView = nullptr;
+        VkMemoryPropertyFlags memoryProperties{};
+        VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+        VkFormat format = VK_FORMAT_UNDEFINED;
+        VkImageUsageFlags usage = 0;
+        VkImageAspectFlags aspect = 0;
+        uint32_t width = 0;
+        uint32_t height = 0;
     };
 
     class VulkanImage {
     private:
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
-        VkImage image = VK_NULL_HANDLE;
-        VkDeviceMemory deviceMemory = VK_NULL_HANDLE;
+        VulkanImageConfig config;
+        VkImage image = nullptr;
+        VkImageView imageView = nullptr;
+        VkDeviceMemory deviceMemory = nullptr;
+        VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     public:
-        VulkanImage(VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        VulkanImage(const VulkanImageConfig& config) noexcept(false);
+
+        ~VulkanImage();
 
         operator VkImage() const;
 
-        bool initialize(const VulkanImageConfig& config);
+        operator VkImageView() const;
 
-        void terminate() const;
+        VkImage getImage() const;
+
+        VkImageView getImageView() const;
+
+        void setLayout(VkImageLayout layout) noexcept(false);
+
+        void setData(const Image& image) const noexcept(false);
+
+    private:
+        void createImage() noexcept(false);
+
+        void createImageView() noexcept(false);
+
+        void initializeImageMemory() noexcept(false);
+
+        static bool hasStencilComponent(VkFormat format);
+
+        static std::string getLayoutName(VkImageLayout layout);
     };
 
 }

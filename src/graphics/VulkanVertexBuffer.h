@@ -2,7 +2,6 @@
 
 #include "VulkanCommandPool.h"
 #include "VulkanDevice.h"
-#include "VulkanPhysicalDevice.h"
 #include "VulkanBuffer.h"
 #include "Vertex.h"
 
@@ -10,23 +9,26 @@
 
 namespace Blink {
 
+    struct VulkanVertexBufferConfig {
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+        VkDeviceSize size = 0;
+    };
+
     class VulkanVertexBuffer {
     private:
-        VulkanCommandPool* commandPool;
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
+        VulkanVertexBufferConfig config;
         VulkanBuffer* buffer = nullptr;
+        VulkanBuffer* stagingBuffer = nullptr;
 
     public:
-        VulkanVertexBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        explicit VulkanVertexBuffer(const VulkanVertexBufferConfig& config) noexcept(false);
 
         ~VulkanVertexBuffer();
 
         operator VkBuffer() const;
 
-        bool initialize(const std::vector<Vertex>& vertices);
-
-        void terminate();
+        void setData(const std::vector<Vertex>& vertices) const noexcept(false);
 
         void bind(VkCommandBuffer commandBuffer) const;
     };

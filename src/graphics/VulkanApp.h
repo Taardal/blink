@@ -1,27 +1,31 @@
 #pragma once
 
-#include "AppConfig.h"
 #include "window/Window.h"
-#include "system/Log.h"
 #include <vulkan/vulkan.h>
 #include <vector>
 
-#define BL_VULKAN_ALLOCATOR VK_NULL_HANDLE
+#define BL_VULKAN_ALLOCATOR nullptr
 
-#define BL_VULKAN_ASSERT(expression) BL_ASSERT(expression == VK_SUCCESS)
-#define BL_VULKAN_ASSERT_THROW(expression) BL_ASSERT_THROW(expression == VK_SUCCESS)
+#define BL_ASSERT_VK_SUCCESS(expression) BL_ASSERT(expression == VK_SUCCESS)
+#define BL_ASSERT_THROW_VK_SUCCESS(expression) BL_ASSERT_THROW(expression == VK_SUCCESS)
 
 namespace Blink {
+    struct VulkanAppConfig {
+        Window* window = nullptr;
+        std::string applicationName;
+        std::string engineName;
+        bool validationLayersEnabled = false;
+    };
+
     class VulkanApp {
     private:
-        Window* window = nullptr;
-        VkInstance vulkanInstance = nullptr;
+        VulkanAppConfig config;
+        VkInstance instance = nullptr;
         VkDebugUtilsMessengerEXT debugMessenger = nullptr;
         VkSurfaceKHR surface = nullptr;
-        bool validationLayersEnabled = false;
 
     public:
-        VulkanApp(const AppConfig& appConfig, Window* window);
+        VulkanApp(const VulkanAppConfig& config) noexcept(false);
 
         ~VulkanApp();
 
@@ -30,20 +34,19 @@ namespace Blink {
         VkSurfaceKHR getSurface() const;
 
     private:
-        bool createInstance(
-            const AppConfig& appConfig,
+        void createInstance(
             const std::vector<const char*>& requiredExtensions,
             const std::vector<const char*>& validationLayers,
             const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo
-        );
+        ) noexcept(false);
 
-        void destroyInstance();
+        void destroyInstance() const;
 
-        bool createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo);
+        void createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) noexcept(false);
 
-        void destroyDebugMessenger();
+        void destroyDebugMessenger() const;
 
-        bool createSurface();
+        void createSurface() noexcept(false);
 
         void destroySurface() const;
 

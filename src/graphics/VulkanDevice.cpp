@@ -3,41 +3,61 @@
 
 namespace Blink {
 
-    VulkanDevice::VulkanDevice(VulkanPhysicalDevice* physicalDevice) : physicalDevice(physicalDevice) {
-        const QueueFamilyIndices& queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
-        if (!createDevice(queueFamilyIndices)) {
-            throw std::runtime_error("Could not create logical device");
-        }
-        BL_LOG_INFO("Created logical device");
+    VulkanDevice::VulkanDevice(const VulkanDeviceConfig& config) noexcept(false) : config(config) {
+        const QueueFamilyIndices& queueFamilyIndices = config.physicalDevice->getQueueFamilyIndices();
+
+        createDevice(queueFamilyIndices);
+
         this->graphicsQueue = getDeviceQueue(queueFamilyIndices.graphicsFamily.value());
-        if (graphicsQueue == nullptr) {
-            throw std::runtime_error("Could not get graphics queue");
-        }
+        BL_ASSERT_THROW(graphicsQueue != nullptr);
+
         this->presentQueue = getDeviceQueue(queueFamilyIndices.presentFamily.value());
-        if (presentQueue == nullptr) {
-            throw std::runtime_error("Could not get present queue");
-        }
+        BL_ASSERT_THROW(presentQueue != nullptr);
     }
 
     VulkanDevice::~VulkanDevice() {
         destroyDevice();
-        BL_LOG_INFO("Destroyed logical device");
     }
 
     VulkanDevice::operator VkDevice() const {
         return device;
     }
 
+    VulkanPhysicalDevice* VulkanDevice::getPhysicalDevice() const {
+        return config.physicalDevice;
+    }
+
     VkQueue VulkanDevice::getGraphicsQueue() const {
         return graphicsQueue;
+    }
+
+    VkResult VulkanDevice::submitToGraphicsQueue(VkSubmitInfo* submitInfo, VkFence fence) const {
+        constexpr uint32_t submitCount = 1;
+        return vkQueueSubmit(graphicsQueue, submitCount, submitInfo, fence);
+    }
+
+    VkResult VulkanDevice::waitUntilGraphicsQueueIsIdle() const {
+        return vkQueueWaitIdle(graphicsQueue);
     }
 
     VkQueue VulkanDevice::getPresentQueue() const {
         return presentQueue;
     }
 
-    void VulkanDevice::waitUntilIdle() const {
-        vkDeviceWaitIdle(device);
+    VkResult VulkanDevice::submitToPresentQueue(VkPresentInfoKHR* presentInfo) const {
+        return vkQueuePresentKHR(presentQueue, presentInfo);
+    }
+
+    VkResult VulkanDevice::waitUntilPresentQueueIsIdle() const {
+        return vkQueueWaitIdle(presentQueue);
+    }
+
+    VkResult VulkanDevice::waitUntilIdle() const {
+        return vkDeviceWaitIdle(device);
+    }
+
+    VkResult VulkanDevice::waitUntilQueueIsIdle(VkQueue queue) const {
+        return vkQueueWaitIdle(queue);
     }
 
     VkResult VulkanDevice::createSwapChain(VkSwapchainCreateInfoKHR* createInfo, VkSwapchainKHR* swapchain) const {
@@ -48,10 +68,14 @@ namespace Blink {
         vkDestroySwapchainKHR(device, swapChain, BL_VULKAN_ALLOCATOR);
     }
 
-    void VulkanDevice::getSwapChainImages(uint32_t* imageCount, std::vector<VkImage>* images, VkSwapchainKHR swapChain) const {
-        vkGetSwapchainImagesKHR(device, swapChain, imageCount, nullptr);
+    VkResult VulkanDevice::getSwapChainImages(VkSwapchainKHR swapChain, uint32_t* imageCount, std::vector<VkImage>* images) const {
+        VkResult result = vkGetSwapchainImagesKHR(device, swapChain, imageCount, nullptr);
+        if (result != VK_SUCCESS) {
+            return result;
+        }
         images->resize(*imageCount);
-        vkGetSwapchainImagesKHR(device, swapChain, imageCount, images->data());
+        result = vkGetSwapchainImagesKHR(device, swapChain, imageCount, images->data());
+        return result;
     }
 
     VkResult VulkanDevice::createImageView(VkImageViewCreateInfo* createInfo, VkImageView* imageView) const {
@@ -88,75 +112,74 @@ namespace Blink {
 
     VkResult VulkanDevice::createGraphicsPipeline(VkGraphicsPipelineCreateInfo* createInfo, VkPipeline* pipeline) const {
         constexpr uint32_t count = 1;
-        VkPipelineCache cache = VK_NULL_HANDLE;
+        VkPipelineCache cache = nullptr;
         return vkCreateGraphicsPipelines(device, cache, count, createInfo, BL_VULKAN_ALLOCATOR, pipeline);
-    };
+    }
 
     void VulkanDevice::destroyGraphicsPipeline(VkPipeline pipeline) const {
         vkDestroyPipeline(device, pipeline, BL_VULKAN_ALLOCATOR);
-    };
+    }
 
     VkResult VulkanDevice::createFramebuffer(VkFramebufferCreateInfo* createInfo, VkFramebuffer* framebuffer) const {
         return vkCreateFramebuffer(device, createInfo, BL_VULKAN_ALLOCATOR, framebuffer);
-    };
+    }
 
     void VulkanDevice::destroyFramebuffer(VkFramebuffer framebuffer) const {
         vkDestroyFramebuffer(device, framebuffer, BL_VULKAN_ALLOCATOR);
-    };
+    }
 
     VkResult VulkanDevice::createCommandPool(VkCommandPoolCreateInfo* createInfo, VkCommandPool* commandPool) const {
         return vkCreateCommandPool(device, createInfo, BL_VULKAN_ALLOCATOR, commandPool);
-    };
+    }
 
     void VulkanDevice::destroyCommandPool(VkCommandPool commandPool) const {
         vkDestroyCommandPool(device, commandPool, BL_VULKAN_ALLOCATOR);
-    };
+    }
 
     VkResult VulkanDevice::allocateCommandBuffers(VkCommandBufferAllocateInfo* allocateInfo, VkCommandBuffer* commandBuffers) const {
         return vkAllocateCommandBuffers(device, allocateInfo, commandBuffers);
-    };
+    }
 
     void VulkanDevice::freeCommandBuffers(uint32_t count, VkCommandBuffer* commandBuffers, VkCommandPool commandPool) const {
         vkFreeCommandBuffers(device, commandPool, count, commandBuffers);
-    };
+    }
 
     VkResult VulkanDevice::createSemaphore(VkSemaphoreCreateInfo* createInfo, VkSemaphore* semaphore) const {
         return vkCreateSemaphore(device, createInfo, BL_VULKAN_ALLOCATOR, semaphore);
-    };
+    }
 
     void VulkanDevice::destroySemaphore(VkSemaphore semaphore) const {
         vkDestroySemaphore(device, semaphore, BL_VULKAN_ALLOCATOR);
-    };
+    }
 
     VkResult VulkanDevice::createFence(VkFenceCreateInfo* createInfo, VkFence* fence) const {
         return vkCreateFence(device, createInfo, BL_VULKAN_ALLOCATOR, fence);
-    };
+    }
 
     void VulkanDevice::destroyFence(VkFence fence) const {
         vkDestroyFence(device, fence, BL_VULKAN_ALLOCATOR);
-    };
+    }
 
-    void VulkanDevice::waitForFence(VkFence* fence) const {
+    VkResult VulkanDevice::waitForFence(VkFence* fence) const {
         uint32_t count = 1;
         bool waitAll = VK_TRUE;
         uint64_t timeout = UINT64_MAX;
-        vkWaitForFences(device, count, fence, waitAll, timeout);
-    };
+        return vkWaitForFences(device, count, fence, waitAll, timeout);
+    }
 
-    void VulkanDevice::resetFence(VkFence* fence) const {
-        uint32_t count = 1;
-        resetFences(1, fence);
-    };
+    VkResult VulkanDevice::resetFence(VkFence* fence) const {
+        return vkResetFences(device, 1, fence);
+    }
 
-    void VulkanDevice::resetFences(uint32_t count, VkFence* fences) const {
-        vkResetFences(device, count, fences);
-    };
+    VkResult VulkanDevice::resetFences(uint32_t count, VkFence* fences) const {
+        return vkResetFences(device, count, fences);
+    }
 
     VkResult VulkanDevice::acquireSwapChainImage(VkSwapchainKHR swapChain, VkSemaphore semaphore, uint32_t* imageIndex) const {
         uint64_t timeout = UINT64_MAX;
-        VkFence fence = VK_NULL_HANDLE;
+        VkFence fence = nullptr;
         return vkAcquireNextImageKHR(device, swapChain, timeout, semaphore, fence, imageIndex);
-    };
+    }
 
     VkResult VulkanDevice::createBuffer(VkBufferCreateInfo* createInfo, VkBuffer* buffer) const {
         return vkCreateBuffer(device, createInfo, BL_VULKAN_ALLOCATOR, buffer);
@@ -180,15 +203,15 @@ namespace Blink {
         vkFreeMemory(device, memory, BL_VULKAN_ALLOCATOR);
     }
 
-    void VulkanDevice::bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const {
+    VkResult VulkanDevice::bindBufferMemory(VkBuffer buffer, VkDeviceMemory memory) const {
         constexpr VkDeviceSize memoryOffset = 0;
-        vkBindBufferMemory(device, buffer, memory, memoryOffset);
+        return vkBindBufferMemory(device, buffer, memory, memoryOffset);
     }
 
-    void VulkanDevice::mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const {
+    VkResult VulkanDevice::mapMemory(VkDeviceMemory memory, VkDeviceSize memorySize, void** data) const {
         constexpr VkDeviceSize memoryOffset = 0;
         constexpr VkMemoryMapFlags memoryMapFlags = 0;
-        vkMapMemory(device, memory, memoryOffset, memorySize, memoryMapFlags, data);
+        return vkMapMemory(device, memory, memoryOffset, memorySize, memoryMapFlags, data);
     }
 
     void VulkanDevice::unmapMemory(VkDeviceMemory memory) const {
@@ -231,9 +254,9 @@ namespace Blink {
         return memoryRequirements;
     }
 
-    void VulkanDevice::bindImageMemory(VkImage image, VkDeviceMemory memory) const {
+    VkResult VulkanDevice::bindImageMemory(VkImage image, VkDeviceMemory memory) const {
         constexpr VkDeviceSize memoryOffset = 0;
-        vkBindImageMemory(device, image, memory, memoryOffset);
+        return vkBindImageMemory(device, image, memory, memoryOffset);
     }
 
     void VulkanDevice::destroyImage(VkImage image) const {
@@ -248,11 +271,11 @@ namespace Blink {
         vkDestroySampler(device, sampler, BL_VULKAN_ALLOCATOR);
     }
 
-    bool VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) {
-        const VkPhysicalDeviceFeatures features = physicalDevice->getFeatures();
+    void VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) noexcept(false) {
+        const VkPhysicalDeviceFeatures features = config.physicalDevice->getFeatures();
 
         std::vector<const char*> extensionNames;
-        for (const VkExtensionProperties& extension : physicalDevice->getExtensions()) {
+        for (const VkExtensionProperties& extension : config.physicalDevice->getExtensions()) {
             extensionNames.push_back(extension.extensionName);
         }
 
@@ -281,14 +304,17 @@ namespace Blink {
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
         createInfo.queueCreateInfoCount = (uint32_t) queueCreateInfos.size();
 
-        return physicalDevice->createDevice(&createInfo, &device) == VK_SUCCESS;
+        BL_ASSERT_VK_SUCCESS(config.physicalDevice->createDevice(&createInfo, &device));
+        BL_LOG_INFO("Created device");
     }
 
     void VulkanDevice::destroyDevice() const {
         vkDestroyDevice(device, BL_VULKAN_ALLOCATOR);
+        BL_LOG_INFO("Destroyed device");
     }
 
-    VkQueue VulkanDevice::getDeviceQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const {
+    VkQueue VulkanDevice::getDeviceQueue(uint32_t queueFamilyIndex) const {
+        constexpr uint32_t queueIndex = 0;
         VkQueue queue;
         vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, &queue);
         return queue;

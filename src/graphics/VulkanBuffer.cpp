@@ -2,96 +2,80 @@
 #include "VulkanBuffer.h"
 
 namespace Blink {
-
-    VulkanBuffer::VulkanBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice)
-            : commandPool(commandPool), device(device), physicalDevice(physicalDevice) {}
-
-    VulkanBuffer::operator VkBuffer() const {
-        return buffer;
-    }
-
-    bool VulkanBuffer::initialize(const VulkanBufferConfig& config) {
-        this->config = config;
-
+    VulkanBuffer::VulkanBuffer(const VulkanBufferConfig& config) noexcept(false) : config(config) {
         VkBufferCreateInfo bufferCreateInfo{};
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferCreateInfo.size = config.size;
         bufferCreateInfo.usage = config.usage;
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (device->createBuffer(&bufferCreateInfo, &buffer) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not create vertex buffer");
-            return false;
-        }
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createBuffer(&bufferCreateInfo, &buffer));
 
-        const VkMemoryRequirements& memoryRequirements = device->getBufferMemoryRequirements(buffer);
+        const VkMemoryRequirements& memoryRequirements = config.device->getBufferMemoryRequirements(buffer);
+
+        VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
+        uint32_t memoryTypeIndex = physicalDevice->getMemoryTypeIndex(memoryRequirements, config.memoryProperties);
 
         VkMemoryAllocateInfo memoryAllocateInfo{};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.allocationSize = memoryRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = physicalDevice->getMemoryType(memoryRequirements.memoryTypeBits, config.memoryProperties);
+        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
 
-        if (device->allocateMemory(&memoryAllocateInfo, &memory) != VK_SUCCESS) {
-            BL_LOG_ERROR("Could not allocate vertex buffer memory");
-            return false;
-        }
-        device->bindBufferMemory(buffer, memory);
-        return true;
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateMemory(&memoryAllocateInfo, &memory));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->bindBufferMemory(buffer, memory));
     }
 
-    void VulkanBuffer::terminate() {
-        device->destroyBuffer(buffer);
-        device->freeMemory(memory);
+    VulkanBuffer::~VulkanBuffer() {
+        config.device->destroyBuffer(buffer);
+        config.device->freeMemory(memory);
     }
 
-    void VulkanBuffer::setData(void* src) const {
+    VulkanBuffer::operator VkBuffer() const {
+        return buffer;
+    }
+
+    void VulkanBuffer::setData(void* src) const noexcept(false) {
         void* dst;
-        device->mapMemory(memory, config.size, &dst);
-        memcpy(dst, src, (size_t) config.size);
-        device->unmapMemory(memory);
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->mapMemory(memory, config.size, &dst));
+        memcpy(dst, src, config.size);
+        config.device->unmapMemory(memory);
     }
 
-    void VulkanBuffer::copyTo(VulkanBuffer* destinationBuffer) {
-        copy(this, destinationBuffer, device, commandPool);
+    void VulkanBuffer::copyTo(VulkanBuffer* destinationBuffer) noexcept(false) {
+        copy(this, destinationBuffer, config.device, config.commandPool);
     }
 
-    void VulkanBuffer::copyFrom(VulkanBuffer* sourceBuffer) {
-        copy(sourceBuffer, this, device, commandPool);
+    void VulkanBuffer::copyFrom(VulkanBuffer* sourceBuffer) noexcept(false) {
+        copy(sourceBuffer, this, config.device, config.commandPool);
     }
 
     void VulkanBuffer::copy(
-            VulkanBuffer* sourceBuffer,
-            VulkanBuffer* destinationBuffer,
-            VulkanDevice* device,
-            VulkanCommandPool* commandPool
-    ) {
+        VulkanBuffer* sourceBuffer,
+        VulkanBuffer* destinationBuffer,
+        VulkanDevice* device,
+        VulkanCommandPool* commandPool
+    ) noexcept(false) {
         BL_ASSERT(sourceBuffer->config.size == destinationBuffer->config.size);
 
-        VkCommandBuffer commandBuffer;
-        commandPool->allocateCommandBuffers(1, &commandBuffer);
-
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+        VulkanCommandBuffer commandBuffer;
+        BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffer(&commandBuffer));
+        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT));
 
         VkBufferCopy copyRegion{};
         copyRegion.size = sourceBuffer->config.size;
         constexpr uint32_t regionCount = 1;
         vkCmdCopyBuffer(commandBuffer, sourceBuffer->buffer, destinationBuffer->buffer, regionCount, &copyRegion);
 
-        vkEndCommandBuffer(commandBuffer);
+        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.end());
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
+        submitInfo.pCommandBuffers = commandBuffer.vk_ptr();
 
-        constexpr uint32_t submitCount = 1;
-        VkFence fence = VK_NULL_HANDLE;
-        vkQueueSubmit(device->getGraphicsQueue(), submitCount, &submitInfo, fence);
-        vkQueueWaitIdle(device->getGraphicsQueue());
+        BL_ASSERT_THROW_VK_SUCCESS(device->submitToGraphicsQueue(&submitInfo));
+        BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilGraphicsQueueIsIdle());
 
-        commandPool->freeCommandBuffer(commandBuffer);
+        commandPool->freeCommandBuffer(&commandBuffer);
     }
 }

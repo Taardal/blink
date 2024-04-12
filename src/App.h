@@ -11,12 +11,9 @@
 #include "window/Event.h"
 
 namespace Blink {
-    void runApp(const AppConfig& config);
-}
-
-namespace Blink {
     class App {
     private:
+        AppConfig config;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;
@@ -24,18 +21,23 @@ namespace Blink {
         LuaEngine* luaEngine = nullptr;
         Camera* camera = nullptr;
         Scene* scene = nullptr;
+        bool initialized = false;
         double lastTime = 0.0;
         double fpsUpdateTimestep = 0.0;
         uint32_t fps = 0;
 
     public:
-        explicit App(const AppConfig& appConfig);
+        explicit App(const AppConfig& config);
 
         ~App();
 
         void run();
 
     private:
+        void initialize();
+
+        void update();
+
         void onEvent(Event& event) const;
     };
 }

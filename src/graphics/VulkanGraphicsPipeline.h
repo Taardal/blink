@@ -1,37 +1,32 @@
 #pragma once
 
 #include "graphics/VulkanShader.h"
-#include "graphics/VulkanRenderPass.h"
 #include "graphics/VulkanSwapChain.h"
 #include "graphics/VulkanDevice.h"
 
 #include <vulkan/vulkan.h>
 
 namespace Blink {
+    struct VulkanGraphicsPipelineConfig {
+        VulkanDevice* device = nullptr;
+        VulkanSwapChain* swapChain = nullptr;
+        VulkanShader* vertexShader = nullptr;
+        VulkanShader* fragmentShader = nullptr;
+        VkDescriptorSetLayout descriptorSetLayout = nullptr;
+    };
+
     class VulkanGraphicsPipeline {
     private:
-        VulkanShader* vertexShader;
-        VulkanShader* fragmentShader;
-        VulkanRenderPass* renderPass;
-        VulkanSwapChain* swapChain;
-        VulkanDevice* device;
+        VulkanGraphicsPipelineConfig config;
         VkPipelineLayout layout = nullptr;
         VkPipeline pipeline = nullptr;
 
     public:
-        VulkanGraphicsPipeline(
-            VulkanShader* vertexShader,
-            VulkanShader* fragmentShader,
-            VulkanRenderPass* renderPass,
-            VulkanSwapChain* swapChain,
-            VulkanDevice* device
-        );
+        explicit VulkanGraphicsPipeline(const VulkanGraphicsPipelineConfig& config) noexcept(false);
+
+        ~VulkanGraphicsPipeline();
 
         VkPipelineLayout getLayout() const;
-
-        bool initialize(VkDescriptorSetLayout descriptorSetLayout);
-
-        void terminate();
 
         void bind(VkCommandBuffer commandBuffer) const;
     };

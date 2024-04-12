@@ -48,6 +48,8 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanApp.h
         ${SRC_DIR}/graphics/VulkanBuffer.cpp
         ${SRC_DIR}/graphics/VulkanBuffer.h
+        ${SRC_DIR}/graphics/VulkanCommandBuffer.cpp
+        ${SRC_DIR}/graphics/VulkanCommandBuffer.h
         ${SRC_DIR}/graphics/VulkanCommandPool.cpp
         ${SRC_DIR}/graphics/VulkanCommandPool.h
         ${SRC_DIR}/graphics/VulkanDevice.cpp
@@ -60,8 +62,6 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanIndexBuffer.h
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.cpp
         ${SRC_DIR}/graphics/VulkanPhysicalDevice.h
-        ${SRC_DIR}/graphics/VulkanRenderPass.cpp
-        ${SRC_DIR}/graphics/VulkanRenderPass.h
         ${SRC_DIR}/graphics/VulkanShader.cpp
         ${SRC_DIR}/graphics/VulkanShader.h
         ${SRC_DIR}/graphics/VulkanSwapChain.cpp
@@ -85,12 +85,16 @@ add_executable(
         ${SRC_DIR}/scene/Scene.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
+        ${SRC_DIR}/system/Error.cpp
+        ${SRC_DIR}/system/Error.h
         ${SRC_DIR}/system/FileSystem.cpp
         ${SRC_DIR}/system/FileSystem.h
         ${SRC_DIR}/system/Log.cpp
         ${SRC_DIR}/system/Log.h
         ${SRC_DIR}/system/Random.cpp
         ${SRC_DIR}/system/Random.h
+        ${SRC_DIR}/system/Signal.cpp
+        ${SRC_DIR}/system/Signal.h
         ${SRC_DIR}/system/Uuid.cpp
         ${SRC_DIR}/system/Uuid.h
         ${SRC_DIR}/utils/size.h

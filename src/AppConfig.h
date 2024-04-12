@@ -6,7 +6,6 @@
 namespace Blink {
 
     struct AppConfig {
-        LogLevel logLevel = LogLevel::Trace;
         std::string name = "App";
         int32_t windowWidth = 800;
         int32_t windowHeight = 600;

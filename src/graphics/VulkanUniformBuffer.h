@@ -6,23 +6,23 @@
 
 namespace Blink {
 
+    struct VulkanUniformBufferConfig {
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
+        VkDeviceSize size = 0;
+    };
+
     class VulkanUniformBuffer {
     private:
-        VulkanCommandPool* commandPool;
-        VulkanDevice* device;
-        VulkanPhysicalDevice* physicalDevice;
+        VulkanUniformBufferConfig config;
         VulkanBuffer* buffer = nullptr;
 
     public:
-        VulkanUniformBuffer(VulkanCommandPool* commandPool, VulkanDevice* device, VulkanPhysicalDevice* physicalDevice);
+        VulkanUniformBuffer(const VulkanUniformBufferConfig& config);
 
         ~VulkanUniformBuffer();
 
         operator VkBuffer() const;
-
-        bool initialize(uint32_t bufferSize);
-
-        void terminate();
 
         void setData(void* data) const;
     };

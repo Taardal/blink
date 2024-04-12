@@ -22,19 +22,12 @@
 
 #ifdef BL_ENABLE_ASSERT
     #define BL_ASSERT(expression) \
-        if (expression) {\
-            /* Continue */\
-        } else {\
-            BL_LOG_CRITICAL("Assertion failed: {}", #expression); \
-            BL_BREAK(); \
-        }
+            if (expression) {\
+                /* Continue */\
+            } else {\
+                BL_LOG_CRITICAL("Assertion failed: {}", #expression); \
+                BL_BREAK(); \
+            }
 #else
     #define BL_ASSERT(expression)
 #endif
-
-#define BL_ASSERT_THROW(expression) \
-    if (expression) {\
-        /* Continue */\
-    } else {\
-        throw std::runtime_error(BL_TAG(std::string("Assertion failed: ") + #expression));\
-    }

@@ -26,13 +26,13 @@ namespace Blink {
         return std::filesystem::exists(path);
     }
 
-    std::vector<char> FileSystem::readBytes(const char* path) const {
+    std::vector<char> FileSystem::readBytes(const char* path) const noexcept(false) {
         if (!exists(path)) {
-            throw std::runtime_error(BL_TAG("Could not find file [" + std::string(path) + "]"));
+            BL_THROW("Could not find file [" + std::string(path) + "]");
         }
         std::ifstream file{path, std::ios::ate | std::ios::binary};
         if (!file.is_open()) {
-            throw std::runtime_error(BL_TAG("Could not open file with path [" + std::string(path) + "]"));
+            BL_THROW("Could not open file with path [" + std::string(path) + "]");
         }
         auto fileSize = (uint32_t) file.tellg();
         std::vector<char> buffer(fileSize);
@@ -42,14 +42,14 @@ namespace Blink {
         return buffer;
     }
 
-    Image FileSystem::readImage(const char* path) const {
+    Image FileSystem::readImage(const char* path) const noexcept(false) {
         int32_t width;
         int32_t height;
         int32_t channels;
         int32_t desiredChannels = STBI_rgb_alpha;
         unsigned char* pixels = stbi_load(path, &width, &height, &channels, desiredChannels);
         if (!pixels) {
-            throw std::runtime_error(BL_TAG("Could not read image [" + std::string(path) + "]"));
+            BL_THROW("Could not read image [" + std::string(path) + "]");
         }
         Image image{};
         image.width = width;

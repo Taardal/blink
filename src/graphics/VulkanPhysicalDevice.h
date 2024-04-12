@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.h>
 
 namespace Blink {
-
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
@@ -23,6 +22,11 @@ namespace Blink {
         std::vector<VkExtensionProperties> extensions{};
         QueueFamilyIndices queueFamilyIndices{};
         SwapChainInfo swapChainInfo{};
+        VkFormat depthFormat = VK_FORMAT_UNDEFINED;
+    };
+
+    struct VulkanPhysicalDeviceConfig {
+        VulkanApp* vulkanApp = nullptr;
     };
 
     class VulkanPhysicalDevice {
@@ -30,19 +34,21 @@ namespace Blink {
         static const std::vector<const char*> requiredExtensions;
 
     private:
-        VulkanApp* vulkan;
+        VulkanPhysicalDeviceConfig config;
         VulkanPhysicalDeviceInfo deviceInfo{};
 
     public:
-        explicit VulkanPhysicalDevice(VulkanApp* vulkan);
+        explicit VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config) noexcept(false);
 
         const std::vector<VkExtensionProperties>& getExtensions() const;
-
-        const QueueFamilyIndices& getQueueFamilyIndices() const;
 
         const VkPhysicalDeviceFeatures& getFeatures() const;
 
         const VkPhysicalDeviceProperties& getProperties() const;
+
+        VkFormat getDepthFormat() const;
+
+        const QueueFamilyIndices& getQueueFamilyIndices() const;
 
         const SwapChainInfo& getSwapChainInfo() const;
 
@@ -50,24 +56,42 @@ namespace Blink {
 
         VkResult createDevice(VkDeviceCreateInfo* createInfo, VkDevice* device) const;
 
-        uint32_t getMemoryType(uint32_t memoryTypeBits, VkMemoryPropertyFlags memoryPropertyFlags) const;
-
-        VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
+        uint32_t getMemoryTypeIndex(
+            const VkMemoryRequirements& memoryRequirements,
+            VkMemoryPropertyFlags requiredMemoryProperties
+        ) const;
 
     private:
-        VulkanPhysicalDeviceInfo getMostSuitableDevice(const std::vector<VkPhysicalDevice>& vkPhysicalDevices, const std::vector<const char*>& requiredExtensions) const;
+        VulkanPhysicalDeviceInfo getMostSuitableDevice(
+            const std::vector<VkPhysicalDevice>& physicalDevices,
+            const std::vector<const char*>& requiredExtensions
+        ) const;
 
-        VulkanPhysicalDeviceInfo getDeviceInfo(VkPhysicalDevice vkPhysicalDevice, const std::vector<const char*>& requiredExtensions) const;
+        VulkanPhysicalDeviceInfo getDeviceInfo(
+            VkPhysicalDevice physicalDevice,
+            const std::vector<const char*>& requiredExtensions
+        ) const;
 
-        std::vector<VkExtensionProperties> findExtensions(VkPhysicalDevice device, const std::vector<const char*>& requiredExtensions) const;
+        std::vector<VkExtensionProperties> findExtensions(
+            VkPhysicalDevice physicalDevice,
+            const std::vector<const char*>& requiredExtensions
+        ) const;
 
-        QueueFamilyIndices findQueueFamilyIndices(VkPhysicalDevice device) const;
+        QueueFamilyIndices findQueueFamilyIndices(VkPhysicalDevice physicalDevice) const;
 
-        SwapChainInfo findSwapChainInfo(VkPhysicalDevice device) const;
+        SwapChainInfo findSwapChainInfo(VkPhysicalDevice physicalDevice) const;
 
-        uint32_t getSuitabilityRating(const VulkanPhysicalDeviceInfo& deviceInfo, const std::vector<const char*>& requiredExtensions) const;
+        VkFormat findDepthFormat(VkPhysicalDevice physicalDevice) const;
 
-        bool hasRequiredExtensions(const std::vector<const char*>& extensions, const std::vector<VkExtensionProperties>& availableExtensions) const;
+        uint32_t getSuitabilityRating(
+            const VulkanPhysicalDeviceInfo& physicalDeviceInfo,
+            const std::vector<const char*>& requiredExtensions
+        ) const;
+
+        bool hasRequiredExtensions(
+            const std::vector<const char*>& extensions,
+            const std::vector<VkExtensionProperties>& availableExtensions
+        ) const;
 
         bool hasRequiredQueueFamilyIndices(const QueueFamilyIndices& queueFamilyIndices) const;
 
