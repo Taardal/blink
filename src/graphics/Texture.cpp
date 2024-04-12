@@ -16,10 +16,10 @@ namespace Blink {
         vulkanImageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
         vulkanImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-        BL_EXECUTE_THROW(vulkanImage = new VulkanImage(vulkanImageConfig));
-        BL_EXECUTE_THROW(vulkanImage->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL));
-        BL_EXECUTE_THROW(vulkanImage->setData(image));
-        BL_EXECUTE_THROW(vulkanImage->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
+        vulkanImage = new VulkanImage(vulkanImageConfig);
+        vulkanImage->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        vulkanImage->setData(image);
+        vulkanImage->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         image.free();
     }

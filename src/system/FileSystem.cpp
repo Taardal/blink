@@ -26,7 +26,7 @@ namespace Blink {
         return std::filesystem::exists(path);
     }
 
-    std::vector<char> FileSystem::readBytes(const char* path) const {
+    std::vector<char> FileSystem::readBytes(const char* path) const noexcept(false) {
         if (!exists(path)) {
             BL_THROW("Could not find file [" + std::string(path) + "]");
         }
@@ -42,7 +42,7 @@ namespace Blink {
         return buffer;
     }
 
-    Image FileSystem::readImage(const char* path) const {
+    Image FileSystem::readImage(const char* path) const noexcept(false) {
         int32_t width;
         int32_t height;
         int32_t channels;

@@ -24,8 +24,12 @@ namespace Blink {
     }
 
     void Error::printStacktrace() const {
+        printStacktrace(*this);
+    }
+
+    void Error::printStacktrace(const Error& error) {
         fprintf(stderr, "Stacktrace (%s):\n", BL_TO_STRING(Blink::Error));
-        std::vector<StacktraceEntry> stack = getStacktrace();
+        std::vector<StacktraceEntry> stack = error.getStacktrace();
         uint32_t longestTagLength = 0;
         for (uint32_t i = 0; i < stack.size(); i++) {
             StacktraceEntry& stackEntry = stack[i];

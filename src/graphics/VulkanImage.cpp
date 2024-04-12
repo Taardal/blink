@@ -6,11 +6,11 @@
 namespace Blink {
     VulkanImage::VulkanImage(const VulkanImageConfig& config) : config(config), currentLayout(config.layout) {
         if (config.image == nullptr) {
-            BL_EXECUTE_THROW(createImage());
-            BL_EXECUTE_THROW(initializeImageMemory());
+            createImage();
+            initializeImageMemory();
         }
         if (config.imageView == nullptr) {
-            BL_EXECUTE_THROW(createImageView());
+            createImageView();
         }
     }
 
