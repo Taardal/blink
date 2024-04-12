@@ -1,4 +1,5 @@
 #include "Error.h"
+#include <iomanip>
 
 namespace Blink {
     Error::Error(const std::string& message, const std::string& tag, const std::shared_ptr<Error>& previousError)
@@ -33,7 +34,7 @@ namespace Blink {
                 longestTagLength = tagLength;
             }
         }
-        constexpr uint8_t segmentSpacing = 4;
+        static constexpr uint8_t segmentSpacing = 4;
         for (uint32_t i = 0; i < stack.size(); i++) {
             StacktraceEntry& stackEntry = stack[i];
             uint32_t tagLength = stackEntry.tag.size();
@@ -43,5 +44,24 @@ namespace Blink {
             fprintf(stderr, "%s", stackEntry.message.c_str());
             fprintf(stderr, "\n");
         }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const Error& error) {
+        os << "Stacktrace (" << BL_TO_STRING(Blink::Error) << "):\n";
+        std::vector<StacktraceEntry> stack = error.getStacktrace();
+        uint32_t longestTagLength = 0;
+        for (const auto& stackEntry : stack) {
+            uint32_t tagLength = stackEntry.tag.size();
+            longestTagLength = std::max(longestTagLength, tagLength);
+        }
+        static constexpr uint8_t segmentSpacing = 4;
+        for (size_t i = 0; i < stack.size(); i++) {
+            const auto& stackEntry = stack[i];
+            os << std::setw(segmentSpacing) << std::left << i;
+            os << std::setw(segmentSpacing + longestTagLength) << std::left << stackEntry.tag;
+            os << stackEntry.message;
+            os << "\n";
+        }
+        return os;
     }
 }

@@ -43,4 +43,5 @@ namespace Blink {
         void printStacktrace() const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const Error& error);
 }

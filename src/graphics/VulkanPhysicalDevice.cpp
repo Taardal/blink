@@ -94,6 +94,7 @@ namespace Blink {
         VkPhysicalDevice physicalDevice,
         const std::vector<const char*>& requiredExtensions
     ) const {
+        BL_THROW("NOTICE ME");
         VkPhysicalDeviceProperties properties;
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 

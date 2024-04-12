@@ -1,5 +1,4 @@
 #include "App.h"
-
 #include "window/KeyEvent.h"
 
 namespace Blink {
