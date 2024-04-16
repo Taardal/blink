@@ -48,7 +48,7 @@ namespace Blink {
                     tableName,
                     lua_tostring(L, -1)
                 );
-                throw std::runtime_error("Could not load Lua script");
+                BL_THROW("Could not load Lua script");
             }
             BL_LOG_INFO(
                 "Loaded Lua script [{}] for entity of type [{}]",
@@ -80,7 +80,7 @@ namespace Blink {
                     entity,
                     lua_tostring(L, -1)
                 );
-                throw std::runtime_error("Could not update Lua script for entity");
+                BL_THROW("Could not update Lua script for entity");
             }
 
             lua_pop(L, lua_gettop(L));

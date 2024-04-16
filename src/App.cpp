@@ -51,7 +51,9 @@ namespace Blink {
 
         SceneConfig sceneConfig{};
         sceneConfig.keyboard = keyboard;
+        sceneConfig.renderer = renderer;
         sceneConfig.luaEngine = luaEngine;
+        sceneConfig.camera = camera;
         BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
     }
 
@@ -90,20 +92,12 @@ namespace Blink {
         lastTime = time;
 
         camera->update(timestep);
-
-        glm::mat4 playerModel = scene->update(timestep);
-
-        Frame frame{};
-        frame.model = playerModel;
-        frame.view = camera->getViewMatrix();
-        frame.projection = camera->getProjectionMatrix();
-
-        renderer->render(frame);
+        scene->update(timestep);
 
         fps++;
         fpsUpdateTimestep += timestep;
         if (fpsUpdateTimestep >= 1.0) {
-            BL_LOG_DEBUG("FPS [{}]", fps);
+            BL_LOG_INFO("FPS [{}]", fps);
             fps = 0;
             fpsUpdateTimestep = 0;
         }

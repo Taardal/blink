@@ -25,9 +25,11 @@
 
 namespace Blink {
     struct Frame {
-        glm::mat4 model;
-        glm::mat4 view;
-        glm::mat4 projection;
+        glm::mat4* model;
+        glm::mat4* view;
+        glm::mat4* projection;
+        std::vector<Vertex>* vertices;
+        std::vector<uint16_t>* indices;
     };
 
     struct RendererConfig {

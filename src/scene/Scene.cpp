@@ -20,7 +20,7 @@ namespace Blink {
         }
     }
 
-    glm::mat4 Scene::update(double timestep) {
+    void Scene::update(double timestep) {
         config.luaEngine->updateEntityBindings(&registry, timestep);
 
         // TRANSLATION
@@ -38,7 +38,20 @@ namespace Blink {
         // SCALE
         glm::mat4 scale = glm::mat4(1.0f);
 
-        return translation * rotation * scale;
+        glm::mat4 modelMatrix = translation;// * rotation * scale;
+        glm::mat4 viewMatrix = config.camera->getViewMatrix();
+        glm::mat4 projectionMatrix = config.camera->getProjectionMatrix();
+
+        Frame frame{};
+        frame.model = &modelMatrix;
+        frame.view = &viewMatrix;
+        frame.projection = &projectionMatrix;
+
+        auto& modelComponent = registry.get<ModelComponent>(player);
+        frame.vertices = &modelComponent.vertices;
+        frame.indices = &modelComponent.indices;
+
+        config.renderer->render(frame);
     }
 
     void Scene::initializeEntityComponents() {
@@ -54,5 +67,8 @@ namespace Blink {
         luaComponent.type = "Player";
         luaComponent.filepath = "lua/player.out";
         registry.emplace<LuaComponent>(player, luaComponent);
+
+        ModelComponent modelComponent{};
+        registry.emplace<ModelComponent>(player, modelComponent);
     }
 }

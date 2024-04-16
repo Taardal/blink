@@ -40,14 +40,14 @@ namespace Blink {
         vertexBufferConfig.commandPool = commandPool;
         vertexBufferConfig.size = sizeof(vertices[0]) * vertices.size();
         vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
-        vertexBuffer->setData(vertices);
+        //vertexBuffer->setData(vertices);
 
         VulkanIndexBufferConfig indexBufferConfig{};
         indexBufferConfig.device = device;
         indexBufferConfig.commandPool = commandPool;
         indexBufferConfig.size = sizeof(indices[0]) * indices.size();
         indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
-        indexBuffer->setData(indices);
+        //indexBuffer->setData(indices);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             VulkanUniformBufferConfig uniformBufferConfig{};
@@ -119,6 +119,10 @@ namespace Blink {
         const VulkanUniformBuffer* uniformBuffer = uniformBuffers[currentFrame];
         const VkDescriptorSet descriptorSet = descriptorSets[currentFrame];
 
+        setUniformData(uniformBuffer, frame);
+        vertexBuffer->setData(*frame.vertices);
+        indexBuffer->setData(*frame.indices);
+
         BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.begin());
 
         swapChain->beginRenderPass(commandBuffer);
@@ -130,8 +134,6 @@ namespace Blink {
         swapChain->endRenderPass(commandBuffer);
 
         BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.end());
-
-        setUniformData(uniformBuffer, frame);
 
         swapChain->endFrame(commandBuffer);
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -147,9 +149,9 @@ namespace Blink {
 
     void Renderer::setUniformData(const VulkanUniformBuffer* uniformBuffer, const Frame& frame) const {
         UniformBufferObject ubo{};
-        ubo.model = frame.model;
-        ubo.view = frame.view;
-        ubo.proj = frame.projection;
+        ubo.model = *frame.model;
+        ubo.view = *frame.view;
+        ubo.proj = *frame.projection;
 
         // GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
         // The easiest way to compensate for that is to flip the sign on the scaling factor of the Y rotationAxis in the projection matrix.
