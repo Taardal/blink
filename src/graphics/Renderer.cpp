@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Renderer.h"
-#include "graphics/UniformBufferObject.h"
+#include "graphics/UniformBufferData.h"
 #include "graphics/VulkanImage.h"
-#include "graphics/SimplePushConstantData.h"
+#include "graphics/PushConstantData.h"
 #include "window/KeyEvent.h"
 
 namespace Blink {
@@ -36,18 +36,9 @@ namespace Blink {
         swapChainConfig.commandPool = commandPool;
         swapChain = new VulkanSwapChain(swapChainConfig);
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VulkanUniformBufferConfig uniformBufferConfig{};
-            uniformBufferConfig.device = device;
-            uniformBufferConfig.commandPool = commandPool;
-            uniformBufferConfig.size = sizeof(UniformBufferObject);
-            uniformBuffers.push_back(new VulkanUniformBuffer(uniformBufferConfig));
-        }
-
         createTextureSampler();
         createDescriptorSetLayout();
         createDescriptorPool();
-        createDescriptorSets();
         createGraphicsPipelineObjects();
     }
 
@@ -58,11 +49,6 @@ namespace Blink {
         device->destroyDescriptorSetLayout(descriptorSetLayout);
 
         device->destroySampler(textureSampler);
-
-        for (VulkanUniformBuffer* uniformBuffer : uniformBuffers) {
-            delete uniformBuffer;
-        }
-        uniformBuffers.clear();
 
         delete swapChain;
         delete commandPool;
@@ -83,92 +69,40 @@ namespace Blink {
         swapChain->onEvent(event);
     }
 
-    bool Renderer::beginFrame(const Frame& frame) const {
+    bool Renderer::beginFrame() {
         if (!swapChain->beginFrame(currentFrame)) {
             return false;
         }
-        const VulkanCommandBuffer& commandBuffer = commandBuffers[currentFrame];
-
-        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.begin());
-
-        swapChain->beginRenderPass(commandBuffer);
-        graphicsPipeline->bind(commandBuffer);
-
+        currentCommandBuffer = commandBuffers[currentFrame];
+        BL_ASSERT_THROW_VK_SUCCESS(currentCommandBuffer.begin());
+        swapChain->beginRenderPass(currentCommandBuffer);
+        graphicsPipeline->bind(currentCommandBuffer);
         return true;
     }
 
-    void Renderer::render(const Frame& frame, const Model& model) const {
-        setUniformData(model.uniformBuffer, frame);
-
-        const VulkanCommandBuffer& commandBuffer = commandBuffers[currentFrame];
-
-        constexpr uint32_t firstSet = 0;
-        constexpr uint32_t descriptorSetCount = 1;
-        constexpr uint32_t dynamicOffsetCount = 0;
-        constexpr uint32_t* dynamicOffsets = nullptr;
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            graphicsPipeline->getLayout(),
-            firstSet,
-            descriptorSetCount,
-            &model.descriptorSet,
-            dynamicOffsetCount,
-            dynamicOffsets
-        );
-
-        SimplePushConstantData pushConstantData{};
-        pushConstantData.modelMatrix = model.modelMatrix;
-
-        vkCmdPushConstants(
-            commandBuffer,
-            graphicsPipeline->getLayout(),
-            VK_SHADER_STAGE_VERTEX_BIT,
-            0,
-            sizeof(SimplePushConstantData),
-            &pushConstantData
-        );
-
-        model.vertexBuffer->bind(commandBuffer);
-        model.indexBuffer->bind(commandBuffer);
-
-        constexpr uint32_t instanceCount = 1;
-        constexpr uint32_t firstIndex = 0;
-        constexpr uint32_t vertexOffset = 0;
-        constexpr uint32_t firstInstance = 0;
-        vkCmdDrawIndexed(
-            commandBuffer,
-            (uint32_t) model.indices.size(),
-            instanceCount,
-            firstIndex,
-            vertexOffset,
-            firstInstance
-        );
+    void Renderer::renderMesh(const Mesh& mesh, const ViewProjection& viewProjection) const {
+        setMeshUniformData(mesh, viewProjection);
+        setMeshPushConstantData(mesh);
+        bindMesh(mesh);
+        drawMeshIndexed(mesh);
     }
 
     void Renderer::endFrame() {
-        const VulkanCommandBuffer& commandBuffer = commandBuffers[currentFrame];
-        swapChain->endRenderPass(commandBuffer);
-        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.end());
-        swapChain->endFrame(commandBuffer);
+        swapChain->endRenderPass(currentCommandBuffer);
+        BL_ASSERT_THROW_VK_SUCCESS(currentCommandBuffer.end());
+        swapChain->endFrame(currentCommandBuffer);
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
-    Model Renderer::createModel() const {
+    Mesh Renderer::createMesh() const {
         static std::vector<Vertex> vertices = {
             {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
             {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
             {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
             {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-            {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-            {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
         };
         static std::vector<uint16_t> indices = {
             0, 1, 2, 2, 3, 0,
-            4, 5, 6, 6, 7, 4
         };
 
         VulkanVertexBufferConfig vertexBufferConfig{};
@@ -188,7 +122,7 @@ namespace Blink {
         VulkanUniformBufferConfig uniformBufferConfig{};
         uniformBufferConfig.device = device;
         uniformBufferConfig.commandPool = commandPool;
-        uniformBufferConfig.size = sizeof(UniformBufferObject);
+        uniformBufferConfig.size = sizeof(UniformBufferData);
         auto uniformBuffer = new VulkanUniformBuffer(uniformBufferConfig);
 
         Image image = config.fileSystem->readImage("textures/sculpture.png");
@@ -223,23 +157,12 @@ namespace Blink {
         VkDescriptorBufferInfo descriptorBufferInfo{};
         descriptorBufferInfo.buffer = *uniformBuffer;
         descriptorBufferInfo.offset = 0;
-        descriptorBufferInfo.range = sizeof(UniformBufferObject);
+        descriptorBufferInfo.range = sizeof(UniformBufferData);
 
         VkDescriptorImageInfo descriptorImageInfo{};
         descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         descriptorImageInfo.imageView = texture->getImageView();
         descriptorImageInfo.sampler = textureSampler;
-
-        // VkWriteDescriptorSet descriptorWrite{};
-        // descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        // descriptorWrite.dstSet = descriptorSet;
-        // descriptorWrite.dstBinding = 1;
-        // descriptorWrite.dstArrayElement = 0;
-        // descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        // descriptorWrite.descriptorCount = 1;
-        // descriptorWrite.pImageInfo = &descriptorImageInfo;
-        //
-        // device->updateDescriptorSets(1, &descriptorWrite);
 
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
@@ -261,29 +184,28 @@ namespace Blink {
 
         device->updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data());
 
-        Model model{};
-        model.vertices = vertices;
-        model.indices = indices;
-        model.vertexBuffer = vertexBuffer;
-        model.indexBuffer = indexBuffer;
-        model.uniformBuffer = uniformBuffer;
-        model.texture = texture;
-        model.descriptorSet = descriptorSet;
-        return model;
+        Mesh mesh{};
+        mesh.vertices = vertices;
+        mesh.indices = indices;
+        mesh.vertexBuffer = vertexBuffer;
+        mesh.indexBuffer = indexBuffer;
+        mesh.uniformBuffer = uniformBuffer;
+        mesh.texture = texture;
+        mesh.descriptorSet = descriptorSet;
+        return mesh;
     }
 
-    void Renderer::destroyModel(const Model& model) const {
-        delete model.texture;
-        delete model.uniformBuffer;
-        delete model.indexBuffer;
-        delete model.vertexBuffer;
-        BL_LOG_DEBUG("DESTROYED MODEL");
+    void Renderer::destroyMesh(const Mesh& mesh) const {
+        delete mesh.texture;
+        delete mesh.uniformBuffer;
+        delete mesh.indexBuffer;
+        delete mesh.vertexBuffer;
     }
 
-    void Renderer::setUniformData(const VulkanUniformBuffer* uniformBuffer, const Frame& frame) const {
-        UniformBufferObject ubo{};
-        ubo.view = *frame.view;
-        ubo.proj = *frame.projection;
+    void Renderer::setMeshUniformData(const Mesh& mesh, const ViewProjection& viewProjection) const {
+        UniformBufferData uniformBufferData{};
+        uniformBufferData.view = viewProjection.view;
+        uniformBufferData.projection = viewProjection.projection;
 
         // GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
         // The easiest way to compensate for that is to flip the sign on the scaling factor of the Y rotationAxis in the projection matrix.
@@ -296,9 +218,58 @@ namespace Blink {
         // VkPipelineRasterizationStateCreateInfo rasterizationState{};
         // rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
         // rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        ubo.proj[1][1] *= -1;
+        uniformBufferData.projection[1][1] *= -1;
 
-        uniformBuffer->setData(&ubo);
+        mesh.uniformBuffer->setData(&uniformBufferData);
+    }
+
+    void Renderer::setMeshPushConstantData(const Mesh& mesh) const {
+        PushConstantData pushConstantData{};
+        pushConstantData.model = mesh.model;
+        constexpr uint32_t offset = 0;
+        vkCmdPushConstants(
+            currentCommandBuffer,
+            graphicsPipeline->getLayout(),
+            VK_SHADER_STAGE_VERTEX_BIT,
+            offset,
+            sizeof(PushConstantData),
+            &pushConstantData
+        );
+    }
+
+    void Renderer::bindMesh(const Mesh& mesh) const {
+        constexpr uint32_t firstSet = 0;
+        constexpr uint32_t descriptorSetCount = 1;
+        constexpr uint32_t dynamicOffsetCount = 0;
+        constexpr uint32_t* dynamicOffsets = nullptr;
+        vkCmdBindDescriptorSets(
+            currentCommandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            graphicsPipeline->getLayout(),
+            firstSet,
+            descriptorSetCount,
+            &mesh.descriptorSet,
+            dynamicOffsetCount,
+            dynamicOffsets
+        );
+
+        mesh.vertexBuffer->bind(currentCommandBuffer);
+        mesh.indexBuffer->bind(currentCommandBuffer);
+    }
+
+    void Renderer::drawMeshIndexed(const Mesh& mesh) const {
+        constexpr uint32_t instanceCount = 1;
+        constexpr uint32_t firstIndex = 0;
+        constexpr uint32_t vertexOffset = 0;
+        constexpr uint32_t firstInstance = 0;
+        vkCmdDrawIndexed(
+            currentCommandBuffer,
+            (uint32_t) mesh.indices.size(),
+            instanceCount,
+            firstIndex,
+            vertexOffset,
+            firstInstance
+        );
     }
 
     void Renderer::reloadShaders() {
@@ -382,54 +353,6 @@ namespace Blink {
         poolInfo.maxSets = (uint32_t) MAX_FRAMES_IN_FLIGHT;
 
         BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorPool(&poolInfo, &descriptorPool));
-    }
-
-    void Renderer::createDescriptorSets() {
-        // descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-        //
-        // std::vector<VkDescriptorSetLayout> descriptorSetLayouts(descriptorSets.size(), descriptorSetLayout);
-        //
-        // VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
-        // descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        // descriptorSetAllocateInfo.descriptorPool = descriptorPool;
-        // descriptorSetAllocateInfo.descriptorSetCount = descriptorSets.size();
-        // descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
-        //
-        // BL_ASSERT_THROW_VK_SUCCESS(device->allocateDescriptorSets(&descriptorSetAllocateInfo, descriptorSets.data()));
-        //
-        // for (size_t i = 0; i < descriptorSets.size(); i++) {
-        //     VulkanUniformBuffer* uniformBuffer = uniformBuffers[i];
-        //
-        //     VkDescriptorBufferInfo bufferInfo{};
-        //     bufferInfo.buffer = *uniformBuffer;
-        //     bufferInfo.offset = 0;
-        //     bufferInfo.range = sizeof(UniformBufferObject);
-        //
-        //     VkDescriptorImageInfo imageInfo{};
-        //     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        //     imageInfo.imageView = textureImage->getImageView();
-        //     imageInfo.sampler = textureSampler;
-        //
-        //     std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-        //
-        //     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        //     descriptorWrites[0].dstSet = descriptorSets[i];
-        //     descriptorWrites[0].dstBinding = 0;
-        //     descriptorWrites[0].dstArrayElement = 0;
-        //     descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        //     descriptorWrites[0].descriptorCount = 1;
-        //     descriptorWrites[0].pBufferInfo = &bufferInfo;
-        //
-        //     descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        //     descriptorWrites[1].dstSet = descriptorSets[i];
-        //     descriptorWrites[1].dstBinding = 1;
-        //     descriptorWrites[1].dstArrayElement = 0;
-        //     descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        //     descriptorWrites[1].descriptorCount = 1;
-        //     descriptorWrites[1].pImageInfo = &imageInfo;
-        //
-        //     device->updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data());
-        // }
     }
 
     void Renderer::createGraphicsPipelineObjects() {

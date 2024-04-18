@@ -76,6 +76,7 @@ namespace Blink {
             BL_LOG_INFO("Running...");
             while (!window->shouldClose()) {
                 update();
+                render();
             }
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Runtime error");
@@ -101,8 +102,14 @@ namespace Blink {
 
         camera->update(timestep);
         scene->update(timestep);
+    }
 
+    void App::render() const {
+        if (!renderer->beginFrame()) {
+            return;
+        }
         scene->render();
+        renderer->endFrame();
     }
 
     void App::onEvent(Event& event) const {

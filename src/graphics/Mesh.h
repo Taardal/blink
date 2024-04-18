@@ -11,14 +11,14 @@
 #include <vector>
 
 namespace Blink {
-    struct Model {
-        glm::mat4 modelMatrix;
+    struct Mesh {
+        glm::mat4 model;
         std::vector<Vertex> vertices;
         std::vector<uint16_t> indices;
-        VulkanImage* texture = nullptr;
         VulkanVertexBuffer* vertexBuffer = nullptr;
         VulkanIndexBuffer* indexBuffer = nullptr;
         VulkanUniformBuffer* uniformBuffer = nullptr;
+        VulkanImage* texture = nullptr;
         VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
     };
 }

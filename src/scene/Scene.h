@@ -21,6 +21,7 @@ namespace Blink {
         SceneConfig config;
         entt::registry registry;
         entt::entity player;
+        entt::entity enemy;
 
     public:
         explicit Scene(const SceneConfig& config);
@@ -34,6 +35,8 @@ namespace Blink {
         void render();
 
     private:
-        void initializeEntityComponents();
+        void initializePlayerComponents();
+
+        void initializeEnemyComponents();
     };
 }

@@ -19,20 +19,13 @@
 #include "graphics/VulkanImage.h"
 #include "graphics/Quad.h"
 #include "graphics/Vertex.h"
-#include "graphics/Model.h"
+#include "graphics/Mesh.h"
+#include "graphics/ViewProjection.h"
 
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 
 namespace Blink {
-    struct Frame {
-        //glm::mat4* model;
-        glm::mat4* view;
-        glm::mat4* projection;
-        //std::vector<Vertex>* vertices;
-        //std::vector<uint16_t>* indices;
-    };
-
     struct RendererConfig {
         std::string applicationName;
         std::string engineName;
@@ -52,15 +45,14 @@ namespace Blink {
         VulkanCommandPool* commandPool = nullptr;
         std::vector<VulkanCommandBuffer> commandBuffers;
         VulkanSwapChain* swapChain = nullptr;
-        std::vector<VulkanUniformBuffer*> uniformBuffers;
         VkSampler textureSampler;
         VkDescriptorSetLayout descriptorSetLayout = nullptr;
         VkDescriptorPool descriptorPool = nullptr;
-        std::vector<VkDescriptorSet> descriptorSets;
         VulkanShader* vertexShader = nullptr;
         VulkanShader* fragmentShader = nullptr;
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
         uint32_t currentFrame = 0;
+        VulkanCommandBuffer currentCommandBuffer = nullptr;
 
     public:
         explicit Renderer(const RendererConfig& config);
@@ -71,18 +63,24 @@ namespace Blink {
 
         void onEvent(Event& event);
 
-        bool beginFrame(const Frame& frame) const;
+        bool beginFrame();
 
-        void render(const Frame& frame, const Model& model) const;
+        void renderMesh(const Mesh& mesh, const ViewProjection& viewProjection) const;
 
         void endFrame();
 
-        Model createModel() const;
+        Mesh createMesh() const;
 
-        void destroyModel(const Model& model) const;
+        void destroyMesh(const Mesh& mesh) const;
 
     private:
-        void setUniformData(const VulkanUniformBuffer* uniformBuffer, const Frame& frame) const;
+        void setMeshUniformData(const Mesh& mesh, const ViewProjection& viewProjection) const;
+
+        void setMeshPushConstantData(const Mesh& mesh) const;
+
+        void bindMesh(const Mesh& mesh) const;
+
+        void drawMeshIndexed(const Mesh& mesh) const;
 
         void reloadShaders();
 
@@ -93,8 +91,6 @@ namespace Blink {
         void createDescriptorSetLayout();
 
         void createDescriptorPool();
-
-        void createDescriptorSets();
 
         void createGraphicsPipelineObjects();
 

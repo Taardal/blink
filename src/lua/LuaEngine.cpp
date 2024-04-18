@@ -28,7 +28,7 @@ namespace Blink {
     }
 
     void LuaEngine::reloadScripts(entt::registry* entityRegistry) const {
-        compileLuaFiles();
+        compileLuaScripts();
         createEntityBindings(entityRegistry);
         BL_LOG_INFO("Reloaded Lua scripts");
     }
@@ -91,7 +91,7 @@ namespace Blink {
         KeyboardLuaBinding::initialize(L, config.keyboard);
     }
 
-    void LuaEngine::compileLuaFiles() {
+    void LuaEngine::compileLuaScripts() {
         std::stringstream ss;
         ss << "cmake";
         ss << " -D LUA_SOURCE_DIR=" << CMAKE_LUA_SOURCE_DIR;

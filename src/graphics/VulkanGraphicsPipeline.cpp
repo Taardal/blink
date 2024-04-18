@@ -1,6 +1,6 @@
 #include "VulkanGraphicsPipeline.h"
 #include "Vertex.h"
-#include "SimplePushConstantData.h"
+#include "PushConstantData.h"
 
 namespace Blink {
     VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanGraphicsPipelineConfig& config) : config(config) {
@@ -86,7 +86,7 @@ namespace Blink {
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(SimplePushConstantData);
+        pushConstantRange.size = sizeof(PushConstantData);
 
         VkPipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

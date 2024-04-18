@@ -1,7 +1,7 @@
 #pragma once
 
 #include "graphics/Vertex.h"
-#include "graphics/Model.h"
+#include "graphics/Mesh.h"
 
 #include <glm/glm.hpp>
 #include <string>
@@ -20,7 +20,7 @@ namespace Blink {
         std::string filepath;
     };
 
-    struct ModelComponent {
-        Model model;
+    struct MeshComponent {
+        Mesh mesh;
     };
 }

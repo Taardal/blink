@@ -8,11 +8,11 @@ namespace Blink {
         updateDirections();
     }
 
-    glm::mat4 Camera::getViewMatrix() const {
+    glm::mat4 Camera::getView() const {
         return glm::lookAt(position, position + frontDirection, upDirection);
     }
 
-    glm::mat4 Camera::getProjectionMatrix() const {
+    glm::mat4 Camera::getProjection() const {
         return glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
     }
 
