@@ -37,7 +37,7 @@ namespace Blink {
         bool windowResized = false;
 
     public:
-        explicit VulkanSwapChain(const VulkanSwapChainConfig& config) noexcept(false);
+        explicit VulkanSwapChain(const VulkanSwapChainConfig& config);
 
         ~VulkanSwapChain();
 
@@ -49,38 +49,38 @@ namespace Blink {
 
         void onEvent(Event& event);
 
-        bool beginFrame(uint32_t frameIndex) noexcept(false);
+        bool beginFrame(uint32_t frameIndex);
 
         void beginRenderPass(const VulkanCommandBuffer& commandBuffer) const;
 
         void endRenderPass(const VulkanCommandBuffer& commandBuffer) const;
 
-        void endFrame(const VulkanCommandBuffer& commandBuffer) noexcept(false);
+        void endFrame(const VulkanCommandBuffer& commandBuffer);
 
     private:
-        void recreateSwapChain() noexcept(false);
+        void recreateSwapChain();
 
-        void createSwapChain() noexcept(false);
+        void createSwapChain();
 
         void destroySwapChain() const;
 
-        void createColorImages() noexcept(false);
+        void createColorImages();
 
         void destroyColorImages();
 
-        void createDepthImage() noexcept(false);
+        void createDepthImage();
 
         void destroyDepthImage() const;
 
-        void createRenderPass() noexcept(false);
+        void createRenderPass();
 
         void destroyRenderPass() const;
 
-        void createFramebuffers() noexcept(false);
+        void createFramebuffers();
 
         void destroyFramebuffers() const;
 
-        void createSyncObjects() noexcept(false);
+        void createSyncObjects();
 
         void destroySyncObjects() const;
 

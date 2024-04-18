@@ -1,7 +1,7 @@
 #include "VulkanShader.h"
 
 namespace Blink {
-    VulkanShader::VulkanShader(const VulkanShaderConfig& config) noexcept(false) : config(config) {
+    VulkanShader::VulkanShader(const VulkanShaderConfig& config) : config(config) {
         BL_ASSERT_THROW(config.bytes.size() > 0);
 
         VkShaderModuleCreateInfo shaderModuleCreateInfo{};

@@ -91,9 +91,6 @@ namespace Blink {
         double timestep = time - lastTime;
         lastTime = time;
 
-        camera->update(timestep);
-        scene->update(timestep);
-
         fps++;
         fpsUpdateTimestep += timestep;
         if (fpsUpdateTimestep >= 1.0) {
@@ -101,6 +98,11 @@ namespace Blink {
             fps = 0;
             fpsUpdateTimestep = 0;
         }
+
+        camera->update(timestep);
+        scene->update(timestep);
+
+        scene->render();
     }
 
     void App::onEvent(Event& event) const {

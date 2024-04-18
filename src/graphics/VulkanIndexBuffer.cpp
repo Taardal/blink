@@ -33,7 +33,7 @@ namespace Blink {
         return *buffer;
     }
 
-    void VulkanIndexBuffer::setData(const std::vector<uint16_t>& indices) const noexcept(false) {
+    void VulkanIndexBuffer::setData(const std::vector<uint16_t>& indices) const {
         stagingBuffer->setData((void*) indices.data());
         stagingBuffer->copyTo(buffer);
     }

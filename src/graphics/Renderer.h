@@ -19,17 +19,18 @@
 #include "graphics/VulkanImage.h"
 #include "graphics/Quad.h"
 #include "graphics/Vertex.h"
+#include "graphics/Model.h"
 
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 
 namespace Blink {
     struct Frame {
-        glm::mat4* model;
+        //glm::mat4* model;
         glm::mat4* view;
         glm::mat4* projection;
-        std::vector<Vertex>* vertices;
-        std::vector<uint16_t>* indices;
+        //std::vector<Vertex>* vertices;
+        //std::vector<uint16_t>* indices;
     };
 
     struct RendererConfig {
@@ -51,10 +52,7 @@ namespace Blink {
         VulkanCommandPool* commandPool = nullptr;
         std::vector<VulkanCommandBuffer> commandBuffers;
         VulkanSwapChain* swapChain = nullptr;
-        VulkanVertexBuffer* vertexBuffer = nullptr;
-        VulkanIndexBuffer* indexBuffer = nullptr;
         std::vector<VulkanUniformBuffer*> uniformBuffers;
-        VulkanImage* textureImage;
         VkSampler textureSampler;
         VkDescriptorSetLayout descriptorSetLayout = nullptr;
         VkDescriptorPool descriptorPool = nullptr;
@@ -64,40 +62,27 @@ namespace Blink {
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
         uint32_t currentFrame = 0;
 
-    private:
-        const std::vector<Vertex> vertices = {
-            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-            {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-            {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
-        };
-        const std::vector<uint16_t> indices = {
-            0, 1, 2, 2, 3, 0,
-            4, 5, 6, 6, 7, 4
-        };
-
     public:
-        explicit Renderer(const RendererConfig& config) noexcept(false);
+        explicit Renderer(const RendererConfig& config);
 
         ~Renderer();
 
-        void waitUntilIdle() const noexcept(false);
-
-        void render(const Frame& frame) noexcept(false);
+        void waitUntilIdle() const;
 
         void onEvent(Event& event);
 
+        bool beginFrame(const Frame& frame) const;
+
+        void render(const Frame& frame, const Model& model) const;
+
+        void endFrame();
+
+        Model createModel() const;
+
+        void destroyModel(const Model& model) const;
+
     private:
         void setUniformData(const VulkanUniformBuffer* uniformBuffer, const Frame& frame) const;
-
-        void bindDescriptorSet(VkDescriptorSet descriptorSet, const VulkanCommandBuffer& commandBuffer) const;
-
-        void drawIndexed(const VulkanCommandBuffer& commandBuffer) const;
 
         void reloadShaders();
 

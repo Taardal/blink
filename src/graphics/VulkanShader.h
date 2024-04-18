@@ -17,7 +17,7 @@ namespace Blink {
         VkDescriptorSetLayout descriptorSetLayout = nullptr;
 
     public:
-        explicit VulkanShader(const VulkanShaderConfig& config) noexcept(false);
+        explicit VulkanShader(const VulkanShaderConfig& config);
 
         ~VulkanShader();
 
@@ -27,6 +27,6 @@ namespace Blink {
 
         void setLayout(VkDescriptorSetLayout layout);
 
-        void setLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings) noexcept(false);
+        void setLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
     };
 }

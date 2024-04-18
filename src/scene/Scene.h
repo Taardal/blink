@@ -31,6 +31,8 @@ namespace Blink {
 
         void update(double timestep);
 
+        void render();
+
     private:
         void initializeEntityComponents();
     };

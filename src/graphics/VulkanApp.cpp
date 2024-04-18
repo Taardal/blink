@@ -23,7 +23,7 @@ namespace Blink {
 
 namespace Blink {
 
-    VulkanApp::VulkanApp(const VulkanAppConfig& config) noexcept(false) : config(config) {
+    VulkanApp::VulkanApp(const VulkanAppConfig& config) : config(config) {
         BL_ASSERT_THROW(config.window->isVulkanSupported());
 
         std::vector<const char*> requiredExtensions = config.window->getRequiredVulkanExtensions();
@@ -76,7 +76,7 @@ namespace Blink {
         const std::vector<const char*>& requiredExtensions,
         const std::vector<const char*>& validationLayers,
         const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo
-    ) noexcept(false) {
+    ) {
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = config.applicationName.c_str();
@@ -108,7 +108,7 @@ namespace Blink {
         BL_LOG_INFO("Destroyed instance");
     }
 
-    void VulkanApp::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) noexcept(false) {
+    void VulkanApp::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) {
         auto createDebugMessenger = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
         BL_ASSERT_THROW(createDebugMessenger != nullptr);
         BL_ASSERT_VK_SUCCESS(createDebugMessenger(instance, &debugMessengerCreateInfo, BL_VULKAN_ALLOCATOR, &debugMessenger));
@@ -124,7 +124,7 @@ namespace Blink {
         BL_LOG_INFO("Destroyed debug messenger");
     }
 
-    void VulkanApp::createSurface() noexcept(false) {
+    void VulkanApp::createSurface() {
         BL_ASSERT_VK_SUCCESS(config.window->createVulkanSurface(instance, &surface, BL_VULKAN_ALLOCATOR));
         BL_LOG_INFO("Created surface");
     }

@@ -3,7 +3,7 @@
 
 namespace Blink {
 
-    VulkanVertexBuffer::VulkanVertexBuffer(const VulkanVertexBufferConfig& config) noexcept(false) : config(config) {
+    VulkanVertexBuffer::VulkanVertexBuffer(const VulkanVertexBufferConfig& config) : config(config) {
         BL_ASSERT_THROW(config.size > 0);
 
         VulkanBufferConfig bufferConfig{};
@@ -34,7 +34,7 @@ namespace Blink {
         return *buffer;
     }
 
-    void VulkanVertexBuffer::setData(const std::vector<Vertex>& vertices) const noexcept(false) {
+    void VulkanVertexBuffer::setData(const std::vector<Vertex>& vertices) const {
         stagingBuffer->setData((void*) vertices.data());
         stagingBuffer->copyTo(buffer);
     }

@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "Components.h"
 #include "window/KeyEvent.h"
+#include "graphics/Model.h"
 
 namespace Blink {
     Scene::Scene(const SceneConfig& config) : config(config), player(registry.create()) {
@@ -10,6 +11,11 @@ namespace Blink {
     }
 
     Scene::~Scene() {
+        BL_LOG_DEBUG("DESTROYING SCENE");
+        for (entt::entity entity : registry.view<ModelComponent>()) {
+            const ModelComponent& modelComponent = registry.get<ModelComponent>(entity);
+            config.renderer->destroyModel(modelComponent.model);
+        }
         registry.clear();
     }
 
@@ -22,7 +28,9 @@ namespace Blink {
 
     void Scene::update(double timestep) {
         config.luaEngine->updateEntityBindings(&registry, timestep);
+    }
 
+    void Scene::render() {
         // TRANSLATION
         auto& transformComponent = registry.get<TransformComponent>(player);
         glm::mat4 translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
@@ -38,20 +46,28 @@ namespace Blink {
         // SCALE
         glm::mat4 scale = glm::mat4(1.0f);
 
-        glm::mat4 modelMatrix = translation;// * rotation * scale;
+        glm::mat4 modelMatrix = translation * rotation * scale;
         glm::mat4 viewMatrix = config.camera->getViewMatrix();
         glm::mat4 projectionMatrix = config.camera->getProjectionMatrix();
 
         Frame frame{};
-        frame.model = &modelMatrix;
         frame.view = &viewMatrix;
         frame.projection = &projectionMatrix;
 
-        auto& modelComponent = registry.get<ModelComponent>(player);
-        frame.vertices = &modelComponent.vertices;
-        frame.indices = &modelComponent.indices;
+        if (!config.renderer->beginFrame(frame)) {
+            return;
+        }
 
-        config.renderer->render(frame);
+        auto& modelComponent = registry.get<ModelComponent>(player);
+        Model& model = modelComponent.model;
+
+        model.modelMatrix = modelMatrix;
+        config.renderer->render(frame, model);
+
+        model.modelMatrix = glm::translate(glm::mat4(1.0f), transformComponent.position + 1.0f);
+        config.renderer->render(frame, model);
+
+        config.renderer->endFrame();
     }
 
     void Scene::initializeEntityComponents() {
@@ -69,6 +85,7 @@ namespace Blink {
         registry.emplace<LuaComponent>(player, luaComponent);
 
         ModelComponent modelComponent{};
+        modelComponent.model = config.renderer->createModel();
         registry.emplace<ModelComponent>(player, modelComponent);
     }
 }

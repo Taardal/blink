@@ -35,9 +35,11 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
+        ${SRC_DIR}/graphics/Model.h
         ${SRC_DIR}/graphics/Quad.h
         ${SRC_DIR}/graphics/Renderer.cpp
         ${SRC_DIR}/graphics/Renderer.h
+        ${SRC_DIR}/graphics/SimplePushConstantData.h
         ${SRC_DIR}/graphics/Texture.cpp
         ${SRC_DIR}/graphics/Texture.h
         ${SRC_DIR}/graphics/UniformBufferObject.h

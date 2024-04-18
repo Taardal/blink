@@ -2,7 +2,7 @@
 #include "VulkanBuffer.h"
 
 namespace Blink {
-    VulkanBuffer::VulkanBuffer(const VulkanBufferConfig& config) noexcept(false) : config(config) {
+    VulkanBuffer::VulkanBuffer(const VulkanBufferConfig& config) : config(config) {
         VkBufferCreateInfo bufferCreateInfo{};
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferCreateInfo.size = config.size;
@@ -34,18 +34,18 @@ namespace Blink {
         return buffer;
     }
 
-    void VulkanBuffer::setData(void* src) const noexcept(false) {
+    void VulkanBuffer::setData(void* src) const {
         void* dst;
         BL_ASSERT_THROW_VK_SUCCESS(config.device->mapMemory(memory, config.size, &dst));
         memcpy(dst, src, config.size);
         config.device->unmapMemory(memory);
     }
 
-    void VulkanBuffer::copyTo(VulkanBuffer* destinationBuffer) noexcept(false) {
+    void VulkanBuffer::copyTo(VulkanBuffer* destinationBuffer) {
         copy(this, destinationBuffer, config.device, config.commandPool);
     }
 
-    void VulkanBuffer::copyFrom(VulkanBuffer* sourceBuffer) noexcept(false) {
+    void VulkanBuffer::copyFrom(VulkanBuffer* sourceBuffer) {
         copy(sourceBuffer, this, config.device, config.commandPool);
     }
 
@@ -54,7 +54,7 @@ namespace Blink {
         VulkanBuffer* destinationBuffer,
         VulkanDevice* device,
         VulkanCommandPool* commandPool
-    ) noexcept(false) {
+    ) {
         BL_ASSERT(sourceBuffer->config.size == destinationBuffer->config.size);
 
         VulkanCommandBuffer commandBuffer;

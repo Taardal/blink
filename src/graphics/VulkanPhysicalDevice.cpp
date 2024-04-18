@@ -3,7 +3,7 @@
 
 namespace Blink {
 
-    VulkanPhysicalDevice::VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config) noexcept(false) : config(config) {
+    VulkanPhysicalDevice::VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config) : config(config) {
         std::vector<VkPhysicalDevice> availableDevices = config.vulkanApp->getPhysicalDevices();
         BL_ASSERT_THROW(!availableDevices.empty());
 
