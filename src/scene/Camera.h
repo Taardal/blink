@@ -32,9 +32,9 @@ namespace Blink {
     public:
         explicit Camera(const CameraConfig& config);
 
-        glm::mat4 getViewMatrix() const;
+        glm::mat4 getView() const;
 
-        glm::mat4 getProjectionMatrix() const;
+        glm::mat4 getProjection() const;
 
         void update(double timestep);
 

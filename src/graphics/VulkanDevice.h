@@ -23,7 +23,7 @@ namespace Blink {
         VkQueue presentQueue = nullptr;
 
     public:
-        explicit VulkanDevice(const VulkanDeviceConfig& config) noexcept(false);
+        explicit VulkanDevice(const VulkanDeviceConfig& config);
 
         ~VulkanDevice();
 
@@ -143,7 +143,7 @@ namespace Blink {
 
     private:
 
-        void createDevice(const QueueFamilyIndices& queueFamilyIndices) noexcept(false);
+        void createDevice(const QueueFamilyIndices& queueFamilyIndices);
 
         void destroyDevice() const;
 

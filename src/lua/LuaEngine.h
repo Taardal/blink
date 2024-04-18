@@ -29,7 +29,7 @@ namespace Blink {
     private:
         void createGlobalBindings() const;
 
-        static void compileLuaFiles();
+        static void compileLuaScripts();
 
         static int luaPrint(lua_State* L);
     };

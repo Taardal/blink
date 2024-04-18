@@ -1,6 +1,7 @@
 #pragma once
 
-#include "system/Uuid.h"
+#include "graphics/Vertex.h"
+#include "graphics/Mesh.h"
 
 #include <glm/glm.hpp>
 #include <string>
@@ -17,5 +18,9 @@ namespace Blink {
     struct LuaComponent {
         std::string type;
         std::string filepath;
+    };
+
+    struct MeshComponent {
+        Mesh mesh;
     };
 }

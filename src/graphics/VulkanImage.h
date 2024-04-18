@@ -31,7 +31,7 @@ namespace Blink {
         VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     public:
-        VulkanImage(const VulkanImageConfig& config) noexcept(false);
+        VulkanImage(const VulkanImageConfig& config);
 
         ~VulkanImage();
 
@@ -43,16 +43,16 @@ namespace Blink {
 
         VkImageView getImageView() const;
 
-        void setLayout(VkImageLayout layout) noexcept(false);
+        void setLayout(VkImageLayout layout);
 
-        void setData(const Image& image) const noexcept(false);
+        void setData(const Image& image) const;
 
     private:
-        void createImage() noexcept(false);
+        void createImage();
 
-        void createImageView() noexcept(false);
+        void createImageView();
 
-        void initializeImageMemory() noexcept(false);
+        void initializeImageMemory();
 
         static bool hasStencilComponent(VkFormat format);
 

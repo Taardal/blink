@@ -38,7 +38,7 @@ namespace Blink {
         }
     }
 
-    bool VulkanSwapChain::beginFrame(uint32_t frameIndex) noexcept(false) {
+    bool VulkanSwapChain::beginFrame(uint32_t frameIndex) {
         currentInFlightFence = inFlightFences[frameIndex];
         currentImageAvailableSemaphore = imageAvailableSemaphores[frameIndex];
         currentRenderFinishedSemaphore = renderFinishedSemaphores[frameIndex];

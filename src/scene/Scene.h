@@ -1,7 +1,9 @@
 #pragma once
 
 #include "window/Keyboard.h"
+#include "graphics/Renderer.h"
 #include "lua/LuaEngine.h"
+#include "scene/Camera.h"
 
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
@@ -9,7 +11,9 @@
 namespace Blink {
     struct SceneConfig {
         Keyboard* keyboard = nullptr;
+        Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
+        Camera* camera = nullptr;
     };
 
     class Scene {
@@ -17,6 +21,7 @@ namespace Blink {
         SceneConfig config;
         entt::registry registry;
         entt::entity player;
+        entt::entity enemy;
 
     public:
         explicit Scene(const SceneConfig& config);
@@ -25,9 +30,13 @@ namespace Blink {
 
         void onEvent(Event& event);
 
-        glm::mat4 update(double timestep);
+        void update(double timestep);
+
+        void render();
 
     private:
-        void initializeEntityComponents();
+        void initializePlayerComponents();
+
+        void initializeEnemyComponents();
     };
 }

@@ -38,6 +38,8 @@ namespace Blink {
 
         void update();
 
+        void render() const;
+
         void onEvent(Event& event) const;
     };
 }

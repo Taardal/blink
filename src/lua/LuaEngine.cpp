@@ -28,7 +28,7 @@ namespace Blink {
     }
 
     void LuaEngine::reloadScripts(entt::registry* entityRegistry) const {
-        compileLuaFiles();
+        compileLuaScripts();
         createEntityBindings(entityRegistry);
         BL_LOG_INFO("Reloaded Lua scripts");
     }
@@ -48,7 +48,7 @@ namespace Blink {
                     tableName,
                     lua_tostring(L, -1)
                 );
-                throw std::runtime_error("Could not load Lua script");
+                BL_THROW("Could not load Lua script");
             }
             BL_LOG_INFO(
                 "Loaded Lua script [{}] for entity of type [{}]",
@@ -80,7 +80,7 @@ namespace Blink {
                     entity,
                     lua_tostring(L, -1)
                 );
-                throw std::runtime_error("Could not update Lua script for entity");
+                BL_THROW("Could not update Lua script for entity");
             }
 
             lua_pop(L, lua_gettop(L));
@@ -91,7 +91,7 @@ namespace Blink {
         KeyboardLuaBinding::initialize(L, config.keyboard);
     }
 
-    void LuaEngine::compileLuaFiles() {
+    void LuaEngine::compileLuaScripts() {
         std::stringstream ss;
         ss << "cmake";
         ss << " -D LUA_SOURCE_DIR=" << CMAKE_LUA_SOURCE_DIR;

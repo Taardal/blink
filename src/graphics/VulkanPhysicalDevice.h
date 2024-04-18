@@ -38,7 +38,7 @@ namespace Blink {
         VulkanPhysicalDeviceInfo deviceInfo{};
 
     public:
-        explicit VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config) noexcept(false);
+        explicit VulkanPhysicalDevice(const VulkanPhysicalDeviceConfig& config);
 
         const std::vector<VkExtensionProperties>& getExtensions() const;
 

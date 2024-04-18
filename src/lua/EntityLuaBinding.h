@@ -9,7 +9,7 @@ namespace Blink {
         entt::registry* entityRegistry;
 
     private:
-        EntityLuaBinding(entt::registry* entityRegistry);
+        explicit EntityLuaBinding(entt::registry* entityRegistry);
 
         ~EntityLuaBinding() = default;
 

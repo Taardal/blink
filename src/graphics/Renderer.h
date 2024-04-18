@@ -19,17 +19,13 @@
 #include "graphics/VulkanImage.h"
 #include "graphics/Quad.h"
 #include "graphics/Vertex.h"
+#include "graphics/Mesh.h"
+#include "graphics/ViewProjection.h"
 
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 
 namespace Blink {
-    struct Frame {
-        glm::mat4 model;
-        glm::mat4 view;
-        glm::mat4 projection;
-    };
-
     struct RendererConfig {
         std::string applicationName;
         std::string engineName;
@@ -49,53 +45,42 @@ namespace Blink {
         VulkanCommandPool* commandPool = nullptr;
         std::vector<VulkanCommandBuffer> commandBuffers;
         VulkanSwapChain* swapChain = nullptr;
-        VulkanVertexBuffer* vertexBuffer = nullptr;
-        VulkanIndexBuffer* indexBuffer = nullptr;
-        std::vector<VulkanUniformBuffer*> uniformBuffers;
-        VulkanImage* textureImage;
         VkSampler textureSampler;
         VkDescriptorSetLayout descriptorSetLayout = nullptr;
         VkDescriptorPool descriptorPool = nullptr;
-        std::vector<VkDescriptorSet> descriptorSets;
         VulkanShader* vertexShader = nullptr;
         VulkanShader* fragmentShader = nullptr;
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
         uint32_t currentFrame = 0;
-
-    private:
-        const std::vector<Vertex> vertices = {
-            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-            {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-            {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
-        };
-        const std::vector<uint16_t> indices = {
-            0, 1, 2, 2, 3, 0,
-            4, 5, 6, 6, 7, 4
-        };
+        VulkanCommandBuffer currentCommandBuffer = nullptr;
 
     public:
-        explicit Renderer(const RendererConfig& config) noexcept(false);
+        explicit Renderer(const RendererConfig& config);
 
         ~Renderer();
 
-        void waitUntilIdle() const noexcept(false);
-
-        void render(const Frame& frame) noexcept(false);
+        void waitUntilIdle() const;
 
         void onEvent(Event& event);
 
+        bool beginFrame();
+
+        void renderMesh(const Mesh& mesh, const ViewProjection& viewProjection) const;
+
+        void endFrame();
+
+        Mesh createMesh() const;
+
+        void destroyMesh(const Mesh& mesh) const;
+
     private:
-        void setUniformData(const VulkanUniformBuffer* uniformBuffer, const Frame& frame) const;
+        void setMeshUniformData(const Mesh& mesh, const ViewProjection& viewProjection) const;
 
-        void bindDescriptorSet(VkDescriptorSet descriptorSet, const VulkanCommandBuffer& commandBuffer) const;
+        void setMeshPushConstantData(const Mesh& mesh) const;
 
-        void drawIndexed(const VulkanCommandBuffer& commandBuffer) const;
+        void bindMesh(const Mesh& mesh) const;
+
+        void drawMeshIndexed(const Mesh& mesh) const;
 
         void reloadShaders();
 
@@ -106,8 +91,6 @@ namespace Blink {
         void createDescriptorSetLayout();
 
         void createDescriptorPool();
-
-        void createDescriptorSets();
 
         void createGraphicsPipelineObjects();
 

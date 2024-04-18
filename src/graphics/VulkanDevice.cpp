@@ -3,7 +3,7 @@
 
 namespace Blink {
 
-    VulkanDevice::VulkanDevice(const VulkanDeviceConfig& config) noexcept(false) : config(config) {
+    VulkanDevice::VulkanDevice(const VulkanDeviceConfig& config) : config(config) {
         const QueueFamilyIndices& queueFamilyIndices = config.physicalDevice->getQueueFamilyIndices();
 
         createDevice(queueFamilyIndices);
@@ -271,7 +271,7 @@ namespace Blink {
         vkDestroySampler(device, sampler, BL_VULKAN_ALLOCATOR);
     }
 
-    void VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) noexcept(false) {
+    void VulkanDevice::createDevice(const QueueFamilyIndices& queueFamilyIndices) {
         const VkPhysicalDeviceFeatures features = config.physicalDevice->getFeatures();
 
         std::vector<const char*> extensionNames;

@@ -35,15 +35,18 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
+        ${SRC_DIR}/graphics/Mesh.h
         ${SRC_DIR}/graphics/Quad.h
         ${SRC_DIR}/graphics/Renderer.cpp
         ${SRC_DIR}/graphics/Renderer.h
+        ${SRC_DIR}/graphics/PushConstantData.h
         ${SRC_DIR}/graphics/Texture.cpp
         ${SRC_DIR}/graphics/Texture.h
-        ${SRC_DIR}/graphics/UniformBufferObject.h
+        ${SRC_DIR}/graphics/UniformBufferData.h
         ${SRC_DIR}/graphics/Vertex.h
         ${SRC_DIR}/graphics/VertexAttribute.cpp
         ${SRC_DIR}/graphics/VertexAttribute.h
+        ${SRC_DIR}/graphics/ViewProjection.h
         ${SRC_DIR}/graphics/VulkanApp.cpp
         ${SRC_DIR}/graphics/VulkanApp.h
         ${SRC_DIR}/graphics/VulkanBuffer.cpp

@@ -22,7 +22,7 @@ namespace Blink {
         VkPipeline pipeline = nullptr;
 
     public:
-        explicit VulkanGraphicsPipeline(const VulkanGraphicsPipelineConfig& config) noexcept(false);
+        explicit VulkanGraphicsPipeline(const VulkanGraphicsPipelineConfig& config);
 
         ~VulkanGraphicsPipeline();
 

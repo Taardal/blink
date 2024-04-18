@@ -25,7 +25,7 @@ namespace Blink {
         VkSurfaceKHR surface = nullptr;
 
     public:
-        VulkanApp(const VulkanAppConfig& config) noexcept(false);
+        VulkanApp(const VulkanAppConfig& config);
 
         ~VulkanApp();
 
@@ -38,15 +38,15 @@ namespace Blink {
             const std::vector<const char*>& requiredExtensions,
             const std::vector<const char*>& validationLayers,
             const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo
-        ) noexcept(false);
+        );
 
         void destroyInstance() const;
 
-        void createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) noexcept(false);
+        void createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo);
 
         void destroyDebugMessenger() const;
 
-        void createSurface() noexcept(false);
+        void createSurface();
 
         void destroySurface() const;
 

@@ -22,13 +22,13 @@ namespace Blink {
         VulkanBuffer* stagingBuffer = nullptr;
 
     public:
-        explicit VulkanVertexBuffer(const VulkanVertexBufferConfig& config) noexcept(false);
+        explicit VulkanVertexBuffer(const VulkanVertexBufferConfig& config);
 
         ~VulkanVertexBuffer();
 
         operator VkBuffer() const;
 
-        void setData(const std::vector<Vertex>& vertices) const noexcept(false);
+        void setData(const std::vector<Vertex>& vertices) const;
 
         void bind(VkCommandBuffer commandBuffer) const;
     };

@@ -25,8 +25,8 @@ namespace Blink {
     public:
         bool exists(const char* path) const;
 
-        std::vector<char> readBytes(const char* path) const noexcept(false);
+        std::vector<char> readBytes(const char* path) const;
 
-        Image readImage(const char* path) const noexcept(false);
+        Image readImage(const char* path) const;
     };
 }

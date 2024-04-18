@@ -22,17 +22,17 @@ namespace Blink {
         VkDeviceMemory memory = nullptr;
 
     public:
-        explicit VulkanBuffer(const VulkanBufferConfig& config) noexcept(false);
+        explicit VulkanBuffer(const VulkanBufferConfig& config);
 
         ~VulkanBuffer();
 
         operator VkBuffer() const;
 
-        void setData(void* src) const noexcept(false);
+        void setData(void* src) const;
 
-        void copyFrom(VulkanBuffer* sourceBuffer) noexcept(false);
+        void copyFrom(VulkanBuffer* sourceBuffer);
 
-        void copyTo(VulkanBuffer* destinationBuffer) noexcept(false);
+        void copyTo(VulkanBuffer* destinationBuffer);
 
     public:
         static void copy(
@@ -40,6 +40,6 @@ namespace Blink {
             VulkanBuffer* destinationBuffer,
             VulkanDevice* device,
             VulkanCommandPool* commandPool
-        ) noexcept(false);
+        );
     };
 }
