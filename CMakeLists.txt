@@ -155,7 +155,21 @@ add_custom_target(
         COMMENT "Copying textures"
 )
 
-add_dependencies(${PROJECT_NAME} CompileLua CompileShaders CopyTextures)
+set(MODELS_SOURCE_DIR ${PROJECT_SOURCE_DIR}/res/models)
+set(MODELS_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/models)
+add_custom_target(
+        CopyModels
+        COMMAND ${CMAKE_COMMAND} -D MODELS_SOURCE_DIR=${MODELS_SOURCE_DIR} -D MODELS_OUTPUT_DIR=${MODELS_OUTPUT_DIR} -P ${CMAKE_DIR}/copy_models.cmake
+        COMMENT "Copying textures"
+)
+
+add_dependencies(
+        ${PROJECT_NAME}
+        CompileLua
+        CompileShaders
+        CopyTextures
+        CopyModels
+)
 
 #########################################
 # Preprocessor macros (used in C++)     #
@@ -221,6 +235,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${LIB_DIR}/stb_image)
+target_include_directories(${PROJECT_NAME} PRIVATE ${LIB_DIR}/tiny_obj_loader)
 
 #########################################
 # Installation                          #

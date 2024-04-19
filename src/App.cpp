@@ -70,6 +70,7 @@ namespace Blink {
 
     void App::run() {
         if (!initialized) {
+            BL_LOG_WARN("Could not run because initialization is not complete");
             return;
         }
         try {
@@ -95,7 +96,7 @@ namespace Blink {
         fps++;
         fpsUpdateTimestep += timestep;
         if (fpsUpdateTimestep >= 1.0) {
-            BL_LOG_INFO("FPS [{}]", fps);
+            BL_LOG_DEBUG("FPS [{}]", fps);
             fps = 0;
             fpsUpdateTimestep = 0;
         }
@@ -118,6 +119,7 @@ namespace Blink {
             return;
         }
         renderer->onEvent(event);
+        camera->onEvent(event);
         scene->onEvent(event);
     }
 }

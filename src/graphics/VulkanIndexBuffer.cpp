@@ -33,14 +33,14 @@ namespace Blink {
         return *buffer;
     }
 
-    void VulkanIndexBuffer::setData(const std::vector<uint16_t>& indices) const {
+    void VulkanIndexBuffer::setData(const std::vector<uint32_t>& indices) const {
         stagingBuffer->setData((void*) indices.data());
         stagingBuffer->copyTo(buffer);
     }
 
     void VulkanIndexBuffer::bind(VkCommandBuffer commandBuffer) const {
         constexpr VkDeviceSize offset = 0;
-        constexpr VkIndexType indexType = VK_INDEX_TYPE_UINT16;
+        constexpr VkIndexType indexType = VK_INDEX_TYPE_UINT32;
         vkCmdBindIndexBuffer(commandBuffer, *buffer, offset, indexType);
     }
 

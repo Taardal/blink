@@ -25,7 +25,7 @@ namespace Blink {
 
         operator VkBuffer() const;
 
-        void setData(const std::vector<uint16_t>& indices) const;
+        void setData(const std::vector<uint32_t>& indices) const;
 
         void bind(VkCommandBuffer commandBuffer) const;
     };

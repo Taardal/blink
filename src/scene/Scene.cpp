@@ -10,6 +10,7 @@ namespace Blink {
         initializePlayerComponents();
         initializeEnemyComponents();
         config.luaEngine->createEntityBindings(&registry);
+        //config.camera->setPosition({2.0f, 2.0f, 2.0f});
     }
 
     Scene::~Scene() {
@@ -34,7 +35,7 @@ namespace Blink {
             glm::mat4 rotation = glm::mat4(1.0f);
             glm::mat4 scale = glm::mat4(1.0f);
             auto& meshComponent = registry.get<MeshComponent>(entity);
-            meshComponent.mesh.model = translation * rotation * scale;
+            meshComponent.mesh.model = glm::mat4(1.0f);//translation * rotation * scale;
         }
     }
 
@@ -50,7 +51,7 @@ namespace Blink {
 
     void Scene::initializePlayerComponents() {
         TransformComponent transformComponent{};
-        transformComponent.position = { 2.0f, 2.0f, 2.0f };
+        transformComponent.position = { 0.0f, 0.0f, 0.0f };
         registry.emplace<TransformComponent>(player, transformComponent);
 
         TagComponent tagComponent{};
@@ -69,7 +70,7 @@ namespace Blink {
 
     void Scene::initializeEnemyComponents() {
         TransformComponent transformComponent{};
-        transformComponent.position = { 1.75f, 1.75f, 1.75f };
+        transformComponent.position = { 0.0f, 0.0f, 0.0f };
         registry.emplace<TransformComponent>(enemy, transformComponent);
 
         TagComponent tagComponent{};

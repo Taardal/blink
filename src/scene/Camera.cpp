@@ -3,22 +3,33 @@
 
 namespace Blink {
     Camera::Camera(const CameraConfig& config) : config(config) {
-        WindowSize windowSize = config.window->getSizeInPixels();
-        aspectRatio = (float) windowSize.width / (float) windowSize.height;
-        updateDirections();
+        updateAspectRatio();
+        //updateDirections();
     }
 
     glm::mat4 Camera::getView() const {
-        return glm::lookAt(position, position + frontDirection, upDirection);
+        //return glm::lookAt(position, position + frontDirection, upDirection);
+
+        return glm::lookAt(position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     }
 
     glm::mat4 Camera::getProjection() const {
         return glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
     }
 
+    void Camera::setPosition(const glm::vec3& position) {
+        this->position = position;
+    }
+
+    void Camera::onEvent(Event& event) {
+        if (event.type == EventType::WindowResize) {
+            updateAspectRatio();
+        }
+    }
+
     void Camera::update(double timestep) {
         processKeyboardInput((float) timestep);
-        updateDirections();
+        //updateDirections();
         //logState();
     }
 
@@ -81,9 +92,15 @@ namespace Blink {
         rightDirection = glm::normalize(glm::cross(frontDirection, worldUpDirection));
         upDirection = glm::normalize(glm::cross(rightDirection, frontDirection));
 
-        // Rotate the up direction vector using roll
+        // Apply roll rotation
         glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(roll), frontDirection);
         upDirection = glm::vec3(rollMatrix * glm::vec4(upDirection, 0.0f));
+        rightDirection = glm::vec3(rollMatrix * glm::vec4(rightDirection, 0.0f));
+    }
+
+    void Camera::updateAspectRatio() {
+        WindowSize windowSize = config.window->getSizeInPixels();
+        aspectRatio = (float) windowSize.width / (float) windowSize.height;
     }
 
     void Camera::logState() const {

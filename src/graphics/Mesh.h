@@ -14,7 +14,7 @@ namespace Blink {
     struct Mesh {
         glm::mat4 model;
         std::vector<Vertex> vertices;
-        std::vector<uint16_t> indices;
+        std::vector<uint32_t> indices;
         VulkanVertexBuffer* vertexBuffer = nullptr;
         VulkanIndexBuffer* indexBuffer = nullptr;
         VulkanUniformBuffer* uniformBuffer = nullptr;

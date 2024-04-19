@@ -14,9 +14,9 @@ namespace Blink {
     class Camera {
     private:
         CameraConfig config;
-        glm::vec3 position = {2.0f, 2.0f, 4.0f};
-        glm::vec3 frontDirection = {0.0f, 0.0f, 0.0f};
-        glm::vec3 upDirection = {0.0f, 0.0f, 0.0f};
+        glm::vec3 position = {2.0f, 2.0f, 2.0f};
+        glm::vec3 frontDirection = {0.0f, 0.0f, -1.0f};
+        glm::vec3 upDirection = {0.0f, 1.0f, 0.0f};
         glm::vec3 worldUpDirection = {0.0f, 1.0f, 0.0f};
         glm::vec3 rightDirection = {0.0f, 0.0f, 0.0f};
         float aspectRatio = 0.0f;
@@ -36,11 +36,18 @@ namespace Blink {
 
         glm::mat4 getProjection() const;
 
+        void setPosition(const glm::vec3& position);
+
+        void onEvent(Event& event);
+
         void update(double timestep);
 
+    private:
         void processKeyboardInput(float timestep);
 
         void updateDirections();
+
+        void updateAspectRatio();
 
         void logState() const;
     };

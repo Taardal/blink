@@ -5,6 +5,9 @@
 #include "graphics/PushConstantData.h"
 #include "window/KeyEvent.h"
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
 namespace Blink {
     Renderer::Renderer(const RendererConfig& config) {
         VulkanAppConfig vulkanAppConfig{};
@@ -95,15 +98,76 @@ namespace Blink {
     }
 
     Mesh Renderer::createMesh() const {
-        static std::vector<Vertex> vertices = {
-            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-        };
-        static std::vector<uint16_t> indices = {
-            0, 1, 2, 2, 3, 0,
-        };
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
+
+        Image image = config.fileSystem->readImage("textures/viking_room.png");
+
+        VulkanImageConfig textureImageConfig{};
+        textureImageConfig.device = device;
+        textureImageConfig.commandPool = commandPool;
+        textureImageConfig.width = image.width;
+        textureImageConfig.height = image.height;
+        textureImageConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
+        textureImageConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        textureImageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+        textureImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+        auto texture = new VulkanImage(textureImageConfig);
+        texture->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        texture->setData(image);
+        texture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        image.free();
+
+        /*
+         * An OBJ file consists of positions, normals, texture coordinates and faces.
+         * Faces consist of an arbitrary amount of vertices, where each vertex refers to a position, normal and/or texture coordinate by index.
+         * The attrib container holds all of the positions, normals and texture coordinates in its attrib.vertices, attrib.normals and attrib.texcoords vectors.
+         * The shapes container contains all of the separate objects and their faces.
+         * Each face consists of an array of vertices, and each vertex contains the indices of the position, normal and texture coordinate attributes.
+         */
+        tinyobj::attrib_t attrib;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+        std::string err;
+
+        const std::string modelFilepath = "models/viking_room.obj";
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, modelFilepath.c_str())) {
+            BL_THROW(err);
+        }
+
+        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+        for (const tinyobj::shape_t& shape : shapes) {
+            for (const tinyobj::index_t& index : shape.mesh.indices) {
+
+                Vertex vertex{};
+                vertex.color = {1.0f, 1.0f, 1.0f};
+
+                // Unfortunately the attrib.vertices array is an array of float values instead of something like glm::vec3, so we need to multiply the index by 3.
+                vertex.position = {
+                        attrib.vertices[3 * index.vertex_index + 0],
+                        attrib.vertices[3 * index.vertex_index + 1],
+                        attrib.vertices[3 * index.vertex_index + 2]
+                };
+                // Similarly, there are two texture coordinate components per entry.
+                vertex.textureCoordinate = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        // The OBJ format assumes a coordinate system where a vertical coordinate of 0 means the bottom of the image,
+                        // however we've uploaded our image into Vulkan in a top to bottom orientation where 0 means the top of the image.
+                        // This can be solved by flipping the vertical component of the texture coordinates
+                        1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                };
+                // The offsets of 0, 1 and 2 are used to access the X, Y and Z components,
+                // or the U and V components in the case of texture coordinates.
+
+                if (uniqueVertices.count(vertex) == 0) {
+                    uniqueVertices[vertex] = (uint32_t) vertices.size();
+                    vertices.push_back(vertex);
+                }
+                indices.push_back(uniqueVertices[vertex]);
+            }
+        }
 
         VulkanVertexBufferConfig vertexBufferConfig{};
         vertexBufferConfig.device = device;
@@ -124,25 +188,6 @@ namespace Blink {
         uniformBufferConfig.commandPool = commandPool;
         uniformBufferConfig.size = sizeof(UniformBufferData);
         auto uniformBuffer = new VulkanUniformBuffer(uniformBufferConfig);
-
-        Image image = config.fileSystem->readImage("textures/sculpture.png");
-
-        VulkanImageConfig textureImageConfig{};
-        textureImageConfig.device = device;
-        textureImageConfig.commandPool = commandPool;
-        textureImageConfig.width = image.width;
-        textureImageConfig.height = image.height;
-        textureImageConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
-        textureImageConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        textureImageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-        textureImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-        auto texture = new VulkanImage(textureImageConfig);
-        texture->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        texture->setData(image);
-        texture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-        image.free();
 
         VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 

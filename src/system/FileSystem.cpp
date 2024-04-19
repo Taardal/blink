@@ -55,7 +55,7 @@ namespace Blink {
         image.width = width;
         image.height = height;
         image.channels = channels;
-        image.size = width * height * channels;
+        image.size = width * height * desiredChannels;
         image.pixels = pixels;
         return image;
     }
