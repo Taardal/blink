@@ -8,7 +8,10 @@
 
 namespace Blink {
     struct TransformComponent {
-        glm::vec3 position;
+        glm::vec3 position = {0, 0, 0};
+        glm::mat4 translation = glm::mat4(1.0f);
+        glm::mat4 rotation = glm::mat4(1.0f);
+        glm::mat4 scale = glm::mat4(1.0f);
     };
 
     struct TagComponent {

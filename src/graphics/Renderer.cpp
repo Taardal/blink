@@ -160,7 +160,6 @@ namespace Blink {
                 };
                 // The offsets of 0, 1 and 2 are used to access the X, Y and Z components,
                 // or the U and V components in the case of texture coordinates.
-
                 if (uniqueVertices.count(vertex) == 0) {
                     uniqueVertices[vertex] = (uint32_t) vertices.size();
                     vertices.push_back(vertex);
