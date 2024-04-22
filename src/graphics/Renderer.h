@@ -2,6 +2,7 @@
 
 #include "system/FileSystem.h"
 #include "window/Window.h"
+#include "graphics/ResourceLoader.h"
 #include "graphics/VulkanApp.h"
 #include "graphics/VulkanPhysicalDevice.h"
 #include "graphics/VulkanDevice.h"
@@ -31,6 +32,7 @@ namespace Blink {
         std::string engineName;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
+        ResourceLoader* resourceLoader = nullptr;
     };
 
     class Renderer {

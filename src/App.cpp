@@ -1,4 +1,6 @@
 #include "App.h"
+
+#include "graphics/ResourceLoader.h"
 #include "window/KeyEvent.h"
 
 namespace Blink {
@@ -33,11 +35,16 @@ namespace Blink {
         keyboardConfig.window = window;
         BL_EXECUTE_THROW(keyboard = new Keyboard(keyboardConfig));
 
+        ResourceLoaderConfig resourceLoaderConfig{};
+        resourceLoaderConfig.fileSystem = fileSystem;
+        BL_EXECUTE_THROW(resourceLoader = new ResourceLoader(resourceLoaderConfig));
+
         RendererConfig rendererConfig{};
         rendererConfig.applicationName = config.name;
         rendererConfig.engineName = config.name;
         rendererConfig.fileSystem = fileSystem;
         rendererConfig.window = window;
+        rendererConfig.resourceLoader = resourceLoader;
         BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
 
         LuaEngineConfig luaEngineConfig{};

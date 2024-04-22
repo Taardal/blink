@@ -124,21 +124,21 @@ namespace Blink {
         config.commandPool->freeCommandBuffer(commandBuffer.vk_ptr());
     }
 
-    void VulkanImage::setData(const Image& image) const {
+    void VulkanImage::setData(std::shared_ptr<Image> image) const {
         VulkanBufferConfig stagingBufferConfig{};
         stagingBufferConfig.device = config.device;
         stagingBufferConfig.commandPool = config.commandPool;
-        stagingBufferConfig.size = image.size;
+        stagingBufferConfig.size = image->size;
         stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
         VulkanBuffer stagingBuffer(stagingBufferConfig);
-        stagingBuffer.setData(image.pixels);
+        stagingBuffer.setData(image->pixels);
 
         constexpr uint32_t depth = 1;
         VkExtent3D imageExtent = {
-                (uint32_t) image.width,
-                (uint32_t) image.height,
+                (uint32_t) image->width,
+                (uint32_t) image->height,
                 depth
         };
 

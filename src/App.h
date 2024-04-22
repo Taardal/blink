@@ -4,6 +4,7 @@
 #include "system/FileSystem.h"
 #include "window/Window.h"
 #include "window/Keyboard.h"
+#include "graphics/ResourceLoader.h"
 #include "graphics/Renderer.h"
 #include "lua/LuaEngine.h"
 #include "scene/Camera.h"
@@ -17,6 +18,7 @@ namespace Blink {
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;
+        ResourceLoader* resourceLoader = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
         Camera* camera = nullptr;
