@@ -10,7 +10,7 @@ namespace Blink {
         initializePlayerComponents();
         initializeEnemyComponents();
         config.luaEngine->createEntityBindings(&registry);
-        //config.camera->setPosition({2.0f, 2.0f, 2.0f});
+        //config.camera->setPosition({-2, 0, 0});
     }
 
     Scene::~Scene() {
@@ -50,7 +50,8 @@ namespace Blink {
         TransformComponent transformComponent{};
         transformComponent.position = { 0, 0, 0 };
         transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-        transformComponent.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         registry.emplace<TransformComponent>(player, transformComponent);
 
         TagComponent tagComponent{};
@@ -68,18 +69,23 @@ namespace Blink {
     }
 
     void Scene::initializeEnemyComponents() {
-        TransformComponent transformComponent{};
-        transformComponent.position = { 0, 0, 0 };
-        transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-        transformComponent.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        registry.emplace<TransformComponent>(enemy, transformComponent);
+        for (uint32_t i = 0; i < 5; i++) {
+            entt::entity enemy = registry.create();
 
-        TagComponent tagComponent{};
-        tagComponent.tag = "Enemy";
-        registry.emplace<TagComponent>(enemy, tagComponent);
+            TransformComponent transformComponent{};
+            transformComponent.position = { i, i, i };
+            transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
+            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            registry.emplace<TransformComponent>(enemy, transformComponent);
 
-        MeshComponent meshComponent{};
-        meshComponent.mesh = config.renderer->createMesh();
-        registry.emplace<MeshComponent>(enemy, meshComponent);
+            TagComponent tagComponent{};
+            tagComponent.tag = "Enemy" + std::to_string(i);
+            registry.emplace<TagComponent>(enemy, tagComponent);
+
+            MeshComponent meshComponent{};
+            meshComponent.mesh = config.renderer->createMesh();
+            registry.emplace<MeshComponent>(enemy, meshComponent);
+        }
     }
 }

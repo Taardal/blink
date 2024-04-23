@@ -17,7 +17,6 @@ namespace Blink {
         std::vector<uint32_t> indices;
         VulkanVertexBuffer* vertexBuffer = nullptr;
         VulkanIndexBuffer* indexBuffer = nullptr;
-        VulkanUniformBuffer* uniformBuffer = nullptr;
         VulkanImage* texture = nullptr;
         VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
     };

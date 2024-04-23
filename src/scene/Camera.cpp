@@ -2,13 +2,13 @@
 #include "scene/Camera.h"
 
 namespace Blink {
-    Camera::Camera(const CameraConfig& config) : config(config) {
+    Camera::Camera(const CameraConfig& config)
+        : config(config),
+          position({0, 0, 0}),
+          forwardDirection({0, 0, -1}),
+          upDirection({0, 1, 0})
+    {
         updateAspectRatio();
-
-        position = {0, 0, 0};
-        forwardDirection = {0, 0, -1};
-        upDirection = {0, 1, 0};
-
         updateDirections();
     }
 
@@ -58,7 +58,6 @@ namespace Blink {
         if (config.keyboard->isPressed(Key::C)) {
             position -= worldUpDirection * velocity;
         }
-
         if (config.keyboard->isPressed(Key::Up)) {
             pitch += lookSpeed;
         }

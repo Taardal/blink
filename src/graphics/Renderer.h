@@ -38,6 +38,7 @@ namespace Blink {
     class Renderer {
     private:
         static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
+        static constexpr uint32_t MAX_MESHES = 100;
 
     private:
         RendererConfig config;
@@ -47,9 +48,13 @@ namespace Blink {
         VulkanCommandPool* commandPool = nullptr;
         std::vector<VulkanCommandBuffer> commandBuffers;
         VulkanSwapChain* swapChain = nullptr;
+        std::vector<VulkanUniformBuffer*> uniformBuffers;
         VkSampler textureSampler;
-        VkDescriptorSetLayout descriptorSetLayout = nullptr;
-        VkDescriptorPool descriptorPool = nullptr;
+        VkDescriptorSetLayout perFrameDescriptorSetLayout = nullptr;
+        VkDescriptorSetLayout perMeshDescriptorSetLayout = nullptr;
+        VkDescriptorPool perFrameDescriptorPool = nullptr;
+        VkDescriptorPool perMeshDescriptorPool = nullptr;
+        std::vector<VkDescriptorSet> perFrameDescriptorSets;
         VulkanShader* vertexShader = nullptr;
         VulkanShader* fragmentShader = nullptr;
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
@@ -76,9 +81,9 @@ namespace Blink {
         void destroyMesh(const Mesh& mesh) const;
 
     private:
-        void setMeshUniformData(const Mesh& mesh, const ViewProjection& viewProjection) const;
+        void setUniformData(const ViewProjection& viewProjection) const;
 
-        void setMeshPushConstantData(const Mesh& mesh) const;
+        void setPushConstantData(const Mesh& mesh) const;
 
         void bindMesh(const Mesh& mesh) const;
 
@@ -90,9 +95,11 @@ namespace Blink {
 
         void createTextureSampler();
 
-        void createDescriptorSetLayout();
+        void createDescriptorSetLayouts();
 
-        void createDescriptorPool();
+        void createDescriptorPools();
+
+        void createDescriptorSets();
 
         void createGraphicsPipelineObjects();
 

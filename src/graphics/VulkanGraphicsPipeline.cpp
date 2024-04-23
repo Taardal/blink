@@ -90,8 +90,8 @@ namespace Blink {
 
         VkPipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        layoutCreateInfo.setLayoutCount = 1;
-        layoutCreateInfo.pSetLayouts = &config.descriptorSetLayout;
+        layoutCreateInfo.setLayoutCount = config.descriptorSetLayouts.size();
+        layoutCreateInfo.pSetLayouts = config.descriptorSetLayouts.data();
         layoutCreateInfo.pushConstantRangeCount = 1;
         layoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 

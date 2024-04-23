@@ -12,7 +12,7 @@ namespace Blink {
         VulkanSwapChain* swapChain = nullptr;
         VulkanShader* vertexShader = nullptr;
         VulkanShader* fragmentShader = nullptr;
-        VkDescriptorSetLayout descriptorSetLayout = nullptr;
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
     };
 
     class VulkanGraphicsPipeline {

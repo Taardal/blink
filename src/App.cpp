@@ -77,7 +77,6 @@ namespace Blink {
 
     void App::run() {
         if (!initialized) {
-            BL_LOG_WARN("Could not run because initialization is not complete");
             return;
         }
         try {
