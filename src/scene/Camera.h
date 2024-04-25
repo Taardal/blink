@@ -25,11 +25,11 @@ namespace Blink {
         float yaw = 0;
         float pitch = 0.0f;
         float roll = 0.0f;
-        float moveSpeed = 2.5f;
+        float moveSpeed = 250;
         float lookSpeed = 1.0f;
         float fieldOfView = glm::radians(45.0f);
         float nearClip = 0.1f;
-        float farClip = 10.0f;
+        float farClip = 10000.0f;
 
     public:
         explicit Camera(const CameraConfig& config);

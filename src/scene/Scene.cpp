@@ -8,7 +8,7 @@
 namespace Blink {
     Scene::Scene(const SceneConfig& config) : config(config), player(registry.create()), enemy(registry.create()) {
         initializePlayerComponents();
-        initializeEnemyComponents();
+        //initializeEnemyComponents();
         config.luaEngine->createEntityBindings(&registry);
         //config.camera->setPosition({-2, 0, 0});
     }
@@ -50,8 +50,9 @@ namespace Blink {
         TransformComponent transformComponent{};
         transformComponent.position = { 0, 0, 0 };
         transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-        transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        //transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        //transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        //transformComponent.scale = glm::scale(transformComponent.scale, { 1, 1, 1 });
         registry.emplace<TransformComponent>(player, transformComponent);
 
         TagComponent tagComponent{};

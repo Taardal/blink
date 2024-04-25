@@ -6,6 +6,7 @@
 #include "graphics/VulkanCommandPool.h"
 #include "graphics/VulkanDevice.h"
 
+#include <tiny_obj_loader.h>
 #include <vector>
 
 namespace Blink {
@@ -28,8 +29,15 @@ namespace Blink {
     public:
         explicit ResourceLoader(const ResourceLoaderConfig& config);
 
-        std::shared_ptr<Image> loadTexture(const std::string& name) const;
+        std::shared_ptr<Image> loadTexture(const std::string& path) const;
 
-        std::shared_ptr<Model> loadModel(const std::string& name) const;
+        std::shared_ptr<Model> loadModel(const std::string& path, const std::string& name) const;
+
+    private:
+        void printModelInfo(
+            const tinyobj::attrib_t& attrib,
+            const std::vector<tinyobj::shape_t>& shapes,
+            const std::vector<tinyobj::material_t>& materials
+        ) const;
     };
 }

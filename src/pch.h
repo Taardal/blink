@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard library
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <map>

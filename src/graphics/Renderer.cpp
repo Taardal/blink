@@ -113,7 +113,8 @@ namespace Blink {
     }
 
     Mesh Renderer::createMesh() const {
-        std::shared_ptr<Image> image = config.resourceLoader->loadTexture("viking_room.png");
+        std::string path = "textures/viking_room.png";
+        std::shared_ptr<Image> image = config.resourceLoader->loadTexture(path);
 
         VulkanImageConfig textureImageConfig{};
         textureImageConfig.device = device;
@@ -130,7 +131,69 @@ namespace Blink {
         texture->setData(image);
         texture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        std::shared_ptr<Model> model = config.resourceLoader->loadModel("viking_room.obj");
+        std::string modelPath = "models/sponza";
+        std::string modelName = "sponza";
+        std::shared_ptr<Model> model = config.resourceLoader->loadModel(modelPath, modelName);
+
+        std::vector<VulkanImage*> fooTextures;
+        for (int i = 0; i < model->materials.size(); ++i) {
+            auto material = model->materials[i];
+            if (material.diffuse_texname.empty()) {
+                continue;
+            }
+            std::string imagePath = modelPath + "/" + material.diffuse_texname;
+            std::shared_ptr<Image> fooImage = config.resourceLoader->loadTexture(imagePath);
+            auto fooTexture = new VulkanImage({
+                .device = device,
+                .commandPool = commandPool,
+                .width = (uint32_t) fooImage->width,
+                .height = (uint32_t) fooImage->height,
+                .format = VK_FORMAT_R8G8B8A8_SRGB,
+                .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                .aspect = VK_IMAGE_ASPECT_COLOR_BIT,
+                .memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            });
+            fooTexture->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            fooTexture->setData(fooImage);
+            fooTexture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+            fooTextures.push_back(fooTexture);
+        }
+        BL_ASSERT(!fooTextures.empty());
+        for (auto fooTexture : fooTextures) {
+            BL_ASSERT(fooTexture != nullptr);
+        }
+
+        // Change fragment to use an array of samplers
+        // Use the sampler count limit of the physical device --> uint32_t maxDescriptorSetSamplers = physicalDevice->getProperties().limits.maxDescriptorSetSamplers;
+        // Reuse the single texture sampler in all descriptor sets
+        // Pass a texture index (int) to vertex shader as vertex attribute
+        // Forward the texture index from the vertex to the fragment shader
+
+        // During initialization:
+        //
+        // Load texture images corresponding to the materials of the model (RESEARCH ME!)
+        // for (const auto& material : model->materials) {
+        //     std::shared_ptr<Image> image = config.resourceLoader->loadTexture(material.texturePath);
+        // }
+        //
+        // Create one descriptor set per texture (RESEARCH ME --> ONE DESCRIPTOR SET PER TEXTURE NECESSARY ??)
+        // std::vector<VkDescriptorSet> descriptorSets;
+        // for (size_t i = 0; i < textures.size(); ++i) {
+        //     // Allocate set
+        //     // Update set
+        //     descriptorSets.push_back(descriptorSet)
+        // }
+        //
+        // Modify descriptor set layout(s) to accomodate an array of samplers
+        // Define an array of descriptor set layout bindings for texture samplers
+        // std::array<VkDescriptorSetLayoutBinding, 4> textureSamplerBindings = {};
+
+        // During rendering: Bind textures & draw faces (RESEARCH ME!)
+        // tinyobjloader --> materials ?? shapes ?? READ MORE LAZY PERSON
+        // Draw faces ??? NO IDEA RESEARCH ME PLZ
+        // "Bind textures" --> probably binding the corresponding descriptor set
+
 
         VulkanVertexBufferConfig vertexBufferConfig{};
         vertexBufferConfig.device = device;
@@ -173,6 +236,9 @@ namespace Blink {
         device->updateDescriptorSets(1, &descriptorWrite);
 
         Mesh mesh{};
+
+        mesh.fooTextures = fooTextures;
+
         mesh.vertices = model->vertices;
         mesh.indices = model->indices;
         mesh.vertexBuffer = vertexBuffer;
@@ -183,6 +249,9 @@ namespace Blink {
     }
 
     void Renderer::destroyMesh(const Mesh& mesh) const {
+        for (auto fooTexture : mesh.fooTextures) {
+            delete fooTexture;
+        }
         delete mesh.texture;
         delete mesh.indexBuffer;
         delete mesh.vertexBuffer;
