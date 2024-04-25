@@ -160,8 +160,39 @@ namespace Blink {
             fooTextures.push_back(fooTexture);
         }
         BL_ASSERT(!fooTextures.empty());
-        for (auto fooTexture : fooTextures) {
+        for (VulkanImage* fooTexture : fooTextures) {
             BL_ASSERT(fooTexture != nullptr);
+        }
+
+        std::vector<VkDescriptorSet> fooDescriptorSets;
+        for (VulkanImage* fooTexture : fooTextures) {
+            VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+
+            VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
+            descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            descriptorSetAllocateInfo.descriptorPool = perMeshDescriptorPool;
+            descriptorSetAllocateInfo.descriptorSetCount = 1;
+            descriptorSetAllocateInfo.pSetLayouts = &perMeshDescriptorSetLayout;
+
+            BL_ASSERT_THROW_VK_SUCCESS(device->allocateDescriptorSets(&descriptorSetAllocateInfo, &descriptorSet));
+
+            VkDescriptorImageInfo descriptorImageInfo{};
+            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            descriptorImageInfo.imageView = fooTexture->getImageView();
+            descriptorImageInfo.sampler = textureSampler;
+
+            VkWriteDescriptorSet descriptorWrite{};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = descriptorSet;
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = 0;
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pImageInfo = &descriptorImageInfo;
+
+            device->updateDescriptorSets(1, &descriptorWrite);
+
+            fooDescriptorSets.push_back(descriptorSet);
         }
 
         // Change fragment to use an array of samplers
@@ -238,6 +269,7 @@ namespace Blink {
         Mesh mesh{};
 
         mesh.fooTextures = fooTextures;
+        mesh.fooDescriptorSets = fooDescriptorSets;
 
         mesh.vertices = model->vertices;
         mesh.indices = model->indices;

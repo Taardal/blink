@@ -74,7 +74,7 @@ namespace Blink {
         BL_LOG_DEBUG("Materials [{}]", materials.size());
 
         for (int i = 0; i < materials.size(); ++i) {
-            auto& material = materials[i];
+            tinyobj::material_t& material = materials[i];
             BL_LOG_DEBUG("--------------------------------------------------------------------");
             BL_LOG_DEBUG("| {}", material.name);
             BL_LOG_DEBUG("--------------------------------------------------------------------");
@@ -85,6 +85,17 @@ namespace Blink {
             BL_LOG_DEBUG("| bump_texname                | {}", material.bump_texname);
             BL_LOG_DEBUG("| displacement_texname        | {}", material.displacement_texname);
             BL_LOG_DEBUG("| alpha_texname               | {}", material.alpha_texname);
+        }
+
+        for (int i = 0; i < shapes.size(); ++i) {
+            tinyobj::shape_t& shape = shapes[i];
+            BL_LOG_DEBUG("Shape [{}]", shape.name);
+            for (int j = 0; j < shape.mesh.num_face_vertices.size(); ++j) {
+                int materialId = shape.mesh.material_ids[j];
+                const tinyobj::material_t material = materials[materialId];
+                std::string textureName = material.diffuse_texname;
+                BL_LOG_DEBUG("Texture name [{}]", textureName);
+            }
         }
 
         //printModelInfo(attrib, shapes, materials);
