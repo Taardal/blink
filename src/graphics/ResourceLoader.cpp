@@ -87,16 +87,20 @@ namespace Blink {
             BL_LOG_DEBUG("| alpha_texname               | {}", material.alpha_texname);
         }
 
-        for (int i = 0; i < shapes.size(); ++i) {
-            tinyobj::shape_t& shape = shapes[i];
-            BL_LOG_DEBUG("Shape [{}]", shape.name);
-            for (int j = 0; j < shape.mesh.num_face_vertices.size(); ++j) {
-                int materialId = shape.mesh.material_ids[j];
-                const tinyobj::material_t material = materials[materialId];
-                std::string textureName = material.diffuse_texname;
-                BL_LOG_DEBUG("Texture name [{}]", textureName);
-            }
-        }
+        // for (int i = 0; i < shapes.size(); ++i) {
+        //     tinyobj::shape_t& shape = shapes[i];
+        //     BL_LOG_DEBUG("Shape [{}]", shape.name);
+        //     std::string pn;
+        //     for (int j = 0; j < shape.mesh.num_face_vertices.size(); ++j) {
+        //         int materialId = shape.mesh.material_ids[j];
+        //         const tinyobj::material_t material = materials[materialId];
+        //         std::string textureName = material.diffuse_texname;
+        //         if (!textureName.empty() && textureName != pn) {
+        //             pn = textureName;
+        //             BL_LOG_DEBUG("Texture name [{}]", pn);
+        //         }
+        //     }
+        // }
 
         //printModelInfo(attrib, shapes, materials);
 
@@ -106,35 +110,74 @@ namespace Blink {
         model->shapes = shapes;
         model->materials = materials;
 
-        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-        for (const tinyobj::shape_t& shape : shapes) {
-            for (const tinyobj::index_t& index : shape.mesh.indices) {
-                Vertex vertex{};
-                vertex.color = {1.0f, 1.0f, 1.0f};
+        // Loop over shapes
+        for (size_t shapeIndex = 0; shapeIndex < shapes.size(); shapeIndex++) {
+            // Loop over faces(polygon)
+            size_t index_offset = 0;
+            tinyobj::shape_t& shape = shapes[shapeIndex];
+            for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
+                size_t fv = size_t(shape.mesh.num_face_vertices[f]);
 
-                // Unfortunately the attrib.vertices array is an array of float values instead of something like glm::vec3, so we need to multiply the index by 3.
-                vertex.position = {
-                    attrib.vertices[3 * index.vertex_index + 0],
-                    attrib.vertices[3 * index.vertex_index + 1],
-                    attrib.vertices[3 * index.vertex_index + 2]
-                };
-                // Similarly, there are two texture coordinate components per entry.
-                vertex.textureCoordinate = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    // The OBJ format assumes a coordinate system where a vertical coordinate of 0 means the bottom of the image,
-                    // however we've uploaded our image into Vulkan in a top to bottom orientation where 0 means the top of the image.
-                    // This can be solved by flipping the vertical component of the texture coordinates
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-                };
-                // The offsets of 0, 1 and 2 are used to access the X, Y and Z components,
-                // or the U and V components in the case of texture coordinates.
-                if (uniqueVertices.count(vertex) == 0) {
-                    uniqueVertices[vertex] = (uint32_t) model->vertices.size();
+                // Loop over vertices in the face.
+                for (size_t v = 0; v < fv; v++) {
+                    Vertex vertex{};
+                    vertex.color = {1.0f, 1.0f, 1.0f};
+                    vertex.textureIndex = shape.mesh.material_ids[f];
+
+                    // access to vertex
+                    tinyobj::index_t index = shape.mesh.indices[index_offset + v];
+
+                    vertex.position = {
+                        attrib.vertices[3 * index.vertex_index + 0],
+                        attrib.vertices[3 * index.vertex_index + 1],
+                        attrib.vertices[3 * index.vertex_index + 2]
+                    };
+
+                    vertex.textureCoordinate = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                    };
                     model->vertices.push_back(vertex);
+                    model->indices.push_back(index_offset + v);
                 }
-                model->indices.push_back(uniqueVertices[vertex]);
+                index_offset += fv;
+
+                // per-face material
+                shape.mesh.material_ids[f];
             }
         }
+
+        // std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+        // for (const tinyobj::shape_t& shape : shapes) {
+        //     for (const tinyobj::index_t& index : shape.mesh.indices) {
+        //         Vertex vertex{};
+        //         vertex.color = {1.0f, 1.0f, 1.0f};
+        //         vertex.textureIndex = 0;
+        //
+        //         // Unfortunately the attrib.vertices array is an array of float values instead of something like glm::vec3, so we need to multiply the index by 3.
+        //         vertex.position = {
+        //             attrib.vertices[3 * index.vertex_index + 0],
+        //             attrib.vertices[3 * index.vertex_index + 1],
+        //             attrib.vertices[3 * index.vertex_index + 2]
+        //         };
+        //         // Similarly, there are two texture coordinate components per entry.
+        //         vertex.textureCoordinate = {
+        //             attrib.texcoords[2 * index.texcoord_index + 0],
+        //             // The OBJ format assumes a coordinate system where a vertical coordinate of 0 means the bottom of the image,
+        //             // however we've uploaded our image into Vulkan in a top to bottom orientation where 0 means the top of the image.
+        //             // This can be solved by flipping the vertical component of the texture coordinates
+        //             1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+        //         };
+        //         // The offsets of 0, 1 and 2 are used to access the X, Y and Z components,
+        //         // or the U and V components in the case of texture coordinates.
+        //         if (uniqueVertices.count(vertex) == 0) {
+        //             uniqueVertices[vertex] = (uint32_t) model->vertices.size();
+        //             model->vertices.push_back(vertex);
+        //         }
+        //         model->indices.push_back(uniqueVertices[vertex]);
+        //     }
+        // }
+
         return model;
     }
 

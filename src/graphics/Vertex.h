@@ -5,20 +5,19 @@
 #include <glm/glm.hpp>
 
 namespace Blink {
-
-    typedef std::array<VkVertexInputAttributeDescription, 3> VertexAttributeDescriptions;
+    typedef std::array<VkVertexInputAttributeDescription, 4> VertexAttributeDescriptions;
 
     struct Vertex {
-        glm::vec3 position = { 0.0f, 0.0f, 0.0f };
-        glm::vec3 color = { 1.0f, 1.0f, 1.0f };
-        glm::vec2 textureCoordinate = { 0.0f, 0.0f };
+        glm::vec3 position = {0.0f, 0.0f, 0.0f};
+        glm::vec3 color = {1.0f, 1.0f, 1.0f};
+        glm::vec2 textureCoordinate = {0.0f, 0.0f};
+        uint32_t textureIndex = 0;
 
         static VkVertexInputBindingDescription getBindingDescription() {
             VkVertexInputBindingDescription bindingDescription{};
             bindingDescription.binding = 0;
             bindingDescription.stride = sizeof(Vertex);
             bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
             return bindingDescription;
         }
 
@@ -40,10 +39,19 @@ namespace Blink {
             attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
             attributeDescriptions[2].offset = offsetof(Vertex, textureCoordinate);
 
+            attributeDescriptions[3].binding = 0;
+            attributeDescriptions[3].location = 3;
+            attributeDescriptions[3].format = VK_FORMAT_R32_UINT;
+            attributeDescriptions[3].offset = offsetof(Vertex, textureIndex);
+
             return attributeDescriptions;
         }
+
         bool operator==(const Vertex& other) const {
-            return position == other.position && color == other.color && textureCoordinate == other.textureCoordinate;
+            return position == other.position
+                   && color == other.color
+                   && textureCoordinate == other.textureCoordinate
+                   && textureIndex == other.textureIndex;
         }
     };
 }
@@ -57,7 +65,9 @@ namespace std {
     template<>
     struct hash<Blink::Vertex> {
         size_t operator()(Blink::Vertex const& vertex) const {
-            return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.textureCoordinate) << 1);
+            return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                   (hash<glm::vec2>()(vertex.textureCoordinate) << 1) ^
+                   (hash<uint32_t>()(vertex.textureIndex) << 1);
         }
     };
 }
