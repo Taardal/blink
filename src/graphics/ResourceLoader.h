@@ -14,6 +14,7 @@ namespace Blink {
         std::string modelPath;
         std::string textureAtlasPath; // Single texture atlas. Mutually exclusive with textureDirectoryPath.
         std::string texturesDirectoryPath; // Multiple textures. Mutually exclusive with textureAtlasPath.
+        std::string texturesDirectoryPathz; // Multiple textures. Mutually exclusive with textureAtlasPath.
     };
 
     struct ResourceLoaderConfig {
@@ -41,13 +42,5 @@ namespace Blink {
 
     private:
         void cleanPath(std::string* path) const;
-
-        std::string cleanPath(const std::string& path) const;
-
-        void printModelInfo(
-            const tinyobj::attrib_t& attrib,
-            const std::vector<tinyobj::shape_t>& shapes,
-            const std::vector<tinyobj::material_t>& materials
-        ) const;
     };
 }

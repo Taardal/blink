@@ -114,7 +114,7 @@ namespace Blink {
 
     Mesh Renderer::createMesh(const MeshConfig& meshConfig) const {
         std::string path = "models/viking_room/viking_room.png";
-        std::shared_ptr<Image> vikingRoomImage = config.resourceLoader->loadTexture(path);
+        std::shared_ptr<Image> placeholderImage = config.resourceLoader->loadTexture(path);
 
         std::shared_ptr<Model> model = config.resourceLoader->loadModel(meshConfig);
 
@@ -129,13 +129,14 @@ namespace Blink {
 
             if (textureAtlasImage != nullptr) {
                 image = textureAtlasImage;
+            } else if (i > model->materials.size() - 1) {
+                image = placeholderImage;
             } else {
                 tinyobj::material_t& material = model->materials[i];
-                const std::string& textureName = material.diffuse_texname;
-                if (textureName.empty()) {
-                    image = vikingRoomImage;
+                if (material.diffuse_texname.empty()) {
+                    image = placeholderImage;
                 } else {
-                    image = config.resourceLoader->loadTexture(meshConfig.texturesDirectoryPath + "/" + textureName);
+                    image = config.resourceLoader->loadTexture(meshConfig.texturesDirectoryPath + "/" + material.diffuse_texname);
                 }
             }
 

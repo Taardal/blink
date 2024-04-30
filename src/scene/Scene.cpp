@@ -63,7 +63,7 @@ namespace Blink {
 
         MeshConfig meshConfig{};
         meshConfig.modelPath = "models/fighter/fighter.obj";
-        meshConfig.textureAtlasPath = "models/fighter/lordshadow.jpg";
+        meshConfig.textureAtlasPath = "models/fighter/crono782.jpg";
 
         MeshComponent meshComponent{};
         meshComponent.mesh = config.renderer->createMesh(meshConfig);
