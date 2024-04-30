@@ -8,23 +8,13 @@
 #include "graphics/VulkanDevice.h"
 #include "graphics/VulkanSwapChain.h"
 #include "graphics/VulkanCommandPool.h"
-#include "graphics/VulkanPhysicalDevice.h"
-#include "graphics/VulkanDevice.h"
-#include "graphics/VulkanSwapChain.h"
-#include "graphics/VulkanCommandPool.h"
 #include "graphics/VulkanShader.h"
 #include "graphics/VulkanGraphicsPipeline.h"
-#include "graphics/VulkanVertexBuffer.h"
-#include "graphics/VulkanIndexBuffer.h"
 #include "graphics/VulkanUniformBuffer.h"
-#include "graphics/VulkanImage.h"
-#include "graphics/Quad.h"
-#include "graphics/Vertex.h"
 #include "graphics/Mesh.h"
 #include "graphics/ViewProjection.h"
 
 #include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
 
 namespace Blink {
     struct RendererConfig {
@@ -39,6 +29,7 @@ namespace Blink {
     private:
         static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
         static constexpr uint32_t MAX_MESHES = 100;
+        static constexpr uint32_t MAX_DESCRIPTORS_PER_STAGE = 16;
 
     private:
         RendererConfig config;
@@ -76,7 +67,7 @@ namespace Blink {
 
         void endFrame();
 
-        Mesh createMesh() const;
+        Mesh createMesh(const MeshConfig& meshConfig) const;
 
         void destroyMesh(const Mesh& mesh) const;
 

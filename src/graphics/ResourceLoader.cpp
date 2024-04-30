@@ -19,7 +19,8 @@ namespace Blink {
         BL_ASSERT(!path.empty());
 
         std::string texturePath = path;
-        std::replace(texturePath.begin(), texturePath.end(), '\\', '/');
+        cleanPath(&texturePath);
+        BL_LOG_DEBUG("Loading texture [{}]", texturePath);
 
         int32_t width;
         int32_t height;
@@ -28,7 +29,7 @@ namespace Blink {
 
         unsigned char* pixels = stbi_load(texturePath.c_str(), &width, &height, &channels, desiredChannels);
         if (!pixels) {
-            BL_THROW("Could not load texture [" + std::string(texturePath) + "]");
+            BL_THROW("Could not load texture [" + texturePath + "]");
         }
 
         auto image = std::make_shared<Image>();
@@ -40,17 +41,23 @@ namespace Blink {
         return image;
     }
 
-    std::shared_ptr<Model> ResourceLoader::loadModel(const std::string& path, const std::string& name) const {
-        BL_ASSERT(!path.empty());
-        BL_ASSERT(!name.empty());
+    std::shared_ptr<Model> ResourceLoader::loadModel(const MeshConfig& meshConfig) const {
+        //BL_ASSERT(!path.empty());
 
-        std::string objFilePath = path + "/" + name + ".obj";
-        std::replace(objFilePath.begin(), objFilePath.end(), '\\', '/');
+        // std::string objFilePath = path + "/" + name + ".obj";
+        // std::replace(objFilePath.begin(), objFilePath.end(), '\\', '/');
+        //
+        // std::string mtlDirectoryPath = path + "/";
+        // std::replace(mtlDirectoryPath.begin(), mtlDirectoryPath.end(), '\\', '/');
 
-        std::string mtlDirectoryPath = path + "/";
-        std::replace(mtlDirectoryPath.begin(), mtlDirectoryPath.end(), '\\', '/');
-
+        std::string objFilePath = meshConfig.modelPath;
+        cleanPath(&objFilePath);
         BL_LOG_DEBUG("Loading model [{}]", objFilePath);
+
+        size_t lastSlashIndex = objFilePath.find_last_of("/");
+        size_t secondLastSlashIndex = objFilePath.find_last_of("/", lastSlashIndex - 1);
+        std::string modelDirectoryPath = objFilePath.substr(0, lastSlashIndex + 1);
+        BL_LOG_DEBUG("Loading model from directory [{}]", modelDirectoryPath);
 
         // An OBJ file consists of positions, normals, texture coordinates and faces.
         // Faces consist of an arbitrary amount of vertices, where each vertex refers to a position, normal and/or texture coordinate by index.
@@ -62,30 +69,33 @@ namespace Blink {
         std::vector<tinyobj::material_t> materials;
         std::string err;
 
-        bool triangulate = true;
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, objFilePath.c_str(), mtlDirectoryPath.c_str(), triangulate)) {
-            BL_THROW("Could not load model: " + err);
+        // https://github.com/tinyobjloader/tinyobjloader?tab=readme-ov-file#robust-triangulation
+        // When you enable triangulation(default is enabled), TinyObjLoader triangulate polygons(faces with 4 or more vertices).
+        constexpr bool triangulate = true;
+
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, objFilePath.c_str(), modelDirectoryPath.c_str(), triangulate)) {
+            BL_THROW("Could not load model [" + objFilePath + "]: " + err);
         }
 
-        BL_LOG_DEBUG("Vertices [{}]", attrib.vertices.size());
-        BL_LOG_DEBUG("Normals [{}]", attrib.normals.size());
-        BL_LOG_DEBUG("Texcoords [{}]", attrib.texcoords.size());
-        BL_LOG_DEBUG("Shapes [{}]", shapes.size());
-        BL_LOG_DEBUG("Materials [{}]", materials.size());
-
-        for (int i = 0; i < materials.size(); ++i) {
-            tinyobj::material_t& material = materials[i];
-            BL_LOG_DEBUG("--------------------------------------------------------------------");
-            BL_LOG_DEBUG("| {}", material.name);
-            BL_LOG_DEBUG("--------------------------------------------------------------------");
-            BL_LOG_DEBUG("| ambient_texname             | {}", material.ambient_texname);
-            BL_LOG_DEBUG("| diffuse_texname             | {}", material.diffuse_texname);
-            BL_LOG_DEBUG("| specular_texname            | {}", material.specular_texname);
-            BL_LOG_DEBUG("| specular_highlight_texname  | {}", material.specular_highlight_texname);
-            BL_LOG_DEBUG("| bump_texname                | {}", material.bump_texname);
-            BL_LOG_DEBUG("| displacement_texname        | {}", material.displacement_texname);
-            BL_LOG_DEBUG("| alpha_texname               | {}", material.alpha_texname);
-        }
+        // BL_LOG_DEBUG("Vertices [{}]", attrib.vertices.size());
+        // BL_LOG_DEBUG("Normals [{}]", attrib.normals.size());
+        // BL_LOG_DEBUG("Texcoords [{}]", attrib.texcoords.size());
+        // BL_LOG_DEBUG("Shapes [{}]", shapes.size());
+        // BL_LOG_DEBUG("Materials [{}]", materials.size());
+        //
+        // for (int i = 0; i < materials.size(); ++i) {
+        //     tinyobj::material_t& material = materials[i];
+        //     BL_LOG_DEBUG("--------------------------------------------------------------------");
+        //     BL_LOG_DEBUG("| {}", material.name);
+        //     BL_LOG_DEBUG("--------------------------------------------------------------------");
+        //     BL_LOG_DEBUG("| ambient_texname             | {}", material.ambient_texname);
+        //     BL_LOG_DEBUG("| diffuse_texname             | {}", material.diffuse_texname);
+        //     BL_LOG_DEBUG("| specular_texname            | {}", material.specular_texname);
+        //     BL_LOG_DEBUG("| specular_highlight_texname  | {}", material.specular_highlight_texname);
+        //     BL_LOG_DEBUG("| bump_texname                | {}", material.bump_texname);
+        //     BL_LOG_DEBUG("| displacement_texname        | {}", material.displacement_texname);
+        //     BL_LOG_DEBUG("| alpha_texname               | {}", material.alpha_texname);
+        // }
 
         // for (int i = 0; i < shapes.size(); ++i) {
         //     tinyobj::shape_t& shape = shapes[i];
@@ -116,13 +126,18 @@ namespace Blink {
             size_t index_offset = 0;
             tinyobj::shape_t& shape = shapes[shapeIndex];
             for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
-                size_t fv = size_t(shape.mesh.num_face_vertices[f]);
+                size_t fv = (size_t) shape.mesh.num_face_vertices[f];
+
+                int materialId = shape.mesh.material_ids[f];
 
                 // Loop over vertices in the face.
                 for (size_t v = 0; v < fv; v++) {
                     Vertex vertex{};
                     vertex.color = {1.0f, 1.0f, 1.0f};
-                    vertex.textureIndex = shape.mesh.material_ids[f];
+
+                    if (materialId != -1) {
+                        vertex.textureIndex = materialId;
+                    }
 
                     // access to vertex
                     tinyobj::index_t index = shape.mesh.indices[index_offset + v];
@@ -141,9 +156,6 @@ namespace Blink {
                     model->indices.push_back(index_offset + v);
                 }
                 index_offset += fv;
-
-                // per-face material
-                shape.mesh.material_ids[f];
             }
         }
 
@@ -179,6 +191,16 @@ namespace Blink {
         // }
 
         return model;
+    }
+
+    void ResourceLoader::cleanPath(std::string* path) const {
+        std::replace(path->begin(), path->end(), '\\', '/');
+    }
+
+    std::string ResourceLoader::cleanPath(const std::string& path) const {
+        std::string p = path;
+        std::replace(p.begin(), p.end(), '\\', '/');
+        return p;
     }
 
     void ResourceLoader::printModelInfo(

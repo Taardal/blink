@@ -112,138 +112,79 @@ namespace Blink {
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
-    Mesh Renderer::createMesh() const {
-        std::string path = "textures/viking_room.png";
-        std::shared_ptr<Image> image = config.resourceLoader->loadTexture(path);
+    Mesh Renderer::createMesh(const MeshConfig& meshConfig) const {
+        std::string path = "models/viking_room/viking_room.png";
+        std::shared_ptr<Image> vikingRoomImage = config.resourceLoader->loadTexture(path);
 
-        VulkanImageConfig textureImageConfig{};
-        textureImageConfig.device = device;
-        textureImageConfig.commandPool = commandPool;
-        textureImageConfig.width = image->width;
-        textureImageConfig.height = image->height;
-        textureImageConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
-        textureImageConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        textureImageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-        textureImageConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        std::shared_ptr<Model> model = config.resourceLoader->loadModel(meshConfig);
 
-        auto texture = new VulkanImage(textureImageConfig);
-        texture->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        texture->setData(image);
-        texture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        std::shared_ptr<Image> textureAtlasImage = nullptr;
+        if (!meshConfig.textureAtlasPath.empty()) {
+            textureAtlasImage = config.resourceLoader->loadTexture(meshConfig.textureAtlasPath);
+        }
 
-        std::string modelPath = "models/sibenik";
-        std::string modelName = "sibenik";
-        std::shared_ptr<Model> model = config.resourceLoader->loadModel(modelPath, modelName);
+        std::vector<VulkanImage*> textures;
+        for (uint32_t i = 0; i < MAX_DESCRIPTORS_PER_STAGE; ++i) {
+            std::shared_ptr<Image> image;
 
-        std::vector<VulkanImage*> fooTextures;
-        for (uint32_t i = 0; i < 16; ++i) {
-            std::shared_ptr<Image> img;
-
-            if (i + 1 > model->materials.size()) {
-                img = image;
+            if (textureAtlasImage != nullptr) {
+                image = textureAtlasImage;
             } else {
                 tinyobj::material_t& material = model->materials[i];
-                if (material.diffuse_texname.empty()) {
-                    img = image;
+                const std::string& textureName = material.diffuse_texname;
+                if (textureName.empty()) {
+                    image = vikingRoomImage;
                 } else {
-                    std::string imagePath = modelPath + "/" + material.diffuse_texname;
-
-                    std::string tp = imagePath;
-                    std::replace(tp.begin(), tp.end(), '\\', '/');
-
-                    img = config.resourceLoader->loadTexture(tp);
+                    image = config.resourceLoader->loadTexture(meshConfig.texturesDirectoryPath + "/" + textureName);
                 }
             }
 
-            auto fooTexture = new VulkanImage({
+            auto texture = new VulkanImage({
                 .device = device,
                 .commandPool = commandPool,
-                .width = (uint32_t) img->width,
-                .height = (uint32_t) img->height,
+                .width = (uint32_t) image->width,
+                .height = (uint32_t) image->height,
                 .format = VK_FORMAT_R8G8B8A8_SRGB,
                 .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 .aspect = VK_IMAGE_ASPECT_COLOR_BIT,
                 .memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                .debugName = "foo " + std::to_string(i),
             });
-            fooTexture->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            fooTexture->setData(img);
-            fooTexture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            texture->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            texture->setData(image);
+            texture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-            fooTextures.push_back(fooTexture);
-        }
-        BL_ASSERT(!fooTextures.empty());
-        for (VulkanImage* fooTexture : fooTextures) {
-            BL_ASSERT(fooTexture != nullptr);
+            textures.push_back(texture);
         }
 
-        // std::vector<VkDescriptorSet> fooDescriptorSets;
-        // for (VulkanImage* fooTexture : fooTextures) {
-        //     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-        //
-        //     VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
-        //     descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        //     descriptorSetAllocateInfo.descriptorPool = perMeshDescriptorPool;
-        //     descriptorSetAllocateInfo.descriptorSetCount = 1;
-        //     descriptorSetAllocateInfo.pSetLayouts = &perMeshDescriptorSetLayout;
-        //
-        //     BL_LOG_DEBUG("Creating descriptor set for texture [{}]", fooTexture->getDebugName());
-        //     BL_ASSERT_THROW_VK_SUCCESS(device->allocateDescriptorSets(&descriptorSetAllocateInfo, &descriptorSet));
-        //
-        //     VkDescriptorImageInfo descriptorImageInfo{};
-        //     descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        //     descriptorImageInfo.imageView = fooTexture->getImageView();
-        //     descriptorImageInfo.sampler = textureSampler;
-        //
-        //     VkWriteDescriptorSet descriptorWrite{};
-        //     descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        //     descriptorWrite.dstSet = descriptorSet;
-        //     descriptorWrite.dstBinding = 0;
-        //     descriptorWrite.dstArrayElement = 0;
-        //     descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        //     descriptorWrite.descriptorCount = 1;
-        //     descriptorWrite.pImageInfo = &descriptorImageInfo;
-        //
-        //     device->updateDescriptorSets(1, &descriptorWrite);
-        //
-        //     fooDescriptorSets.push_back(descriptorSet);
-        // }
-        // BL_ASSERT(!fooDescriptorSets.empty());
-        // BL_ASSERT(fooDescriptorSets.size() == fooTextures.size());
-        // for (VkDescriptorSet fooDescriptorSet : fooDescriptorSets) {
-        //     BL_ASSERT(fooDescriptorSet != nullptr);
-        // }
+        VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 
-        // Change fragment to use an array of samplers
-        // Use the sampler count limit of the physical device --> uint32_t maxDescriptorSetSamplers = physicalDevice->getProperties().limits.maxDescriptorSetSamplers;
-        // Reuse the single texture sampler in all descriptor sets
-        // Pass a texture index (int) to vertex shader as vertex attribute
-        // Forward the texture index from the vertex to the fragment shader
+        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
+        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        descriptorSetAllocateInfo.descriptorPool = perMeshDescriptorPool;
+        descriptorSetAllocateInfo.descriptorSetCount = 1;
+        descriptorSetAllocateInfo.pSetLayouts = &perMeshDescriptorSetLayout;
 
-        // During initialization:
-        //
-        // Load texture images corresponding to the materials of the model (RESEARCH ME!)
-        // for (const auto& material : model->materials) {
-        //     std::shared_ptr<Image> image = config.resourceLoader->loadTexture(material.texturePath);
-        // }
-        //
-        // Create one descriptor set per texture (RESEARCH ME --> ONE DESCRIPTOR SET PER TEXTURE NECESSARY ??)
-        // std::vector<VkDescriptorSet> descriptorSets;
-        // for (size_t i = 0; i < textures.size(); ++i) {
-        //     // Allocate set
-        //     // Update set
-        //     descriptorSets.push_back(descriptorSet)
-        // }
-        //
-        // Modify descriptor set layout(s) to accomodate an array of samplers
-        // Define an array of descriptor set layout bindings for texture samplers
-        // std::array<VkDescriptorSetLayoutBinding, 4> textureSamplerBindings = {};
+        BL_ASSERT_THROW_VK_SUCCESS(device->allocateDescriptorSets(&descriptorSetAllocateInfo, &descriptorSet));
 
-        // During rendering: Bind textures & draw faces (RESEARCH ME!)
-        // tinyobjloader --> materials ?? shapes ?? READ MORE LAZY PERSON
-        // Draw faces ??? NO IDEA RESEARCH ME PLZ
-        // "Bind textures" --> probably binding the corresponding descriptor set
+        for (uint32_t i = 0; i < textures.size(); ++i) {
+            VulkanImage* texture = textures[i];
 
+            VkDescriptorImageInfo descriptorImageInfo{};
+            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            descriptorImageInfo.imageView = texture->getImageView();
+            descriptorImageInfo.sampler = textureSampler;
+
+            VkWriteDescriptorSet descriptorWrite{};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = descriptorSet;
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = i;
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pImageInfo = &descriptorImageInfo;
+
+            device->updateDescriptorSets(1, &descriptorWrite);
+        }
 
         VulkanVertexBufferConfig vertexBufferConfig{};
         vertexBufferConfig.device = device;
@@ -259,58 +200,19 @@ namespace Blink {
         auto indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
         indexBuffer->setData(model->indices);
 
-        VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-
-        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
-        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptorSetAllocateInfo.descriptorPool = perMeshDescriptorPool;
-        descriptorSetAllocateInfo.descriptorSetCount = 1;
-        descriptorSetAllocateInfo.pSetLayouts = &perMeshDescriptorSetLayout;
-
-        BL_ASSERT_THROW_VK_SUCCESS(device->allocateDescriptorSets(&descriptorSetAllocateInfo, &descriptorSet));
-
-        //std::vector<VkWriteDescriptorSet> descriptorWrites;
-        //uint32_t textureCount = fooTextures.size() < 16 ? fooTextures.size() : 16;
-        for (uint32_t i = 0; i < fooTextures.size(); ++i) {
-            auto tex = fooTextures[i];
-
-            VkDescriptorImageInfo descriptorImageInfo{};
-            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            descriptorImageInfo.imageView = tex->getImageView();
-            descriptorImageInfo.sampler = textureSampler;
-
-            VkWriteDescriptorSet descriptorWrite{};
-            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrite.dstSet = descriptorSet;
-            descriptorWrite.dstBinding = 0;
-            descriptorWrite.dstArrayElement = i;
-            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrite.descriptorCount = 1;
-            descriptorWrite.pImageInfo = &descriptorImageInfo;
-
-            //descriptorWrites.push_back(descriptorWrite);
-            //device->updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data());
-
-            device->updateDescriptorSets(1, &descriptorWrite);
-        }
-
         Mesh mesh{};
-
-        mesh.fooTextures = fooTextures;
-        //mesh.fooDescriptorSets = fooDescriptorSets;
-
-        mesh.vertices = model->vertices;
-        mesh.indices = model->indices;
+        mesh.textures = textures;
+        mesh.descriptorSet = descriptorSet;
         mesh.vertexBuffer = vertexBuffer;
         mesh.indexBuffer = indexBuffer;
-        mesh.texture = texture;
-        mesh.descriptorSet = descriptorSet;
+        mesh.vertices = model->vertices;
+        mesh.indices = model->indices;
         return mesh;
     }
 
     void Renderer::destroyMesh(const Mesh& mesh) const {
-        for (auto fooTexture : mesh.fooTextures) {
-            delete fooTexture;
+        for (auto texture : mesh.textures) {
+            delete texture;
         }
         delete mesh.texture;
         delete mesh.indexBuffer;
@@ -452,7 +354,7 @@ namespace Blink {
         VkDescriptorSetLayoutBinding textureSamplerLayoutBinding{};
         textureSamplerLayoutBinding.binding = 0;
         textureSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        textureSamplerLayoutBinding.descriptorCount = 16; // Must match uniform sampler2D textureSamplers[...] @ fragment shader
+        textureSamplerLayoutBinding.descriptorCount = MAX_DESCRIPTORS_PER_STAGE; // Must match uniform sampler2D textureSamplers[...] @ fragment shader
         textureSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkDescriptorSetLayoutCreateInfo perMeshLayoutCreateInfo{};

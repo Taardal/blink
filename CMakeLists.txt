@@ -152,14 +152,6 @@ add_custom_target(
         COMMENT "Compiling shaders"
 )
 
-set(TEXTURES_SOURCE_DIR ${PROJECT_SOURCE_DIR}/res/textures)
-set(TEXTURES_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/textures)
-add_custom_target(
-        CopyTextures
-        COMMAND ${CMAKE_COMMAND} -D TEXTURES_SOURCE_DIR=${TEXTURES_SOURCE_DIR} -D TEXTURES_OUTPUT_DIR=${TEXTURES_OUTPUT_DIR} -P ${CMAKE_DIR}/copy_textures.cmake
-        COMMENT "Copying textures"
-)
-
 set(MODELS_SOURCE_DIR ${PROJECT_SOURCE_DIR}/res/models)
 set(MODELS_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/models)
 add_custom_target(
@@ -172,7 +164,6 @@ add_dependencies(
         ${PROJECT_NAME}
         CompileLua
         CompileShaders
-        CopyTextures
         CopyModels
 )
 

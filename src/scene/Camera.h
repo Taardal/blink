@@ -25,7 +25,7 @@ namespace Blink {
         float yaw = 0;
         float pitch = 0.0f;
         float roll = 0.0f;
-        float moveSpeed = 25;
+        float moveSpeed = 10;
         float lookSpeed = 1.0f;
         float fieldOfView = glm::radians(45.0f);
         float nearClip = 0.1f;

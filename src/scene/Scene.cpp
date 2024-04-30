@@ -8,7 +8,7 @@
 namespace Blink {
     Scene::Scene(const SceneConfig& config) : config(config), player(registry.create()), enemy(registry.create()) {
         initializePlayerComponents();
-        //initializeEnemyComponents();
+        initializeEnemyComponents();
         config.luaEngine->createEntityBindings(&registry);
         //config.camera->setPosition({-2, 0, 0});
     }
@@ -50,9 +50,6 @@ namespace Blink {
         TransformComponent transformComponent{};
         transformComponent.position = { 0, 0, 0 };
         transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-        //transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        //transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        //transformComponent.scale = glm::scale(transformComponent.scale, { 1, 1, 1 });
         registry.emplace<TransformComponent>(player, transformComponent);
 
         TagComponent tagComponent{};
@@ -64,29 +61,57 @@ namespace Blink {
         luaComponent.filepath = "lua/player.out";
         registry.emplace<LuaComponent>(player, luaComponent);
 
+        MeshConfig meshConfig{};
+        meshConfig.modelPath = "models/fighter/fighter.obj";
+        meshConfig.textureAtlasPath = "models/fighter/lordshadow.jpg";
+
         MeshComponent meshComponent{};
-        meshComponent.mesh = config.renderer->createMesh();
+        meshComponent.mesh = config.renderer->createMesh(meshConfig);
         registry.emplace<MeshComponent>(player, meshComponent);
     }
 
     void Scene::initializeEnemyComponents() {
-        for (uint32_t i = 0; i < 5; i++) {
-            entt::entity enemy = registry.create();
+        {
+            entt::entity entity = registry.create();
 
             TransformComponent transformComponent{};
-            transformComponent.position = { i, i, i };
+            transformComponent.position = { 0, 0, 1 };
             transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
             transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
             transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-            registry.emplace<TransformComponent>(enemy, transformComponent);
+            registry.emplace<TransformComponent>(entity, transformComponent);
 
             TagComponent tagComponent{};
-            tagComponent.tag = "Enemy" + std::to_string(i);
-            registry.emplace<TagComponent>(enemy, tagComponent);
+            tagComponent.tag = "Viking Room";
+            registry.emplace<TagComponent>(entity, tagComponent);
+
+            MeshConfig meshConfig{};
+            meshConfig.modelPath = "models/viking_room/viking_room.obj";
+            meshConfig.textureAtlasPath = "models/viking_room/viking_room.png";
 
             MeshComponent meshComponent{};
-            meshComponent.mesh = config.renderer->createMesh();
-            registry.emplace<MeshComponent>(enemy, meshComponent);
+            meshComponent.mesh = config.renderer->createMesh(meshConfig);
+            registry.emplace<MeshComponent>(entity, meshComponent);
+        }
+        {
+            entt::entity entity = registry.create();
+
+            TransformComponent transformComponent{};
+            transformComponent.position = { 0, 0, 0 };
+            transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
+            registry.emplace<TransformComponent>(entity, transformComponent);
+
+            TagComponent tagComponent{};
+            tagComponent.tag = "Sibenik";
+            registry.emplace<TagComponent>(entity, tagComponent);
+
+            MeshConfig meshConfig{};
+            meshConfig.modelPath = "models/sibenik/sibenik.obj";
+            meshConfig.texturesDirectoryPath = "models/sibenik";
+
+            MeshComponent meshComponent{};
+            meshComponent.mesh = config.renderer->createMesh(meshConfig);
+            registry.emplace<MeshComponent>(entity, meshComponent);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace Blink {
         VulkanImage* texture = nullptr;
         VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 
-        std::vector<VulkanImage*> fooTextures;
+        std::vector<VulkanImage*> textures;
         std::vector<VkDescriptorSet> fooDescriptorSets;
     };
 }

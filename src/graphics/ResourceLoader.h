@@ -10,6 +10,12 @@
 #include <vector>
 
 namespace Blink {
+    struct MeshConfig {
+        std::string modelPath;
+        std::string textureAtlasPath; // Single texture atlas. Mutually exclusive with textureDirectoryPath.
+        std::string texturesDirectoryPath; // Multiple textures. Mutually exclusive with textureAtlasPath.
+    };
+
     struct ResourceLoaderConfig {
         FileSystem* fileSystem = nullptr;
         //VulkanDevice* device = nullptr;
@@ -31,9 +37,13 @@ namespace Blink {
 
         std::shared_ptr<Image> loadTexture(const std::string& path) const;
 
-        std::shared_ptr<Model> loadModel(const std::string& path, const std::string& name) const;
+        std::shared_ptr<Model> loadModel(const MeshConfig& meshConfig) const;
 
     private:
+        void cleanPath(std::string* path) const;
+
+        std::string cleanPath(const std::string& path) const;
+
         void printModelInfo(
             const tinyobj::attrib_t& attrib,
             const std::vector<tinyobj::shape_t>& shapes,
