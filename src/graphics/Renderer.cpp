@@ -6,7 +6,7 @@
 #include "window/KeyEvent.h"
 
 namespace Blink {
-    Renderer::Renderer(const RendererConfig& config) {
+    Renderer::Renderer(const RendererConfig& config) : config(config) {
         VulkanAppConfig vulkanAppConfig{};
         vulkanAppConfig.window = config.window;
         vulkanAppConfig.applicationName = config.applicationName;

@@ -39,8 +39,5 @@ namespace Blink {
         std::shared_ptr<Image> loadTexture(const std::string& path) const;
 
         std::shared_ptr<Model> loadModel(const MeshConfig& meshConfig) const;
-
-    private:
-        void cleanPath(std::string* path) const;
     };
 }

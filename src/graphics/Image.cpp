@@ -8,10 +8,10 @@ namespace Blink {
     }
 
     void Image::free() {
-        if (pixels == nullptr) {
-            return;
-        }
-        stbi_image_free(pixels);
-        pixels = nullptr;
+        // if (pixels == nullptr) {
+        //     return;
+        // }
+        // stbi_image_free(pixels);
+        // pixels = nullptr;
     }
 }
