@@ -1,23 +1,14 @@
 #include "pch.h"
 #include "FileSystem.h"
 
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
 #include <filesystem>
 #include <fstream>
-
-namespace Blink {
-    ImageFile::~ImageFile() {
-        free();
-    }
-
-    void ImageFile::free() {
-        if (pixels == nullptr) {
-            return;
-        }
-        stbi_image_free(pixels);
-        pixels = nullptr;
-    }
-}
 
 namespace Blink {
     bool FileSystem::exists(const std::string& path) const {

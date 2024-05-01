@@ -1,82 +1,35 @@
 #include "pch.h"
 #include "Renderer.h"
-#include "graphics/UniformBufferData.h"
-#include "graphics/VulkanImage.h"
-#include "graphics/PushConstantData.h"
+#include "PushConstantData.h"
+#include "UniformBufferData.h"
+#include "VulkanImage.h"
 #include "window/KeyEvent.h"
 
 namespace Blink {
     Renderer::Renderer(const RendererConfig& config) : config(config) {
-        VulkanAppConfig vulkanAppConfig{};
-        vulkanAppConfig.window = config.window;
-        vulkanAppConfig.applicationName = config.applicationName;
-        vulkanAppConfig.engineName = config.engineName;
-        vulkanAppConfig.validationLayersEnabled = true;
-        vulkanApp = new VulkanApp(vulkanAppConfig);
-
-        VulkanPhysicalDeviceConfig physicalDeviceConfig{};
-        physicalDeviceConfig.vulkanApp = vulkanApp;
-        physicalDevice = new VulkanPhysicalDevice(physicalDeviceConfig);
-
-        VulkanDeviceConfig deviceConfig{};
-        deviceConfig.physicalDevice = physicalDevice;
-        device = new VulkanDevice(deviceConfig);
-
-        VulkanCommandPoolConfig commandPoolConfig{};
-        commandPoolConfig.device = device;
-        commandPool = new VulkanCommandPool(commandPoolConfig);
-
-        commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffers(&commandBuffers));
-
         VulkanSwapChainConfig swapChainConfig{};
         swapChainConfig.window = config.window;
-        swapChainConfig.vulkanApp = vulkanApp;
-        swapChainConfig.device = device;
-        swapChainConfig.commandPool = commandPool;
+        swapChainConfig.vulkanApp = config.vulkanApp;
+        swapChainConfig.device = config.device;
+        swapChainConfig.commandPool = config.commandPool;
         swapChain = new VulkanSwapChain(swapChainConfig);
 
-        uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        for (uint32_t i = 0; i < uniformBuffers.size(); i++) {
-            VulkanUniformBufferConfig uniformBufferConfig{};
-            uniformBufferConfig.device = device;
-            uniformBufferConfig.commandPool = commandPool;
-            uniformBufferConfig.size = sizeof(UniformBufferData);
-            uniformBuffers[i] = new VulkanUniformBuffer(uniformBufferConfig);
-        }
-
-        createTextureSampler();
-        createDescriptorSetLayouts();
-        createDescriptorPools();
-        createDescriptorSets();
+        createCommandObjects();
+        createUniformBuffers();
+        createDescriptorObjects();
         createGraphicsPipelineObjects();
     }
 
     Renderer::~Renderer() {
         destroyGraphicsPipelineObjects();
-
-        device->destroyDescriptorPool(perMeshDescriptorPool);
-        device->destroyDescriptorSetLayout(perMeshDescriptorSetLayout);
-
-        device->destroyDescriptorPool(perFrameDescriptorPool);
-        device->destroyDescriptorSetLayout(perFrameDescriptorSetLayout);
-
-        device->destroySampler(textureSampler);
-
-        for (VulkanUniformBuffer* uniformBuffer : uniformBuffers) {
-            delete uniformBuffer;
-        }
-        uniformBuffers.clear();
-
+        destroyDescriptorObjects();
+        destroyUniformBuffers();
+        destroyCommandObjects();
         delete swapChain;
-        delete commandPool;
-        delete device;
-        delete physicalDevice;
-        delete vulkanApp;
     }
 
     void Renderer::waitUntilIdle() const {
-        BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilIdle());
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilIdle());
     }
 
     void Renderer::onEvent(Event& event) {
@@ -98,7 +51,7 @@ namespace Blink {
         return true;
     }
 
-    void Renderer::renderMesh(const Mesh& mesh, const ViewProjection& viewProjection) const {
+    void Renderer::renderMesh(std::shared_ptr<Mesh> mesh, const ViewProjection& viewProjection) const {
         setUniformData(viewProjection);
         setPushConstantData(mesh);
         bindMesh(mesh);
@@ -110,114 +63,6 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(currentCommandBuffer.end());
         swapChain->endFrame(currentCommandBuffer);
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-    }
-
-    Mesh Renderer::createMesh(const MeshConfig& meshConfig) const {
-        std::string path = "models/viking_room/viking_room.png";
-        std::shared_ptr<Image> placeholderImage = config.resourceLoader->loadTexture(path);
-
-        std::shared_ptr<Model> model = config.resourceLoader->loadModel(meshConfig);
-
-        std::shared_ptr<Image> textureAtlasImage = nullptr;
-        if (!meshConfig.textureAtlasPath.empty()) {
-            textureAtlasImage = config.resourceLoader->loadTexture(meshConfig.textureAtlasPath);
-        }
-
-        std::vector<VulkanImage*> textures;
-        for (uint32_t i = 0; i < MAX_DESCRIPTORS_PER_STAGE; ++i) {
-            std::shared_ptr<Image> image;
-
-            if (textureAtlasImage != nullptr) {
-                image = textureAtlasImage;
-            } else if (i > model->materials.size() - 1) {
-                image = placeholderImage;
-            } else {
-                tinyobj::material_t& material = model->materials[i];
-                if (material.diffuse_texname.empty()) {
-                    image = placeholderImage;
-                } else {
-                    image = config.resourceLoader->loadTexture(meshConfig.texturesDirectoryPath + "/" + material.diffuse_texname);
-                }
-            }
-
-            auto texture = new VulkanImage({
-                .device = device,
-                .commandPool = commandPool,
-                .width = (uint32_t) image->width,
-                .height = (uint32_t) image->height,
-                .format = VK_FORMAT_R8G8B8A8_SRGB,
-                .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                .aspect = VK_IMAGE_ASPECT_COLOR_BIT,
-                .memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            });
-            texture->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            texture->setData(image);
-            texture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-            textures.push_back(texture);
-        }
-
-        VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-
-        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
-        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptorSetAllocateInfo.descriptorPool = perMeshDescriptorPool;
-        descriptorSetAllocateInfo.descriptorSetCount = 1;
-        descriptorSetAllocateInfo.pSetLayouts = &perMeshDescriptorSetLayout;
-
-        BL_ASSERT_THROW_VK_SUCCESS(device->allocateDescriptorSets(&descriptorSetAllocateInfo, &descriptorSet));
-
-        for (uint32_t i = 0; i < textures.size(); ++i) {
-            VulkanImage* texture = textures[i];
-
-            VkDescriptorImageInfo descriptorImageInfo{};
-            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            descriptorImageInfo.imageView = texture->getImageView();
-            descriptorImageInfo.sampler = textureSampler;
-
-            VkWriteDescriptorSet descriptorWrite{};
-            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrite.dstSet = descriptorSet;
-            descriptorWrite.dstBinding = 0;
-            descriptorWrite.dstArrayElement = i;
-            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            descriptorWrite.descriptorCount = 1;
-            descriptorWrite.pImageInfo = &descriptorImageInfo;
-
-            device->updateDescriptorSets(1, &descriptorWrite);
-        }
-
-        VulkanVertexBufferConfig vertexBufferConfig{};
-        vertexBufferConfig.device = device;
-        vertexBufferConfig.commandPool = commandPool;
-        vertexBufferConfig.size = sizeof(model->vertices[0]) * model->vertices.size();
-        auto vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
-        vertexBuffer->setData(model->vertices);
-
-        VulkanIndexBufferConfig indexBufferConfig{};
-        indexBufferConfig.device = device;
-        indexBufferConfig.commandPool = commandPool;
-        indexBufferConfig.size = sizeof(model->indices[0]) * model->indices.size();
-        auto indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
-        indexBuffer->setData(model->indices);
-
-        Mesh mesh{};
-        mesh.textures = textures;
-        mesh.descriptorSet = descriptorSet;
-        mesh.vertexBuffer = vertexBuffer;
-        mesh.indexBuffer = indexBuffer;
-        mesh.vertices = model->vertices;
-        mesh.indices = model->indices;
-        return mesh;
-    }
-
-    void Renderer::destroyMesh(const Mesh& mesh) const {
-        for (auto texture : mesh.textures) {
-            delete texture;
-        }
-        delete mesh.texture;
-        delete mesh.indexBuffer;
-        delete mesh.vertexBuffer;
     }
 
     void Renderer::setUniformData(const ViewProjection& viewProjection) const {
@@ -243,9 +88,9 @@ namespace Blink {
         uniformBuffer->setData(&uniformBufferData);
     }
 
-    void Renderer::setPushConstantData(const Mesh& mesh) const {
+    void Renderer::setPushConstantData(std::shared_ptr<Mesh> mesh) const {
         PushConstantData pushConstantData{};
-        pushConstantData.model = mesh.model;
+        pushConstantData.model = mesh->model;
         constexpr uint32_t offset = 0;
         vkCmdPushConstants(
             currentCommandBuffer,
@@ -257,13 +102,13 @@ namespace Blink {
         );
     }
 
-    void Renderer::bindMesh(const Mesh& mesh) const {
-        mesh.vertexBuffer->bind(currentCommandBuffer);
-        mesh.indexBuffer->bind(currentCommandBuffer);
+    void Renderer::bindMesh(std::shared_ptr<Mesh> mesh) const {
+        mesh->vertexBuffer->bind(currentCommandBuffer);
+        mesh->indexBuffer->bind(currentCommandBuffer);
 
         std::array<VkDescriptorSet, 2> descriptorSets = {
-            perFrameDescriptorSets[currentFrame],
-            mesh.descriptorSet
+            this->descriptorSets[currentFrame], // Per frame descriptor set
+            mesh->descriptorSet // Per mesh descriptor set
         };
 
         constexpr uint32_t firstSet = 0;
@@ -281,14 +126,14 @@ namespace Blink {
         );
     }
 
-    void Renderer::drawMeshIndexed(const Mesh& mesh) const {
+    void Renderer::drawMeshIndexed(std::shared_ptr<Mesh> mesh) const {
         constexpr uint32_t instanceCount = 1;
         constexpr uint32_t firstIndex = 0;
         constexpr uint32_t vertexOffset = 0;
         constexpr uint32_t firstInstance = 0;
         vkCmdDrawIndexed(
             currentCommandBuffer,
-            (uint32_t) mesh.indices.size(),
+            (uint32_t) mesh->indices.size(),
             instanceCount,
             firstIndex,
             vertexOffset,
@@ -297,7 +142,7 @@ namespace Blink {
     }
 
     void Renderer::reloadShaders() {
-        BL_ASSERT_THROW_VK_SUCCESS(device->waitUntilIdle());
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilIdle());
         compileShaders();
         destroyGraphicsPipelineObjects();
         createGraphicsPipelineObjects();
@@ -314,97 +159,73 @@ namespace Blink {
         std::system(command.c_str());
     }
 
-    void Renderer::createTextureSampler() {
-        const VkPhysicalDeviceProperties& physicalDeviceProperties = physicalDevice->getProperties();
-
-        VkSamplerCreateInfo textureSamplerCreateInfo{};
-        textureSamplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        textureSamplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-        textureSamplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-        textureSamplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        textureSamplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        textureSamplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        textureSamplerCreateInfo.anisotropyEnable = VK_TRUE;
-        textureSamplerCreateInfo.maxAnisotropy = physicalDeviceProperties.limits.maxSamplerAnisotropy;
-        textureSamplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        textureSamplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
-        textureSamplerCreateInfo.compareEnable = VK_FALSE;
-        textureSamplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        textureSamplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        textureSamplerCreateInfo.mipLodBias = 0.0f;
-        textureSamplerCreateInfo.minLod = 0.0f;
-        textureSamplerCreateInfo.maxLod = 0.0f;
-
-        BL_ASSERT_THROW_VK_SUCCESS(device->createSampler(&textureSamplerCreateInfo, &textureSampler));
+    void Renderer::createCommandObjects() {
+        commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        BL_ASSERT_THROW_VK_SUCCESS(config.commandPool->allocateCommandBuffers(&commandBuffers));
     }
 
-    void Renderer::createDescriptorSetLayouts() {
+    void Renderer::destroyCommandObjects() const {
+    }
+
+    void Renderer::createUniformBuffers() {
+        uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        for (uint32_t i = 0; i < uniformBuffers.size(); i++) {
+            VulkanUniformBufferConfig uniformBufferConfig{};
+            uniformBufferConfig.device = config.device;
+            uniformBufferConfig.commandPool = config.commandPool;
+            uniformBufferConfig.size = sizeof(UniformBufferData);
+            uniformBuffers[i] = new VulkanUniformBuffer(uniformBufferConfig);
+        }
+    }
+
+    void Renderer::destroyUniformBuffers() {
+        for (VulkanUniformBuffer* uniformBuffer : uniformBuffers) {
+            delete uniformBuffer;
+        }
+        uniformBuffers.clear();
+    }
+
+    void Renderer::createDescriptorObjects() {
+        // Descriptor pool
+        VkDescriptorPoolSize descriptorPoolSize{};
+        descriptorPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorPoolSize.descriptorCount = (uint32_t) MAX_FRAMES_IN_FLIGHT;
+
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
+        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptorPoolCreateInfo.poolSizeCount = 1;
+        descriptorPoolCreateInfo.pPoolSizes = &descriptorPoolSize;
+        descriptorPoolCreateInfo.maxSets = (uint32_t) MAX_FRAMES_IN_FLIGHT;
+
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorPool(&descriptorPoolCreateInfo, &descriptorPool));
+
+        // Descriptor set layout
         VkDescriptorSetLayoutBinding uniformBufferLayoutBinding{};
         uniformBufferLayoutBinding.binding = 0;
         uniformBufferLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uniformBufferLayoutBinding.descriptorCount = 1;
         uniformBufferLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-        VkDescriptorSetLayoutCreateInfo perFrameLayoutCreateInfo{};
-        perFrameLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        perFrameLayoutCreateInfo.bindingCount = 1;
-        perFrameLayoutCreateInfo.pBindings = &uniformBufferLayoutBinding;
+        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
+        descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptorSetLayoutCreateInfo.bindingCount = 1;
+        descriptorSetLayoutCreateInfo.pBindings = &uniformBufferLayoutBinding;
 
-        BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorSetLayout(&perFrameLayoutCreateInfo, &perFrameDescriptorSetLayout));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, &descriptorSetLayout));
 
-        VkDescriptorSetLayoutBinding textureSamplerLayoutBinding{};
-        textureSamplerLayoutBinding.binding = 0;
-        textureSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        textureSamplerLayoutBinding.descriptorCount = MAX_DESCRIPTORS_PER_STAGE; // Must match uniform sampler2D textureSamplers[...] @ fragment shader
-        textureSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutCreateInfo perMeshLayoutCreateInfo{};
-        perMeshLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        perMeshLayoutCreateInfo.bindingCount = 1;
-        perMeshLayoutCreateInfo.pBindings = &textureSamplerLayoutBinding;
-
-        BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorSetLayout(&perMeshLayoutCreateInfo, &perMeshDescriptorSetLayout));
-    }
-
-    void Renderer::createDescriptorPools() {
-        VkDescriptorPoolSize perFrameDescriptorPoolSize{};
-        perFrameDescriptorPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        perFrameDescriptorPoolSize.descriptorCount = (uint32_t) MAX_FRAMES_IN_FLIGHT;
-
-        VkDescriptorPoolCreateInfo perFrameDescriptorPoolCreateInfo{};
-        perFrameDescriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        perFrameDescriptorPoolCreateInfo.poolSizeCount = 1;
-        perFrameDescriptorPoolCreateInfo.pPoolSizes = &perFrameDescriptorPoolSize;
-        perFrameDescriptorPoolCreateInfo.maxSets = (uint32_t) MAX_FRAMES_IN_FLIGHT;
-
-        BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorPool(&perFrameDescriptorPoolCreateInfo, &perFrameDescriptorPool));
-
-        VkDescriptorPoolSize perMeshDescriptorPoolSize{};
-        perMeshDescriptorPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        perMeshDescriptorPoolSize.descriptorCount = (uint32_t) MAX_MESHES;
-
-        VkDescriptorPoolCreateInfo perMeshDescriptorPoolCreateInfo{};
-        perMeshDescriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        perMeshDescriptorPoolCreateInfo.poolSizeCount = 1;
-        perMeshDescriptorPoolCreateInfo.pPoolSizes = &perMeshDescriptorPoolSize;
-        perMeshDescriptorPoolCreateInfo.maxSets = (uint32_t) MAX_MESHES;
-
-        BL_ASSERT_THROW_VK_SUCCESS(device->createDescriptorPool(&perMeshDescriptorPoolCreateInfo, &perMeshDescriptorPool));
-    }
-
-    void Renderer::createDescriptorSets() {
-        perFrameDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-        std::vector<VkDescriptorSetLayout> perFrameDescriptorSetLayouts(perFrameDescriptorSets.size(), perFrameDescriptorSetLayout);
+        // Descriptor set
+        descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(descriptorSets.size(), descriptorSetLayout);
 
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptorSetAllocateInfo.descriptorPool = perFrameDescriptorPool;
-        descriptorSetAllocateInfo.descriptorSetCount = perFrameDescriptorSets.size();
-        descriptorSetAllocateInfo.pSetLayouts = perFrameDescriptorSetLayouts.data();
+        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+        descriptorSetAllocateInfo.descriptorSetCount = descriptorSets.size();
+        descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
 
-        BL_ASSERT_THROW_VK_SUCCESS(device->allocateDescriptorSets(&descriptorSetAllocateInfo, perFrameDescriptorSets.data()));
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateDescriptorSets(&descriptorSetAllocateInfo, descriptorSets.data()));
 
-        for (uint32_t i = 0; i < perFrameDescriptorSets.size(); i++) {
+        for (uint32_t i = 0; i < descriptorSets.size(); i++) {
             VkDescriptorBufferInfo descriptorBufferInfo{};
             descriptorBufferInfo.buffer = *uniformBuffers[i];
             descriptorBufferInfo.offset = 0;
@@ -412,35 +233,40 @@ namespace Blink {
 
             VkWriteDescriptorSet descriptorWrite{};
             descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrite.dstSet = perFrameDescriptorSets[i];
+            descriptorWrite.dstSet = descriptorSets[i];
             descriptorWrite.dstBinding = 0;
             descriptorWrite.dstArrayElement = 0;
             descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrite.descriptorCount = 1;
             descriptorWrite.pBufferInfo = &descriptorBufferInfo;
 
-            device->updateDescriptorSets(1, &descriptorWrite);
+            config.device->updateDescriptorSets(1, &descriptorWrite);
         }
+    }
+
+    void Renderer::destroyDescriptorObjects() const {
+        config.device->destroyDescriptorPool(descriptorPool);
+        config.device->destroyDescriptorSetLayout(descriptorSetLayout);
     }
 
     void Renderer::createGraphicsPipelineObjects() {
         VulkanShaderConfig vertexShaderConfig{};
-        vertexShaderConfig.device = device;
+        vertexShaderConfig.device = config.device;
         vertexShaderConfig.bytes = config.fileSystem->readBytes("shaders/shader.vert.spv");
         vertexShader = new VulkanShader(vertexShaderConfig);
 
         VulkanShaderConfig fragmentShaderConfig{};
-        fragmentShaderConfig.device = device;
+        fragmentShaderConfig.device = config.device;
         fragmentShaderConfig.bytes = config.fileSystem->readBytes("shaders/shader.frag.spv");
         fragmentShader = new VulkanShader(fragmentShaderConfig);
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
-            perFrameDescriptorSetLayout,
-            perMeshDescriptorSetLayout
+            descriptorSetLayout, // Per frame descriptor set layout
+            config.resourceLoader->getDescriptorSetLayout() // Per mesh descriptor set layout
         };
 
         VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
-        graphicsPipelineConfig.device = device;
+        graphicsPipelineConfig.device = config.device;
         graphicsPipelineConfig.swapChain = swapChain;
         graphicsPipelineConfig.vertexShader = vertexShader;
         graphicsPipelineConfig.fragmentShader = fragmentShader;

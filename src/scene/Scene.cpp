@@ -14,10 +14,9 @@ namespace Blink {
     }
 
     Scene::~Scene() {
-        for (const entt::entity entity : registry.view<MeshComponent>()) {
-            const MeshComponent& meshComponent = registry.get<MeshComponent>(entity);
-            config.renderer->destroyMesh(meshComponent.mesh);
-        }
+        // for (const entt::entity entity : registry.view<MeshComponent>()) {
+        //     registry.get<MeshComponent>(entity).mesh = nullptr;
+        // }
         registry.clear();
     }
 
@@ -32,7 +31,7 @@ namespace Blink {
         for (const entt::entity entity : registry.view<TransformComponent, MeshComponent>()) {
             auto& transformComponent = registry.get<TransformComponent>(entity);
             auto& meshComponent = registry.get<MeshComponent>(entity);
-            meshComponent.mesh.model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
+            meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
     }
 
@@ -61,12 +60,12 @@ namespace Blink {
         luaComponent.filepath = "lua/player.out";
         registry.emplace<LuaComponent>(player, luaComponent);
 
-        MeshConfig meshConfig{};
-        meshConfig.modelPath = "models/fighter/fighter.obj";
-        meshConfig.textureAtlasPath = "models/fighter/crono782.jpg";
+        MeshInfo meshInfo{};
+        meshInfo.modelPath = "models/fighter/fighter.obj";
+        meshInfo.textureAtlasPath = "models/fighter/crono782.jpg";
 
         MeshComponent meshComponent{};
-        meshComponent.mesh = config.renderer->createMesh(meshConfig);
+        meshComponent.mesh = config.resourceLoader->loadModel(meshInfo);
         registry.emplace<MeshComponent>(player, meshComponent);
     }
 
@@ -85,12 +84,12 @@ namespace Blink {
             tagComponent.tag = "Viking Room";
             registry.emplace<TagComponent>(entity, tagComponent);
 
-            MeshConfig meshConfig{};
-            meshConfig.modelPath = "models/viking_room/viking_room.obj";
-            meshConfig.textureAtlasPath = "models/viking_room/viking_room.png";
+            MeshInfo meshInfo{};
+            meshInfo.modelPath = "models/viking_room/viking_room.obj";
+            meshInfo.textureAtlasPath = "models/viking_room/viking_room.png";
 
             MeshComponent meshComponent{};
-            meshComponent.mesh = config.renderer->createMesh(meshConfig);
+            meshComponent.mesh = config.resourceLoader->loadModel(meshInfo);
             registry.emplace<MeshComponent>(entity, meshComponent);
         }
         {
@@ -105,12 +104,12 @@ namespace Blink {
             tagComponent.tag = "Sibenik";
             registry.emplace<TagComponent>(entity, tagComponent);
 
-            MeshConfig meshConfig{};
-            meshConfig.modelPath = "models/sibenik/sibenik.obj";
-            meshConfig.texturesDirectoryPath = "models/sibenik";
+            MeshInfo meshInfo{};
+            meshInfo.modelPath = "models/sibenik/sibenik.obj";
+            meshInfo.texturesDirectoryPath = "models/sibenik";
 
             MeshComponent meshComponent{};
-            meshComponent.mesh = config.renderer->createMesh(meshConfig);
+            meshComponent.mesh = config.resourceLoader->loadModel(meshInfo);
             registry.emplace<MeshComponent>(entity, meshComponent);
         }
     }

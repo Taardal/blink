@@ -24,6 +24,6 @@ namespace Blink {
     };
 
     struct MeshComponent {
-        Mesh mesh;
+        std::shared_ptr<Mesh> mesh;
     };
 }

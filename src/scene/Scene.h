@@ -11,6 +11,7 @@
 namespace Blink {
     struct SceneConfig {
         Keyboard* keyboard = nullptr;
+        ResourceLoader* resourceLoader = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
         Camera* camera = nullptr;

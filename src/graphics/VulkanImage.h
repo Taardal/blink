@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Image.h"
 #include "VulkanDevice.h"
 #include "VulkanCommandPool.h"
 #include "VulkanBuffer.h"
@@ -49,7 +48,7 @@ namespace Blink {
 
         void setLayout(VkImageLayout layout);
 
-        void setData(std::shared_ptr<Image> image) const;
+        void setData(std::shared_ptr<ImageFile> imageFile) const;
 
     private:
         void createImage();

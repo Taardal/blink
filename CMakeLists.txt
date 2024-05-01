@@ -35,22 +35,14 @@ add_executable(
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
-        ${SRC_DIR}/graphics/Image.cpp
-        ${SRC_DIR}/graphics/Image.h
         ${SRC_DIR}/graphics/Mesh.h
-        ${SRC_DIR}/graphics/Model.h
-        ${SRC_DIR}/graphics/Quad.h
         ${SRC_DIR}/graphics/Renderer.cpp
         ${SRC_DIR}/graphics/Renderer.h
         ${SRC_DIR}/graphics/PushConstantData.h
         ${SRC_DIR}/graphics/ResourceLoader.cpp
         ${SRC_DIR}/graphics/ResourceLoader.h
-        ${SRC_DIR}/graphics/Texture.cpp
-        ${SRC_DIR}/graphics/Texture.h
         ${SRC_DIR}/graphics/UniformBufferData.h
         ${SRC_DIR}/graphics/Vertex.h
-        ${SRC_DIR}/graphics/VertexAttribute.cpp
-        ${SRC_DIR}/graphics/VertexAttribute.h
         ${SRC_DIR}/graphics/ViewProjection.h
         ${SRC_DIR}/graphics/VulkanApp.cpp
         ${SRC_DIR}/graphics/VulkanApp.h
@@ -97,8 +89,11 @@ add_executable(
         ${SRC_DIR}/system/Error.h
         ${SRC_DIR}/system/FileSystem.cpp
         ${SRC_DIR}/system/FileSystem.h
+        ${SRC_DIR}/system/ImageFile.cpp
+        ${SRC_DIR}/system/ImageFile.h
         ${SRC_DIR}/system/Log.cpp
         ${SRC_DIR}/system/Log.h
+        ${SRC_DIR}/system/ObjFile.h
         ${SRC_DIR}/system/Random.cpp
         ${SRC_DIR}/system/Random.h
         ${SRC_DIR}/system/Signal.cpp

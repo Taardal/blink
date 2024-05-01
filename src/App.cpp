@@ -35,16 +35,38 @@ namespace Blink {
         keyboardConfig.window = window;
         BL_EXECUTE_THROW(keyboard = new Keyboard(keyboardConfig));
 
+        VulkanAppConfig vulkanAppConfig{};
+        vulkanAppConfig.window = window;
+        vulkanAppConfig.applicationName = config.name;
+        vulkanAppConfig.engineName = config.name;
+        vulkanAppConfig.validationLayersEnabled = true;
+        vulkanApp = new VulkanApp(vulkanAppConfig);
+
+        VulkanPhysicalDeviceConfig physicalDeviceConfig{};
+        physicalDeviceConfig.vulkanApp = vulkanApp;
+        physicalDevice = new VulkanPhysicalDevice(physicalDeviceConfig);
+
+        VulkanDeviceConfig deviceConfig{};
+        deviceConfig.physicalDevice = physicalDevice;
+        device = new VulkanDevice(deviceConfig);
+
+        VulkanCommandPoolConfig commandPoolConfig{};
+        commandPoolConfig.device = device;
+        commandPool = new VulkanCommandPool(commandPoolConfig);
+
         ResourceLoaderConfig resourceLoaderConfig{};
         resourceLoaderConfig.fileSystem = fileSystem;
+        resourceLoaderConfig.device = device;
+        resourceLoaderConfig.commandPool = commandPool;
         BL_EXECUTE_THROW(resourceLoader = new ResourceLoader(resourceLoaderConfig));
 
         RendererConfig rendererConfig{};
-        rendererConfig.applicationName = config.name;
-        rendererConfig.engineName = config.name;
         rendererConfig.fileSystem = fileSystem;
         rendererConfig.window = window;
         rendererConfig.resourceLoader = resourceLoader;
+        rendererConfig.vulkanApp = vulkanApp;
+        rendererConfig.device = device;
+        rendererConfig.commandPool = commandPool;
         BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
 
         LuaEngineConfig luaEngineConfig{};
@@ -58,6 +80,7 @@ namespace Blink {
 
         SceneConfig sceneConfig{};
         sceneConfig.keyboard = keyboard;
+        sceneConfig.resourceLoader = resourceLoader;
         sceneConfig.renderer = renderer;
         sceneConfig.luaEngine = luaEngine;
         sceneConfig.camera = camera;
@@ -69,7 +92,15 @@ namespace Blink {
         delete scene;
         delete camera;
         delete luaEngine;
+
         delete renderer;
+        delete resourceLoader;
+
+        delete commandPool;
+        delete device;
+        delete physicalDevice;
+        delete vulkanApp;
+
         delete keyboard;
         delete window;
         delete fileSystem;

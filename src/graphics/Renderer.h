@@ -3,23 +3,20 @@
 #include "system/FileSystem.h"
 #include "window/Window.h"
 #include "graphics/ResourceLoader.h"
-#include "graphics/VulkanApp.h"
-#include "graphics/VulkanPhysicalDevice.h"
-#include "graphics/VulkanDevice.h"
 #include "graphics/VulkanSwapChain.h"
-#include "graphics/VulkanCommandPool.h"
 #include "graphics/VulkanShader.h"
 #include "graphics/VulkanGraphicsPipeline.h"
 #include "graphics/VulkanUniformBuffer.h"
-#include "graphics/Mesh.h"
 #include "graphics/ViewProjection.h"
 
 #include <vulkan/vulkan.h>
 
 namespace Blink {
     struct RendererConfig {
-        std::string applicationName;
-        std::string engineName;
+        VulkanApp* vulkanApp = nullptr;
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         ResourceLoader* resourceLoader = nullptr;
@@ -33,19 +30,12 @@ namespace Blink {
 
     private:
         RendererConfig config;
-        VulkanApp* vulkanApp = nullptr;
-        VulkanPhysicalDevice* physicalDevice = nullptr;
-        VulkanDevice* device = nullptr;
-        VulkanCommandPool* commandPool = nullptr;
-        std::vector<VulkanCommandBuffer> commandBuffers;
         VulkanSwapChain* swapChain = nullptr;
+        std::vector<VulkanCommandBuffer> commandBuffers;
         std::vector<VulkanUniformBuffer*> uniformBuffers;
-        VkSampler textureSampler;
-        VkDescriptorSetLayout perFrameDescriptorSetLayout = nullptr;
-        VkDescriptorSetLayout perMeshDescriptorSetLayout = nullptr;
-        VkDescriptorPool perFrameDescriptorPool = nullptr;
-        VkDescriptorPool perMeshDescriptorPool = nullptr;
-        std::vector<VkDescriptorSet> perFrameDescriptorSets;
+        VkDescriptorSetLayout descriptorSetLayout = nullptr;
+        VkDescriptorPool descriptorPool = nullptr;
+        std::vector<VkDescriptorSet> descriptorSets;
         VulkanShader* vertexShader = nullptr;
         VulkanShader* fragmentShader = nullptr;
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
@@ -63,34 +53,34 @@ namespace Blink {
 
         bool beginFrame();
 
-        void renderMesh(const Mesh& mesh, const ViewProjection& viewProjection) const;
+        void renderMesh(std::shared_ptr<Mesh> mesh, const ViewProjection& viewProjection) const;
 
         void endFrame();
-
-        Mesh createMesh(const MeshConfig& meshConfig) const;
-
-        void destroyMesh(const Mesh& mesh) const;
 
     private:
         void setUniformData(const ViewProjection& viewProjection) const;
 
-        void setPushConstantData(const Mesh& mesh) const;
+        void setPushConstantData(std::shared_ptr<Mesh> mesh) const;
 
-        void bindMesh(const Mesh& mesh) const;
+        void bindMesh(std::shared_ptr<Mesh> mesh) const;
 
-        void drawMeshIndexed(const Mesh& mesh) const;
+        void drawMeshIndexed(std::shared_ptr<Mesh> mesh) const;
 
         void reloadShaders();
 
         void compileShaders() const;
 
-        void createTextureSampler();
+        void createCommandObjects();
 
-        void createDescriptorSetLayouts();
+        void destroyCommandObjects() const;
 
-        void createDescriptorPools();
+        void createUniformBuffers();
 
-        void createDescriptorSets();
+        void destroyUniformBuffers();
+
+        void createDescriptorObjects();
+
+        void destroyDescriptorObjects() const;
 
         void createGraphicsPipelineObjects();
 
