@@ -11,11 +11,11 @@ namespace Blink {
         createSwapChain();
         createUniformBuffers();
         createDescriptorObjects();
-        createGraphicsPipelineObjects();
+        createGraphicsPipeline();
     }
 
     Renderer::~Renderer() {
-        destroyGraphicsPipelineObjects();
+        destroyGraphicsPipeline();
         destroyDescriptorObjects();
         destroyUniformBuffers();
         destroySwapChain();
@@ -138,8 +138,8 @@ namespace Blink {
     void Renderer::reloadShaders() {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilIdle());
         compileShaders();
-        destroyGraphicsPipelineObjects();
-        createGraphicsPipelineObjects();
+        destroyGraphicsPipeline();
+        createGraphicsPipeline();
         BL_LOG_INFO("Reloaded shaders");
     }
 
@@ -261,35 +261,25 @@ namespace Blink {
         config.device->destroyDescriptorSetLayout(descriptorSetLayout);
     }
 
-    void Renderer::createGraphicsPipelineObjects() {
-        VulkanShaderConfig vertexShaderConfig{};
-        vertexShaderConfig.device = config.device;
-        vertexShaderConfig.bytes = config.fileSystem->readBytes("shaders/shader.vert.spv");
-        vertexShader = new VulkanShader(vertexShaderConfig);
-
-        VulkanShaderConfig fragmentShaderConfig{};
-        fragmentShaderConfig.device = config.device;
-        fragmentShaderConfig.bytes = config.fileSystem->readBytes("shaders/shader.frag.spv");
-        fragmentShader = new VulkanShader(fragmentShaderConfig);
-
+    void Renderer::createGraphicsPipeline() {
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
             descriptorSetLayout, // Per frame descriptor set layout
             config.meshManager->getDescriptorSetLayout() // Per mesh descriptor set layout
         };
 
         VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
+        graphicsPipelineConfig.fileSystem = config.fileSystem;
         graphicsPipelineConfig.device = config.device;
         graphicsPipelineConfig.swapChain = swapChain;
-        graphicsPipelineConfig.vertexShader = vertexShader;
-        graphicsPipelineConfig.fragmentShader = fragmentShader;
-        graphicsPipelineConfig.descriptorSetLayouts = descriptorSetLayouts;
+        graphicsPipelineConfig.vertexShader = "shaders/shader.vert.spv";
+        graphicsPipelineConfig.fragmentShader = "shaders/shader.frag.spv";
+        graphicsPipelineConfig.descriptorSetLayouts = &descriptorSetLayouts;
+
         graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig);
     }
 
-    void Renderer::destroyGraphicsPipelineObjects() const {
+    void Renderer::destroyGraphicsPipeline() const {
         delete graphicsPipeline;
-        delete fragmentShader;
-        delete vertexShader;
     }
 
 }

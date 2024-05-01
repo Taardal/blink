@@ -4,16 +4,32 @@
 
 namespace Blink {
     VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanGraphicsPipelineConfig& config) : config(config) {
+        std::vector<char> vertexShaderBytes = config.fileSystem->readBytes(config.vertexShader);
+
+        VkShaderModuleCreateInfo vertexShaderModuleCreateInfo{};
+        vertexShaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        vertexShaderModuleCreateInfo.codeSize = vertexShaderBytes.size();
+        vertexShaderModuleCreateInfo.pCode = (const uint32_t*) vertexShaderBytes.data();
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createShaderModule(&vertexShaderModuleCreateInfo, &vertexShaderModule));
+
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
         vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertexShaderStageCreateInfo.module = *config.vertexShader;
+        vertexShaderStageCreateInfo.module = vertexShaderModule;
         vertexShaderStageCreateInfo.pName = "main";
+
+        std::vector<char> fragmentShaderBytes = config.fileSystem->readBytes(config.fragmentShader);
+
+        VkShaderModuleCreateInfo fragmentShaderModuleCreateInfo{};
+        fragmentShaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        fragmentShaderModuleCreateInfo.codeSize = fragmentShaderBytes.size();
+        fragmentShaderModuleCreateInfo.pCode = (const uint32_t*) fragmentShaderBytes.data();
+        BL_ASSERT_THROW_VK_SUCCESS(config.device->createShaderModule(&fragmentShaderModuleCreateInfo, &fragmentShaderModule));
 
         VkPipelineShaderStageCreateInfo fragmentShaderStageCreateInfo{};
         fragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragmentShaderStageCreateInfo.module = *config.fragmentShader;
+        fragmentShaderStageCreateInfo.module = fragmentShaderModule;
         fragmentShaderStageCreateInfo.pName = "main";
 
         VkPipelineShaderStageCreateInfo shaderStages[] = {
@@ -90,8 +106,8 @@ namespace Blink {
 
         VkPipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        layoutCreateInfo.setLayoutCount = config.descriptorSetLayouts.size();
-        layoutCreateInfo.pSetLayouts = config.descriptorSetLayouts.data();
+        layoutCreateInfo.setLayoutCount = config.descriptorSetLayouts->size();
+        layoutCreateInfo.pSetLayouts = config.descriptorSetLayouts->data();
         layoutCreateInfo.pushConstantRangeCount = 1;
         layoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -119,6 +135,8 @@ namespace Blink {
     VulkanGraphicsPipeline::~VulkanGraphicsPipeline() {
         config.device->destroyGraphicsPipeline(pipeline);
         config.device->destroyPipelineLayout(layout);
+        config.device->destroyShaderModule(fragmentShaderModule);
+        config.device->destroyShaderModule(vertexShaderModule);
     }
 
     VkPipelineLayout VulkanGraphicsPipeline::getLayout() const {

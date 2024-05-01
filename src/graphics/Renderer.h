@@ -34,8 +34,6 @@ namespace Blink {
         VkDescriptorPool descriptorPool = nullptr;
         VkDescriptorSetLayout descriptorSetLayout = nullptr;
         std::vector<VkDescriptorSet> descriptorSets;
-        VulkanShader* vertexShader = nullptr;
-        VulkanShader* fragmentShader = nullptr;
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
         uint32_t currentFrame = 0;
         VulkanCommandBuffer currentCommandBuffer = nullptr;
@@ -84,8 +82,8 @@ namespace Blink {
 
         void destroyDescriptorObjects() const;
 
-        void createGraphicsPipelineObjects();
+        void createGraphicsPipeline();
 
-        void destroyGraphicsPipelineObjects() const;
+        void destroyGraphicsPipeline() const;
     };
 }
