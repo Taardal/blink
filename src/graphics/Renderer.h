@@ -16,7 +16,6 @@ namespace Blink {
         VulkanApp* vulkanApp = nullptr;
         VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
-        VulkanCommandPool* commandPool = nullptr;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         ResourceLoader* resourceLoader = nullptr;
@@ -31,10 +30,11 @@ namespace Blink {
     private:
         RendererConfig config;
         VulkanSwapChain* swapChain = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
         std::vector<VulkanCommandBuffer> commandBuffers;
         std::vector<VulkanUniformBuffer*> uniformBuffers;
-        VkDescriptorSetLayout descriptorSetLayout = nullptr;
         VkDescriptorPool descriptorPool = nullptr;
+        VkDescriptorSetLayout descriptorSetLayout = nullptr;
         std::vector<VkDescriptorSet> descriptorSets;
         VulkanShader* vertexShader = nullptr;
         VulkanShader* fragmentShader = nullptr;
@@ -73,6 +73,10 @@ namespace Blink {
         void createCommandObjects();
 
         void destroyCommandObjects() const;
+
+        void createSwapChain();
+
+        void destroySwapChain() const;
 
         void createUniformBuffers();
 

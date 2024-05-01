@@ -7,14 +7,8 @@
 
 namespace Blink {
     Renderer::Renderer(const RendererConfig& config) : config(config) {
-        VulkanSwapChainConfig swapChainConfig{};
-        swapChainConfig.window = config.window;
-        swapChainConfig.vulkanApp = config.vulkanApp;
-        swapChainConfig.device = config.device;
-        swapChainConfig.commandPool = config.commandPool;
-        swapChain = new VulkanSwapChain(swapChainConfig);
-
         createCommandObjects();
+        createSwapChain();
         createUniformBuffers();
         createDescriptorObjects();
         createGraphicsPipelineObjects();
@@ -24,8 +18,8 @@ namespace Blink {
         destroyGraphicsPipelineObjects();
         destroyDescriptorObjects();
         destroyUniformBuffers();
+        destroySwapChain();
         destroyCommandObjects();
-        delete swapChain;
     }
 
     void Renderer::waitUntilIdle() const {
@@ -160,11 +154,29 @@ namespace Blink {
     }
 
     void Renderer::createCommandObjects() {
+        VulkanCommandPoolConfig commandPoolConfig{};
+        commandPoolConfig.device = config.device;
+        commandPool = new VulkanCommandPool(commandPoolConfig);
+
         commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        BL_ASSERT_THROW_VK_SUCCESS(config.commandPool->allocateCommandBuffers(&commandBuffers));
+        BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffers(&commandBuffers));
     }
 
     void Renderer::destroyCommandObjects() const {
+        delete commandPool;
+    }
+
+    void Renderer::createSwapChain() {
+        VulkanSwapChainConfig swapChainConfig{};
+        swapChainConfig.window = config.window;
+        swapChainConfig.vulkanApp = config.vulkanApp;
+        swapChainConfig.device = config.device;
+        swapChainConfig.commandPool = commandPool;
+        swapChain = new VulkanSwapChain(swapChainConfig);
+    }
+
+    void Renderer::destroySwapChain() const {
+        delete swapChain;
     }
 
     void Renderer::createUniformBuffers() {
@@ -172,7 +184,7 @@ namespace Blink {
         for (uint32_t i = 0; i < uniformBuffers.size(); i++) {
             VulkanUniformBufferConfig uniformBufferConfig{};
             uniformBufferConfig.device = config.device;
-            uniformBufferConfig.commandPool = config.commandPool;
+            uniformBufferConfig.commandPool = commandPool;
             uniformBufferConfig.size = sizeof(UniformBufferData);
             uniformBuffers[i] = new VulkanUniformBuffer(uniformBufferConfig);
         }

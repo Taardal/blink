@@ -7,20 +7,11 @@
 
 namespace Blink {
     ResourceLoader::ResourceLoader(const ResourceLoaderConfig& config) : config(config) {
-        placeholderTextureImage = std::make_shared<ImageFile>();
-        placeholderTextureImage->width = 1;
-        placeholderTextureImage->height = 1;
-        placeholderTextureImage->channels = 4; // RGBA
-        placeholderTextureImage->size = placeholderTextureImage->width * placeholderTextureImage->height * placeholderTextureImage->channels;
-        placeholderTextureImage->pixels = new unsigned char[placeholderTextureImage->size];
-        placeholderTextureImage->pixels[0] = 0; // Red
-        placeholderTextureImage->pixels[1] = 0; // Green
-        placeholderTextureImage->pixels[2] = 0; // Blue
-        placeholderTextureImage->pixels[3] = 0; // Alpha (transparent)
-
-        createTextureSampler();
+        createCommandPool();
         createDescriptorPool();
         createDescriptorSetLayout();
+        createTextureSampler();
+        createPlaceholderTextureImage();
     }
 
     ResourceLoader::~ResourceLoader() {
@@ -28,13 +19,14 @@ namespace Blink {
         config.device->destroySampler(textureSampler);
         config.device->destroyDescriptorSetLayout(descriptorSetLayout);
         config.device->destroyDescriptorPool(descriptorPool);
+        delete commandPool;
     }
 
     VkDescriptorSetLayout ResourceLoader::getDescriptorSetLayout() const {
         return descriptorSetLayout;
     }
 
-    std::shared_ptr<Mesh> ResourceLoader::loadModel(const MeshInfo& meshInfo) const {
+    std::shared_ptr<Mesh> ResourceLoader::loadMesh(const MeshInfo& meshInfo) const {
         auto mesh = std::make_shared<Mesh>();
 
         std::shared_ptr<ObjFile> objFile = config.fileSystem->readObj(meshInfo.modelPath);
@@ -77,7 +69,7 @@ namespace Blink {
 
         VulkanVertexBufferConfig vertexBufferConfig{};
         vertexBufferConfig.device = config.device;
-        vertexBufferConfig.commandPool = config.commandPool;
+        vertexBufferConfig.commandPool = commandPool;
         vertexBufferConfig.size = sizeof(mesh->vertices[0]) * mesh->vertices.size();
         auto vertexBuffer = std::make_shared<VulkanVertexBuffer>(vertexBufferConfig);
         vertexBuffer->setData(mesh->vertices);
@@ -85,7 +77,7 @@ namespace Blink {
 
         VulkanIndexBufferConfig indexBufferConfig{};
         indexBufferConfig.device = config.device;
-        indexBufferConfig.commandPool = config.commandPool;
+        indexBufferConfig.commandPool = commandPool;
         indexBufferConfig.size = sizeof(mesh->indices[0]) * mesh->indices.size();
         auto indexBuffer = std::make_shared<VulkanIndexBuffer>(indexBufferConfig);
         indexBuffer->setData(mesh->indices);
@@ -121,7 +113,7 @@ namespace Blink {
 
             VulkanImageConfig textureConfig = {};
             textureConfig.device = config.device;
-            textureConfig.commandPool = config.commandPool;
+            textureConfig.commandPool = commandPool;
             textureConfig.width = (uint32_t) image->width;
             textureConfig.height = (uint32_t) image->height;
             textureConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
@@ -153,6 +145,12 @@ namespace Blink {
         }
 
         return mesh;
+    }
+
+    void ResourceLoader::createCommandPool() {
+        VulkanCommandPoolConfig commandPoolConfig{};
+        commandPoolConfig.device = config.device;
+        commandPool = new VulkanCommandPool(commandPoolConfig);
     }
 
     void ResourceLoader::createDescriptorPool() {
@@ -207,5 +205,18 @@ namespace Blink {
         textureSamplerCreateInfo.maxLod = 0.0f;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createSampler(&textureSamplerCreateInfo, &textureSampler));
+    }
+
+    void ResourceLoader::createPlaceholderTextureImage() {
+        placeholderTextureImage = std::make_shared<ImageFile>();
+        placeholderTextureImage->width = 1;
+        placeholderTextureImage->height = 1;
+        placeholderTextureImage->channels = 4; // RGBA
+        placeholderTextureImage->size = placeholderTextureImage->width * placeholderTextureImage->height * placeholderTextureImage->channels;
+        placeholderTextureImage->pixels = new unsigned char[placeholderTextureImage->size];
+        placeholderTextureImage->pixels[0] = 0; // Red
+        placeholderTextureImage->pixels[1] = 0; // Green
+        placeholderTextureImage->pixels[2] = 0; // Blue
+        placeholderTextureImage->pixels[3] = 0; // Alpha (transparent)
     }
 }

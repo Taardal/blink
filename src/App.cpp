@@ -50,14 +50,9 @@ namespace Blink {
         deviceConfig.physicalDevice = physicalDevice;
         device = new VulkanDevice(deviceConfig);
 
-        VulkanCommandPoolConfig commandPoolConfig{};
-        commandPoolConfig.device = device;
-        commandPool = new VulkanCommandPool(commandPoolConfig);
-
         ResourceLoaderConfig resourceLoaderConfig{};
         resourceLoaderConfig.fileSystem = fileSystem;
         resourceLoaderConfig.device = device;
-        resourceLoaderConfig.commandPool = commandPool;
         BL_EXECUTE_THROW(resourceLoader = new ResourceLoader(resourceLoaderConfig));
 
         RendererConfig rendererConfig{};
@@ -66,7 +61,6 @@ namespace Blink {
         rendererConfig.resourceLoader = resourceLoader;
         rendererConfig.vulkanApp = vulkanApp;
         rendererConfig.device = device;
-        rendererConfig.commandPool = commandPool;
         BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
 
         LuaEngineConfig luaEngineConfig{};
@@ -96,7 +90,6 @@ namespace Blink {
         delete renderer;
         delete resourceLoader;
 
-        delete commandPool;
         delete device;
         delete physicalDevice;
         delete vulkanApp;

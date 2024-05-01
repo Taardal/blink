@@ -9,7 +9,6 @@
 #include "graphics/VulkanApp.h"
 #include "graphics/VulkanPhysicalDevice.h"
 #include "graphics/VulkanDevice.h"
-#include "graphics/VulkanCommandPool.h"
 #include "lua/LuaEngine.h"
 #include "scene/Camera.h"
 #include "scene/Scene.h"
@@ -25,7 +24,6 @@ namespace Blink {
         VulkanApp* vulkanApp = nullptr;
         VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
-        VulkanCommandPool* commandPool = nullptr;
         ResourceLoader* resourceLoader = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;

@@ -65,7 +65,7 @@ namespace Blink {
         meshInfo.textureAtlasPath = "models/fighter/crono782.jpg";
 
         MeshComponent meshComponent{};
-        meshComponent.mesh = config.resourceLoader->loadModel(meshInfo);
+        meshComponent.mesh = config.resourceLoader->loadMesh(meshInfo);
         registry.emplace<MeshComponent>(player, meshComponent);
     }
 
@@ -89,7 +89,7 @@ namespace Blink {
             meshInfo.textureAtlasPath = "models/viking_room/viking_room.png";
 
             MeshComponent meshComponent{};
-            meshComponent.mesh = config.resourceLoader->loadModel(meshInfo);
+            meshComponent.mesh = config.resourceLoader->loadMesh(meshInfo);
             registry.emplace<MeshComponent>(entity, meshComponent);
         }
         {
@@ -109,7 +109,7 @@ namespace Blink {
             meshInfo.texturesDirectoryPath = "models/sibenik";
 
             MeshComponent meshComponent{};
-            meshComponent.mesh = config.resourceLoader->loadModel(meshInfo);
+            meshComponent.mesh = config.resourceLoader->loadMesh(meshInfo);
             registry.emplace<MeshComponent>(entity, meshComponent);
         }
     }

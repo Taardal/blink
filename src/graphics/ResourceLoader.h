@@ -21,7 +21,6 @@ namespace Blink {
     struct ResourceLoaderConfig {
         FileSystem* fileSystem = nullptr;
         VulkanDevice* device = nullptr;
-        VulkanCommandPool* commandPool = nullptr;
     };
 
     class ResourceLoader {
@@ -31,10 +30,11 @@ namespace Blink {
 
     private:
         ResourceLoaderConfig config;
-        std::shared_ptr<ImageFile> placeholderTextureImage = nullptr;
+        VulkanCommandPool* commandPool = nullptr;
         VkDescriptorPool descriptorPool = nullptr;
         VkDescriptorSetLayout descriptorSetLayout = nullptr;
         VkSampler textureSampler = nullptr;
+        std::shared_ptr<ImageFile> placeholderTextureImage = nullptr;
 
     public:
         explicit ResourceLoader(const ResourceLoaderConfig& config);
@@ -43,13 +43,17 @@ namespace Blink {
 
         VkDescriptorSetLayout getDescriptorSetLayout() const;
 
-        std::shared_ptr<Mesh> loadModel(const MeshInfo& meshInfo) const;
+        std::shared_ptr<Mesh> loadMesh(const MeshInfo& meshInfo) const;
 
     private:
+        void createCommandPool();
+
         void createDescriptorPool();
 
         void createDescriptorSetLayout();
 
         void createTextureSampler();
+
+        void createPlaceholderTextureImage();
     };
 }
