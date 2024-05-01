@@ -4,7 +4,7 @@
 #include "system/FileSystem.h"
 #include "window/Window.h"
 #include "window/Keyboard.h"
-#include "graphics/ResourceLoader.h"
+#include "graphics/MeshManager.h"
 #include "graphics/Renderer.h"
 #include "graphics/VulkanApp.h"
 #include "graphics/VulkanPhysicalDevice.h"
@@ -22,9 +22,9 @@ namespace Blink {
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;
         VulkanApp* vulkanApp = nullptr;
-        VulkanPhysicalDevice* physicalDevice = nullptr;
-        VulkanDevice* device = nullptr;
-        ResourceLoader* resourceLoader = nullptr;
+        VulkanPhysicalDevice* vulkanPhysicalDevice = nullptr;
+        VulkanDevice* vulkanDevice = nullptr;
+        MeshManager* meshManager = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
         Camera* camera = nullptr;
@@ -42,12 +42,14 @@ namespace Blink {
         void run();
 
     private:
-        void initialize();
-
         void update();
 
         void render() const;
 
         void onEvent(Event& event) const;
+
+        void initialize();
+
+        void terminate() const;
     };
 }

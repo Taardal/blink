@@ -1,13 +1,13 @@
 #pragma once
 
-#include "system/FileSystem.h"
-#include "window/Window.h"
-#include "graphics/ResourceLoader.h"
+#include "graphics/MeshManager.h"
+#include "graphics/ViewProjection.h"
 #include "graphics/VulkanSwapChain.h"
 #include "graphics/VulkanShader.h"
 #include "graphics/VulkanGraphicsPipeline.h"
 #include "graphics/VulkanUniformBuffer.h"
-#include "graphics/ViewProjection.h"
+#include "system/FileSystem.h"
+#include "window/Window.h"
 
 #include <vulkan/vulkan.h>
 
@@ -18,14 +18,12 @@ namespace Blink {
         VulkanDevice* device = nullptr;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
-        ResourceLoader* resourceLoader = nullptr;
+        MeshManager* meshManager = nullptr;
     };
 
     class Renderer {
     private:
         static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
-        static constexpr uint32_t MAX_MESHES = 100;
-        static constexpr uint32_t MAX_DESCRIPTORS_PER_STAGE = 16;
 
     private:
         RendererConfig config;
@@ -53,18 +51,18 @@ namespace Blink {
 
         bool beginFrame();
 
-        void renderMesh(std::shared_ptr<Mesh> mesh, const ViewProjection& viewProjection) const;
+        void renderMesh(const std::shared_ptr<Mesh>& mesh, const ViewProjection& viewProjection) const;
 
         void endFrame();
 
     private:
         void setUniformData(const ViewProjection& viewProjection) const;
 
-        void setPushConstantData(std::shared_ptr<Mesh> mesh) const;
+        void setPushConstantData(const std::shared_ptr<Mesh>& mesh) const;
 
-        void bindMesh(std::shared_ptr<Mesh> mesh) const;
+        void bindMesh(const std::shared_ptr<Mesh>& mesh) const;
 
-        void drawMeshIndexed(std::shared_ptr<Mesh> mesh) const;
+        void drawMeshIndexed(const std::shared_ptr<Mesh>& mesh) const;
 
         void reloadShaders();
 

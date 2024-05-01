@@ -1,13 +1,13 @@
 #include "App.h"
 
-#include "graphics/ResourceLoader.h"
+#include "graphics/MeshManager.h"
 #include "window/KeyEvent.h"
 
 namespace Blink {
     App::App(const AppConfig& config) : config(config) {
         try {
-            initialize();
             BL_LOG_INFO("Initializing...");
+            initialize();
             initialized = true;
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Initialization error");
@@ -17,86 +17,8 @@ namespace Blink {
         }
     }
 
-    void App::initialize() {
-        BL_EXECUTE_THROW(fileSystem = new FileSystem());
-
-        WindowConfig windowConfig{};
-        windowConfig.title = config.name;
-        windowConfig.width = config.windowWidth;
-        windowConfig.height = config.windowHeight;
-        windowConfig.resizable = config.windowResizable;
-        windowConfig.maximized = config.windowMaximized;
-        windowConfig.onEvent = [this](Event& event) {
-            onEvent(event);
-        };
-        BL_EXECUTE_THROW(window = new Window(windowConfig));
-
-        KeyboardConfig keyboardConfig{};
-        keyboardConfig.window = window;
-        BL_EXECUTE_THROW(keyboard = new Keyboard(keyboardConfig));
-
-        VulkanAppConfig vulkanAppConfig{};
-        vulkanAppConfig.window = window;
-        vulkanAppConfig.applicationName = config.name;
-        vulkanAppConfig.engineName = config.name;
-        vulkanAppConfig.validationLayersEnabled = true;
-        vulkanApp = new VulkanApp(vulkanAppConfig);
-
-        VulkanPhysicalDeviceConfig physicalDeviceConfig{};
-        physicalDeviceConfig.vulkanApp = vulkanApp;
-        physicalDevice = new VulkanPhysicalDevice(physicalDeviceConfig);
-
-        VulkanDeviceConfig deviceConfig{};
-        deviceConfig.physicalDevice = physicalDevice;
-        device = new VulkanDevice(deviceConfig);
-
-        ResourceLoaderConfig resourceLoaderConfig{};
-        resourceLoaderConfig.fileSystem = fileSystem;
-        resourceLoaderConfig.device = device;
-        BL_EXECUTE_THROW(resourceLoader = new ResourceLoader(resourceLoaderConfig));
-
-        RendererConfig rendererConfig{};
-        rendererConfig.fileSystem = fileSystem;
-        rendererConfig.window = window;
-        rendererConfig.resourceLoader = resourceLoader;
-        rendererConfig.vulkanApp = vulkanApp;
-        rendererConfig.device = device;
-        BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
-
-        LuaEngineConfig luaEngineConfig{};
-        luaEngineConfig.keyboard = keyboard;
-        BL_EXECUTE_THROW(luaEngine = new LuaEngine(luaEngineConfig));
-
-        CameraConfig cameraConfig{};
-        cameraConfig.window = window;
-        cameraConfig.keyboard = keyboard;
-        BL_EXECUTE_THROW(camera = new Camera(cameraConfig));
-
-        SceneConfig sceneConfig{};
-        sceneConfig.keyboard = keyboard;
-        sceneConfig.resourceLoader = resourceLoader;
-        sceneConfig.renderer = renderer;
-        sceneConfig.luaEngine = luaEngine;
-        sceneConfig.camera = camera;
-        BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
-    }
-
     App::~App() {
-        BL_LOG_INFO("Terminating...");
-        delete scene;
-        delete camera;
-        delete luaEngine;
-
-        delete renderer;
-        delete resourceLoader;
-
-        delete device;
-        delete physicalDevice;
-        delete vulkanApp;
-
-        delete keyboard;
-        delete window;
-        delete fileSystem;
+        terminate();
     }
 
     void App::run() {
@@ -151,5 +73,84 @@ namespace Blink {
         renderer->onEvent(event);
         camera->onEvent(event);
         scene->onEvent(event);
+    }
+
+    void App::initialize() {
+        BL_EXECUTE_THROW(fileSystem = new FileSystem());
+
+        WindowConfig windowConfig{};
+        windowConfig.title = config.name;
+        windowConfig.width = config.windowWidth;
+        windowConfig.height = config.windowHeight;
+        windowConfig.resizable = config.windowResizable;
+        windowConfig.maximized = config.windowMaximized;
+        windowConfig.onEvent = [this](Event& event) {
+            onEvent(event);
+        };
+        BL_EXECUTE_THROW(window = new Window(windowConfig));
+
+        KeyboardConfig keyboardConfig{};
+        keyboardConfig.window = window;
+        BL_EXECUTE_THROW(keyboard = new Keyboard(keyboardConfig));
+
+        VulkanAppConfig vulkanAppConfig{};
+        vulkanAppConfig.window = window;
+        vulkanAppConfig.applicationName = config.name;
+        vulkanAppConfig.engineName = config.name;
+        vulkanAppConfig.validationLayersEnabled = true;
+        BL_EXECUTE_THROW(vulkanApp = new VulkanApp(vulkanAppConfig));
+
+        VulkanPhysicalDeviceConfig physicalDeviceConfig{};
+        physicalDeviceConfig.vulkanApp = vulkanApp;
+        BL_EXECUTE_THROW(vulkanPhysicalDevice = new VulkanPhysicalDevice(physicalDeviceConfig));
+
+        VulkanDeviceConfig deviceConfig{};
+        deviceConfig.physicalDevice = vulkanPhysicalDevice;
+        BL_EXECUTE_THROW(vulkanDevice = new VulkanDevice(deviceConfig));
+
+        MeshManagerConfig meshManagerConfig{};
+        meshManagerConfig.fileSystem = fileSystem;
+        meshManagerConfig.device = vulkanDevice;
+        BL_EXECUTE_THROW(meshManager = new MeshManager(meshManagerConfig));
+
+        RendererConfig rendererConfig{};
+        rendererConfig.fileSystem = fileSystem;
+        rendererConfig.window = window;
+        rendererConfig.meshManager = meshManager;
+        rendererConfig.vulkanApp = vulkanApp;
+        rendererConfig.device = vulkanDevice;
+        BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
+
+        LuaEngineConfig luaEngineConfig{};
+        luaEngineConfig.keyboard = keyboard;
+        BL_EXECUTE_THROW(luaEngine = new LuaEngine(luaEngineConfig));
+
+        CameraConfig cameraConfig{};
+        cameraConfig.window = window;
+        cameraConfig.keyboard = keyboard;
+        BL_EXECUTE_THROW(camera = new Camera(cameraConfig));
+
+        SceneConfig sceneConfig{};
+        sceneConfig.keyboard = keyboard;
+        sceneConfig.meshManager = meshManager;
+        sceneConfig.renderer = renderer;
+        sceneConfig.luaEngine = luaEngine;
+        sceneConfig.camera = camera;
+        BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
+    }
+
+    void App::terminate() const {
+        BL_LOG_INFO("Terminating...");
+        delete scene;
+        delete camera;
+        delete luaEngine;
+        delete renderer;
+        delete meshManager;
+        delete vulkanDevice;
+        delete vulkanPhysicalDevice;
+        delete vulkanApp;
+        delete keyboard;
+        delete window;
+        delete fileSystem;
     }
 }

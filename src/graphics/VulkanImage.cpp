@@ -40,6 +40,10 @@ namespace Blink {
         return imageView != nullptr ? imageView : config.imageView;
     }
 
+    VkImageLayout VulkanImage::getImageLayout() const {
+        return currentLayout;
+    }
+
     void VulkanImage::setLayout(VkImageLayout layout) {
         VkImageLayout oldLayout = this->currentLayout;
         VkImageLayout newLayout = layout;

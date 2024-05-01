@@ -46,6 +46,8 @@ namespace Blink {
 
         VkImageView getImageView() const;
 
+        VkImageLayout getImageLayout() const;
+
         void setLayout(VkImageLayout layout);
 
         void setData(std::shared_ptr<ImageFile> imageFile) const;

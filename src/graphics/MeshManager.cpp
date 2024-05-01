@@ -1,32 +1,38 @@
 #include "pch.h"
-#include "ResourceLoader.h"
+#include "MeshManager.h"
 #include "graphics/VulkanImage.h"
 
-#include <stb_image.h>
-#include <tiny_obj_loader.h>
-
 namespace Blink {
-    ResourceLoader::ResourceLoader(const ResourceLoaderConfig& config) : config(config) {
+    MeshManager::MeshManager(const MeshManagerConfig& config) : config(config) {
         createCommandPool();
         createDescriptorPool();
         createDescriptorSetLayout();
         createTextureSampler();
-        createPlaceholderTextureImage();
+        createPlaceholderTexture();
     }
 
-    ResourceLoader::~ResourceLoader() {
-        placeholderTextureImage = nullptr;
+    MeshManager::~MeshManager() {
         config.device->destroySampler(textureSampler);
         config.device->destroyDescriptorSetLayout(descriptorSetLayout);
         config.device->destroyDescriptorPool(descriptorPool);
         delete commandPool;
     }
 
-    VkDescriptorSetLayout ResourceLoader::getDescriptorSetLayout() const {
+    VkDescriptorSetLayout MeshManager::getDescriptorSetLayout() const {
         return descriptorSetLayout;
     }
 
-    std::shared_ptr<Mesh> ResourceLoader::loadMesh(const MeshInfo& meshInfo) const {
+    std::shared_ptr<Mesh> MeshManager::getMesh(const MeshInfo& meshInfo) {
+        auto iterator = meshCache.find(meshInfo.modelPath);
+        if (iterator != meshCache.end()) {
+            return iterator->second;
+        }
+        std::shared_ptr<Mesh> mesh = loadMesh(meshInfo);
+        meshCache.insert({meshInfo.modelPath, mesh});
+        return mesh;
+    }
+
+    std::shared_ptr<Mesh> MeshManager::loadMesh(const MeshInfo& meshInfo) {
         auto mesh = std::make_shared<Mesh>();
 
         std::shared_ptr<ObjFile> objFile = config.fileSystem->readObj(meshInfo.modelPath);
@@ -71,6 +77,7 @@ namespace Blink {
         vertexBufferConfig.device = config.device;
         vertexBufferConfig.commandPool = commandPool;
         vertexBufferConfig.size = sizeof(mesh->vertices[0]) * mesh->vertices.size();
+
         auto vertexBuffer = std::make_shared<VulkanVertexBuffer>(vertexBufferConfig);
         vertexBuffer->setData(mesh->vertices);
         mesh->vertexBuffer = vertexBuffer;
@@ -79,14 +86,10 @@ namespace Blink {
         indexBufferConfig.device = config.device;
         indexBufferConfig.commandPool = commandPool;
         indexBufferConfig.size = sizeof(mesh->indices[0]) * mesh->indices.size();
+
         auto indexBuffer = std::make_shared<VulkanIndexBuffer>(indexBufferConfig);
         indexBuffer->setData(mesh->indices);
         mesh->indexBuffer = indexBuffer;
-
-        std::shared_ptr<ImageFile> textureAtlasImage = nullptr;
-        if (!meshInfo.textureAtlasPath.empty()) {
-            textureAtlasImage = config.fileSystem->readImage(meshInfo.textureAtlasPath);
-        }
 
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -97,38 +100,33 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateDescriptorSets(&descriptorSetAllocateInfo, &mesh->descriptorSet));
 
         for (uint32_t i = 0; i < MAX_TEXTURES_PER_MESH; ++i) {
-            std::shared_ptr<ImageFile> image = nullptr;
-            if (textureAtlasImage != nullptr) {
-                image = textureAtlasImage;
-            } else if (i > objFile->materials.size() - 1) {
-                image = placeholderTextureImage;
-            } else {
+            std::string textureFilepath;
+            if (meshInfo.textureAtlasPath.size() > 0) {
+                textureFilepath = meshInfo.textureAtlasPath;
+            } else if (i < objFile->materials.size()) {
                 tinyobj::material_t& material = objFile->materials[i];
-                if (material.diffuse_texname.empty()) {
-                    image = placeholderTextureImage;
-                } else {
-                    image = config.fileSystem->readImage(meshInfo.texturesDirectoryPath + "/" + material.diffuse_texname);
+                if (material.diffuse_texname.size() > 0) {
+                    textureFilepath = meshInfo.texturesDirectoryPath + "/" + material.diffuse_texname;
                 }
             }
 
-            VulkanImageConfig textureConfig = {};
-            textureConfig.device = config.device;
-            textureConfig.commandPool = commandPool;
-            textureConfig.width = (uint32_t) image->width;
-            textureConfig.height = (uint32_t) image->height;
-            textureConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
-            textureConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-            textureConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-            textureConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-            auto texture = std::make_shared<VulkanImage>(textureConfig);
-            texture->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            texture->setData(image);
-            texture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            std::shared_ptr<VulkanImage> texture = nullptr;
+            if (textureFilepath.size() == 0) {
+                texture = placeholderTexture;
+            } else {
+                auto iterator = textureCache.find(textureFilepath);
+                if (iterator != textureCache.end()) {
+                    texture = iterator->second;
+                } else {
+                    auto imageFile = config.fileSystem->readImage(textureFilepath);
+                    texture = createTexture(imageFile);
+                    textureCache.insert({textureFilepath, texture});
+                }
+            }
             mesh->textures.push_back(texture);
 
             VkDescriptorImageInfo descriptorImageInfo{};
-            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            descriptorImageInfo.imageLayout = texture->getImageLayout();
             descriptorImageInfo.imageView = texture->getImageView();
             descriptorImageInfo.sampler = textureSampler;
 
@@ -143,17 +141,34 @@ namespace Blink {
 
             config.device->updateDescriptorSets(1, &descriptorWrite);
         }
-
         return mesh;
     }
 
-    void ResourceLoader::createCommandPool() {
+    std::shared_ptr<VulkanImage> MeshManager::createTexture(const std::shared_ptr<ImageFile>& imageFile) const {
+        VulkanImageConfig textureConfig = {};
+        textureConfig.device = config.device;
+        textureConfig.commandPool = commandPool;
+        textureConfig.width = (uint32_t) imageFile->width;
+        textureConfig.height = (uint32_t) imageFile->height;
+        textureConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
+        textureConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        textureConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+        textureConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+        auto texture = std::make_shared<VulkanImage>(textureConfig);
+        texture->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        texture->setData(imageFile);
+        texture->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        return texture;
+    }
+
+    void MeshManager::createCommandPool() {
         VulkanCommandPoolConfig commandPoolConfig{};
         commandPoolConfig.device = config.device;
         commandPool = new VulkanCommandPool(commandPoolConfig);
     }
 
-    void ResourceLoader::createDescriptorPool() {
+    void MeshManager::createDescriptorPool() {
         VkDescriptorPoolSize descriptorPoolSize{};
         descriptorPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorPoolSize.descriptorCount = (uint32_t) MAX_MESHES;
@@ -167,7 +182,7 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorPool(&descriptorPoolCreateInfo, &descriptorPool));
     }
 
-    void ResourceLoader::createDescriptorSetLayout() {
+    void MeshManager::createDescriptorSetLayout() {
         VkDescriptorSetLayoutBinding textureSamplerLayoutBinding{};
         textureSamplerLayoutBinding.binding = 0;
         textureSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -182,7 +197,7 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, &descriptorSetLayout));
     }
 
-    void ResourceLoader::createTextureSampler() {
+    void MeshManager::createTextureSampler() {
         VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
         const VkPhysicalDeviceProperties& physicalDeviceProperties = physicalDevice->getProperties();
 
@@ -207,8 +222,8 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createSampler(&textureSamplerCreateInfo, &textureSampler));
     }
 
-    void ResourceLoader::createPlaceholderTextureImage() {
-        placeholderTextureImage = std::make_shared<ImageFile>();
+    void MeshManager::createPlaceholderTexture() {
+        auto placeholderTextureImage = std::make_shared<ImageFile>();
         placeholderTextureImage->width = 1;
         placeholderTextureImage->height = 1;
         placeholderTextureImage->channels = 4; // RGBA
@@ -218,5 +233,7 @@ namespace Blink {
         placeholderTextureImage->pixels[1] = 0; // Green
         placeholderTextureImage->pixels[2] = 0; // Blue
         placeholderTextureImage->pixels[3] = 0; // Alpha (transparent)
+
+        placeholderTexture = createTexture(placeholderTextureImage);
     }
 }

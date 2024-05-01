@@ -36,11 +36,11 @@ add_executable(
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
         ${SRC_DIR}/graphics/Mesh.h
+        ${SRC_DIR}/graphics/MeshManager.cpp
+        ${SRC_DIR}/graphics/MeshManager.h
         ${SRC_DIR}/graphics/Renderer.cpp
         ${SRC_DIR}/graphics/Renderer.h
         ${SRC_DIR}/graphics/PushConstantData.h
-        ${SRC_DIR}/graphics/ResourceLoader.cpp
-        ${SRC_DIR}/graphics/ResourceLoader.h
         ${SRC_DIR}/graphics/UniformBufferData.h
         ${SRC_DIR}/graphics/Vertex.h
         ${SRC_DIR}/graphics/ViewProjection.h

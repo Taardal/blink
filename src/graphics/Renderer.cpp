@@ -45,7 +45,7 @@ namespace Blink {
         return true;
     }
 
-    void Renderer::renderMesh(std::shared_ptr<Mesh> mesh, const ViewProjection& viewProjection) const {
+    void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh, const ViewProjection& viewProjection) const {
         setUniformData(viewProjection);
         setPushConstantData(mesh);
         bindMesh(mesh);
@@ -82,7 +82,7 @@ namespace Blink {
         uniformBuffer->setData(&uniformBufferData);
     }
 
-    void Renderer::setPushConstantData(std::shared_ptr<Mesh> mesh) const {
+    void Renderer::setPushConstantData(const std::shared_ptr<Mesh>& mesh) const {
         PushConstantData pushConstantData{};
         pushConstantData.model = mesh->model;
         constexpr uint32_t offset = 0;
@@ -96,7 +96,7 @@ namespace Blink {
         );
     }
 
-    void Renderer::bindMesh(std::shared_ptr<Mesh> mesh) const {
+    void Renderer::bindMesh(const std::shared_ptr<Mesh>& mesh) const {
         mesh->vertexBuffer->bind(currentCommandBuffer);
         mesh->indexBuffer->bind(currentCommandBuffer);
 
@@ -120,7 +120,7 @@ namespace Blink {
         );
     }
 
-    void Renderer::drawMeshIndexed(std::shared_ptr<Mesh> mesh) const {
+    void Renderer::drawMeshIndexed(const std::shared_ptr<Mesh>& mesh) const {
         constexpr uint32_t instanceCount = 1;
         constexpr uint32_t firstIndex = 0;
         constexpr uint32_t vertexOffset = 0;
@@ -274,7 +274,7 @@ namespace Blink {
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
             descriptorSetLayout, // Per frame descriptor set layout
-            config.resourceLoader->getDescriptorSetLayout() // Per mesh descriptor set layout
+            config.meshManager->getDescriptorSetLayout() // Per mesh descriptor set layout
         };
 
         VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
