@@ -88,18 +88,18 @@ namespace Blink {
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledExtensionCount = (uint32_t) requiredExtensions.size();
+        createInfo.enabledExtensionCount = requiredExtensions.size();
         createInfo.ppEnabledExtensionNames = requiredExtensions.data();
-        if (Environment::isMacOS()) {
-            createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-        }
+#ifdef BL_PLATFORM_MACOS
+        createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
         if (config.validationLayersEnabled) {
             createInfo.pNext = &debugMessengerCreateInfo;
-            createInfo.enabledLayerCount = (uint32_t) validationLayers.size();
+            createInfo.enabledLayerCount = validationLayers.size();
             createInfo.ppEnabledLayerNames = validationLayers.data();
         }
 
-        BL_ASSERT_VK_SUCCESS(vkCreateInstance(&createInfo, BL_VULKAN_ALLOCATOR, &instance));
+        BL_ASSERT_THROW_VK_SUCCESS(vkCreateInstance(&createInfo, BL_VULKAN_ALLOCATOR, &instance));
         BL_LOG_INFO("Created instance");
     }
 
@@ -111,7 +111,7 @@ namespace Blink {
     void VulkanApp::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT& debugMessengerCreateInfo) {
         auto createDebugMessenger = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
         BL_ASSERT_THROW(createDebugMessenger != nullptr);
-        BL_ASSERT_VK_SUCCESS(createDebugMessenger(instance, &debugMessengerCreateInfo, BL_VULKAN_ALLOCATOR, &debugMessenger));
+        BL_ASSERT_THROW_VK_SUCCESS(createDebugMessenger(instance, &debugMessengerCreateInfo, BL_VULKAN_ALLOCATOR, &debugMessenger));
         BL_LOG_INFO("Created debug messenger");
     }
 
@@ -125,7 +125,7 @@ namespace Blink {
     }
 
     void VulkanApp::createSurface() {
-        BL_ASSERT_VK_SUCCESS(config.window->createVulkanSurface(instance, &surface, BL_VULKAN_ALLOCATOR));
+        BL_ASSERT_THROW_VK_SUCCESS(config.window->createVulkanSurface(instance, &surface, BL_VULKAN_ALLOCATOR));
         BL_LOG_INFO("Created surface");
     }
 

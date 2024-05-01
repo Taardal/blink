@@ -304,7 +304,7 @@ namespace Blink {
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
         createInfo.queueCreateInfoCount = (uint32_t) queueCreateInfos.size();
 
-        BL_ASSERT_VK_SUCCESS(config.physicalDevice->createDevice(&createInfo, &device));
+        BL_ASSERT_THROW_VK_SUCCESS(config.physicalDevice->createDevice(&createInfo, &device));
         BL_LOG_INFO("Created device");
     }
 

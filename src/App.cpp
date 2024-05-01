@@ -97,7 +97,9 @@ namespace Blink {
         vulkanAppConfig.window = window;
         vulkanAppConfig.applicationName = config.name;
         vulkanAppConfig.engineName = config.name;
+#ifdef BL_DEBUG
         vulkanAppConfig.validationLayersEnabled = true;
+#endif
         BL_EXECUTE_THROW(vulkanApp = new VulkanApp(vulkanAppConfig));
 
         VulkanPhysicalDeviceConfig physicalDeviceConfig{};

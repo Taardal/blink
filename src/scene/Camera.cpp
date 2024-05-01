@@ -86,17 +86,14 @@ namespace Blink {
     }
 
     void Camera::updateDirections() {
-        // Calculate the new front direction vector
         forwardDirection.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
         forwardDirection.y = sin(glm::radians(pitch));
         forwardDirection.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
         forwardDirection = glm::normalize(forwardDirection);
 
-        // Recalculate the right and up direction vectors
         rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
         upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
 
-        // Apply roll rotation
         glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(roll), forwardDirection);
         upDirection = glm::vec3(rollMatrix * glm::vec4(upDirection, 0.0f));
         rightDirection = glm::vec3(rollMatrix * glm::vec4(rightDirection, 0.0f));
