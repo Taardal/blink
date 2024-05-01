@@ -37,6 +37,9 @@ namespace Blink {
 
         std::shared_ptr<ObjFile> objFile = config.fileSystem->readObj(meshInfo.modelPath);
 
+        // Ensure that duplicate vertices are not added to the mesh for optimization purposes
+        std::unordered_map<Vertex, uint32_t> indicesByUniqueVertices{};
+
         // Shapes of the model
         for (uint32_t s = 0; s < objFile->shapes.size(); s++) {
             tinyobj::shape_t& shape = objFile->shapes[s];
@@ -44,7 +47,7 @@ namespace Blink {
 
             // Faces (polygons) of the shape
             for (uint32_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
-                uint32_t vertexCountPerFace = (uint32_t) shape.mesh.num_face_vertices[f];
+                uint32_t vertexCountPerFace = shape.mesh.num_face_vertices[f];
                 uint32_t materialId = shape.mesh.material_ids[f];
 
                 // Vertices in the face
@@ -66,8 +69,15 @@ namespace Blink {
                         1.0f - objFile->attrib.texcoords[2 * index.texcoord_index + 1]
                     };
 
-                    mesh->vertices.push_back(vertex);
-                    mesh->indices.push_back(indexOffset + v);
+                    // Check if the current vertex has already been added
+                    if (indicesByUniqueVertices.count(vertex) == 0) {
+                        // Add the new vertex and use its index in the vertices vector as the rendering index
+                        indicesByUniqueVertices[vertex] = (uint32_t) mesh->vertices.size();
+                        mesh->vertices.push_back(vertex);
+                    }
+                    // Add the rendering index of the vertex, regardless if the vertex has already been added or not,
+                    // to ensure that the index used to reference vertices in the mesh remains consistent even if some vertices are repeated.
+                    mesh->indices.push_back(indicesByUniqueVertices[vertex]);
                 }
                 indexOffset += vertexCountPerFace;
             }
@@ -148,8 +158,8 @@ namespace Blink {
         VulkanImageConfig textureConfig = {};
         textureConfig.device = config.device;
         textureConfig.commandPool = commandPool;
-        textureConfig.width = (uint32_t) imageFile->width;
-        textureConfig.height = (uint32_t) imageFile->height;
+        textureConfig.width = imageFile->width;
+        textureConfig.height = imageFile->height;
         textureConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
         textureConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         textureConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -171,13 +181,13 @@ namespace Blink {
     void MeshManager::createDescriptorPool() {
         VkDescriptorPoolSize descriptorPoolSize{};
         descriptorPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorPoolSize.descriptorCount = (uint32_t) MAX_MESHES;
+        descriptorPoolSize.descriptorCount = MAX_MESHES;
 
         VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
         descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptorPoolCreateInfo.poolSizeCount = 1;
         descriptorPoolCreateInfo.pPoolSizes = &descriptorPoolSize;
-        descriptorPoolCreateInfo.maxSets = (uint32_t) MAX_MESHES;
+        descriptorPoolCreateInfo.maxSets = MAX_MESHES;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorPool(&descriptorPoolCreateInfo, &descriptorPool));
     }
