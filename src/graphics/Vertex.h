@@ -5,8 +5,6 @@
 #include <glm/glm.hpp>
 
 namespace Blink {
-    typedef std::array<VkVertexInputAttributeDescription, 4> VertexAttributeDescriptions;
-
     struct Vertex {
         glm::vec3 position = {0.0f, 0.0f, 0.0f};
         glm::vec3 color = {1.0f, 1.0f, 1.0f};
@@ -21,30 +19,33 @@ namespace Blink {
             return bindingDescription;
         }
 
-        static VertexAttributeDescriptions getAttributeDescriptions() {
-            VertexAttributeDescriptions attributeDescriptions{};
-
-            attributeDescriptions[0].binding = 0;
-            attributeDescriptions[0].location = 0;
-            attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-            attributeDescriptions[0].offset = offsetof(Vertex, position);
-
-            attributeDescriptions[1].binding = 0;
-            attributeDescriptions[1].location = 1;
-            attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-            attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-            attributeDescriptions[2].binding = 0;
-            attributeDescriptions[2].location = 2;
-            attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-            attributeDescriptions[2].offset = offsetof(Vertex, textureCoordinate);
-
-            attributeDescriptions[3].binding = 0;
-            attributeDescriptions[3].location = 3;
-            attributeDescriptions[3].format = VK_FORMAT_R32_UINT;
-            attributeDescriptions[3].offset = offsetof(Vertex, textureIndex);
-
-            return attributeDescriptions;
+        static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
+            return {
+                {
+                    .binding = 0,
+                    .location = 0,
+                    .format = VK_FORMAT_R32G32B32_SFLOAT,
+                    .offset = offsetof(Vertex, position),
+                },
+                {
+                    .binding = 0,
+                    .location = 1,
+                    .format = VK_FORMAT_R32G32B32_SFLOAT,
+                    .offset = offsetof(Vertex, color),
+                },
+                {
+                    .binding = 0,
+                    .location = 2,
+                    .format = VK_FORMAT_R32G32_SFLOAT,
+                    .offset = offsetof(Vertex, textureCoordinate),
+                },
+                {
+                    .binding = 0,
+                    .location = 3,
+                    .format = VK_FORMAT_R32_UINT,
+                    .offset = offsetof(Vertex, textureIndex),
+                }
+            };
         }
 
         bool operator==(const Vertex& other) const {

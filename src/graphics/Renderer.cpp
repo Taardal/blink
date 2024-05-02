@@ -137,20 +137,10 @@ namespace Blink {
 
     void Renderer::reloadShaders() {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilIdle());
-        compileShaders();
+        config.shaderManager->reloadShaders();
         destroyGraphicsPipeline();
         createGraphicsPipeline();
         BL_LOG_INFO("Reloaded shaders");
-    }
-
-    void Renderer::compileShaders() const {
-        std::stringstream ss;
-        ss << "cmake";
-        ss << " -D SHADERS_SOURCE_DIR=" << CMAKE_SHADERS_SOURCE_DIR;
-        ss << " -D SHADERS_OUTPUT_DIR=" << CMAKE_SHADERS_OUTPUT_DIR;
-        ss << " -P " << CMAKE_SCRIPTS_DIR << "/compile_shaders.cmake";
-        std::string command = ss.str();
-        std::system(command.c_str());
     }
 
     void Renderer::createCommandObjects() {
@@ -262,18 +252,31 @@ namespace Blink {
     }
 
     void Renderer::createGraphicsPipeline() {
+        std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/shader.vert.spv");
+        std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/shader.frag.spv");
+
+        VkVertexInputBindingDescription vertexBindingDescription = Vertex::getBindingDescription();
+        std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions = Vertex::getAttributeDescriptions();
+
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
             descriptorSetLayout, // Per frame descriptor set layout
             config.meshManager->getDescriptorSetLayout() // Per mesh descriptor set layout
         };
 
+        VkPushConstantRange pushConstantRange{};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(PushConstantData);
+
         VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
-        graphicsPipelineConfig.fileSystem = config.fileSystem;
         graphicsPipelineConfig.device = config.device;
-        graphicsPipelineConfig.swapChain = swapChain;
-        graphicsPipelineConfig.vertexShader = "shaders/shader.vert.spv";
-        graphicsPipelineConfig.fragmentShader = "shaders/shader.frag.spv";
+        graphicsPipelineConfig.renderPass = swapChain->getRenderPass();
+        graphicsPipelineConfig.vertexShader = vertexShader;
+        graphicsPipelineConfig.fragmentShader = fragmentShader;
+        graphicsPipelineConfig.vertexBindingDescription = &vertexBindingDescription;
+        graphicsPipelineConfig.vertexAttributeDescriptions = &vertexAttributeDescriptions;
         graphicsPipelineConfig.descriptorSetLayouts = &descriptorSetLayouts;
+        graphicsPipelineConfig.pushConstantRange = &pushConstantRange;
 
         graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig);
     }

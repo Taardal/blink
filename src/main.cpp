@@ -13,7 +13,7 @@ int main() {
     config.windowWidth = 1280;
     config.windowHeight = 768;
     config.windowResizable = true;
-    config.windowMaximized = true;
+    config.windowMaximized = false;
 
     App app(config);
     app.run();

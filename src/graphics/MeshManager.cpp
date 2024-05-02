@@ -28,7 +28,7 @@ namespace Blink {
             return iterator->second;
         }
         std::shared_ptr<Mesh> mesh = loadMesh(meshInfo);
-        meshCache.insert({meshInfo.modelPath, mesh});
+        meshCache[meshInfo.modelPath] = mesh;
         return mesh;
     }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "graphics/Vertex.h"
 #include "graphics/Mesh.h"
 
 #include <glm/glm.hpp>

@@ -6,6 +6,7 @@
 #include "window/Keyboard.h"
 #include "graphics/MeshManager.h"
 #include "graphics/Renderer.h"
+#include "graphics/ShaderManager.h"
 #include "graphics/VulkanApp.h"
 #include "graphics/VulkanPhysicalDevice.h"
 #include "graphics/VulkanDevice.h"
@@ -25,6 +26,7 @@ namespace Blink {
         VulkanPhysicalDevice* vulkanPhysicalDevice = nullptr;
         VulkanDevice* vulkanDevice = nullptr;
         MeshManager* meshManager = nullptr;
+        ShaderManager* shaderManager = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
         Camera* camera = nullptr;

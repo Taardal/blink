@@ -110,6 +110,11 @@ namespace Blink {
         deviceConfig.physicalDevice = vulkanPhysicalDevice;
         BL_EXECUTE_THROW(vulkanDevice = new VulkanDevice(deviceConfig));
 
+        ShaderManagerConfig shaderManagerConfig{};
+        shaderManagerConfig.fileSystem = fileSystem;
+        shaderManagerConfig.device = vulkanDevice;
+        BL_EXECUTE_THROW(shaderManager = new ShaderManager(shaderManagerConfig));
+
         MeshManagerConfig meshManagerConfig{};
         meshManagerConfig.fileSystem = fileSystem;
         meshManagerConfig.device = vulkanDevice;
@@ -119,6 +124,7 @@ namespace Blink {
         rendererConfig.fileSystem = fileSystem;
         rendererConfig.window = window;
         rendererConfig.meshManager = meshManager;
+        rendererConfig.shaderManager = shaderManager;
         rendererConfig.vulkanApp = vulkanApp;
         rendererConfig.device = vulkanDevice;
         BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
@@ -148,6 +154,7 @@ namespace Blink {
         delete luaEngine;
         delete renderer;
         delete meshManager;
+        delete shaderManager;
         delete vulkanDevice;
         delete vulkanPhysicalDevice;
         delete vulkanApp;

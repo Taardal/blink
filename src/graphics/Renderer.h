@@ -1,6 +1,7 @@
 #pragma once
 
 #include "graphics/MeshManager.h"
+#include "graphics/ShaderManager.h"
 #include "graphics/ViewProjection.h"
 #include "graphics/VulkanSwapChain.h"
 #include "graphics/VulkanShader.h"
@@ -16,9 +17,10 @@ namespace Blink {
         VulkanApp* vulkanApp = nullptr;
         VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
-        FileSystem* fileSystem = nullptr;
-        Window* window = nullptr;
+        ShaderManager* shaderManager = nullptr;
         MeshManager* meshManager = nullptr;
+        Window* window = nullptr;
+        FileSystem* fileSystem = nullptr;
     };
 
     class Renderer {
@@ -63,8 +65,6 @@ namespace Blink {
         void drawMeshIndexed(const std::shared_ptr<Mesh>& mesh) const;
 
         void reloadShaders();
-
-        void compileShaders() const;
 
         void createCommandObjects();
 
