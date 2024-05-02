@@ -1,36 +1,26 @@
 #pragma once
 
-#include "system/FileSystem.h"
-#include "window/Window.h"
-#include "graphics/VulkanApp.h"
-#include "graphics/VulkanPhysicalDevice.h"
-#include "graphics/VulkanDevice.h"
+#include "graphics/MeshManager.h"
+#include "graphics/ShaderManager.h"
+#include "graphics/ViewProjection.h"
 #include "graphics/VulkanSwapChain.h"
-#include "graphics/VulkanCommandPool.h"
-#include "graphics/VulkanPhysicalDevice.h"
-#include "graphics/VulkanDevice.h"
-#include "graphics/VulkanSwapChain.h"
-#include "graphics/VulkanCommandPool.h"
 #include "graphics/VulkanShader.h"
 #include "graphics/VulkanGraphicsPipeline.h"
-#include "graphics/VulkanVertexBuffer.h"
-#include "graphics/VulkanIndexBuffer.h"
 #include "graphics/VulkanUniformBuffer.h"
-#include "graphics/VulkanImage.h"
-#include "graphics/Quad.h"
-#include "graphics/Vertex.h"
-#include "graphics/Mesh.h"
-#include "graphics/ViewProjection.h"
+#include "system/FileSystem.h"
+#include "window/Window.h"
 
 #include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
 
 namespace Blink {
     struct RendererConfig {
-        std::string applicationName;
-        std::string engineName;
-        FileSystem* fileSystem = nullptr;
+        VulkanApp* vulkanApp = nullptr;
+        VulkanPhysicalDevice* physicalDevice = nullptr;
+        VulkanDevice* device = nullptr;
+        ShaderManager* shaderManager = nullptr;
+        MeshManager* meshManager = nullptr;
         Window* window = nullptr;
+        FileSystem* fileSystem = nullptr;
     };
 
     class Renderer {
@@ -39,17 +29,13 @@ namespace Blink {
 
     private:
         RendererConfig config;
-        VulkanApp* vulkanApp = nullptr;
-        VulkanPhysicalDevice* physicalDevice = nullptr;
-        VulkanDevice* device = nullptr;
+        VulkanSwapChain* swapChain = nullptr;
         VulkanCommandPool* commandPool = nullptr;
         std::vector<VulkanCommandBuffer> commandBuffers;
-        VulkanSwapChain* swapChain = nullptr;
-        VkSampler textureSampler;
-        VkDescriptorSetLayout descriptorSetLayout = nullptr;
+        std::vector<VulkanUniformBuffer*> uniformBuffers;
         VkDescriptorPool descriptorPool = nullptr;
-        VulkanShader* vertexShader = nullptr;
-        VulkanShader* fragmentShader = nullptr;
+        VkDescriptorSetLayout descriptorSetLayout = nullptr;
+        std::vector<VkDescriptorSet> descriptorSets;
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
         uint32_t currentFrame = 0;
         VulkanCommandBuffer currentCommandBuffer = nullptr;
@@ -65,35 +51,39 @@ namespace Blink {
 
         bool beginFrame();
 
-        void renderMesh(const Mesh& mesh, const ViewProjection& viewProjection) const;
+        void renderMesh(const std::shared_ptr<Mesh>& mesh, const ViewProjection& viewProjection) const;
 
         void endFrame();
 
-        Mesh createMesh() const;
-
-        void destroyMesh(const Mesh& mesh) const;
-
     private:
-        void setMeshUniformData(const Mesh& mesh, const ViewProjection& viewProjection) const;
+        void setUniformData(const ViewProjection& viewProjection) const;
 
-        void setMeshPushConstantData(const Mesh& mesh) const;
+        void setPushConstantData(const std::shared_ptr<Mesh>& mesh) const;
 
-        void bindMesh(const Mesh& mesh) const;
+        void bindMesh(const std::shared_ptr<Mesh>& mesh) const;
 
-        void drawMeshIndexed(const Mesh& mesh) const;
+        void drawMeshIndexed(const std::shared_ptr<Mesh>& mesh) const;
 
         void reloadShaders();
 
-        void compileShaders() const;
+        void createCommandObjects();
 
-        void createTextureSampler();
+        void destroyCommandObjects() const;
 
-        void createDescriptorSetLayout();
+        void createSwapChain();
 
-        void createDescriptorPool();
+        void destroySwapChain() const;
 
-        void createGraphicsPipelineObjects();
+        void createUniformBuffers();
 
-        void destroyGraphicsPipelineObjects() const;
+        void destroyUniformBuffers();
+
+        void createDescriptorObjects();
+
+        void destroyDescriptorObjects() const;
+
+        void createGraphicsPipeline();
+
+        void destroyGraphicsPipeline() const;
     };
 }

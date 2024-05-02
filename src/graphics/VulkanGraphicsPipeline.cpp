@@ -1,6 +1,4 @@
 #include "VulkanGraphicsPipeline.h"
-#include "Vertex.h"
-#include "PushConstantData.h"
 
 namespace Blink {
     VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VulkanGraphicsPipelineConfig& config) : config(config) {
@@ -22,9 +20,10 @@ namespace Blink {
         };
 
         std::vector<VkDynamicState> dynamicStates = {
-                VK_DYNAMIC_STATE_VIEWPORT,
-                VK_DYNAMIC_STATE_SCISSOR
+            VK_DYNAMIC_STATE_VIEWPORT, // Indicates that the viewport is set dynamically with vkCmdSetViewport elsewhere
+            VK_DYNAMIC_STATE_SCISSOR // Indicates that the scissor is set dynamically with vkCmdSetScissor elsewhere
         };
+
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
         dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         dynamicStateCreateInfo.dynamicStateCount = (uint32_t) dynamicStates.size();
@@ -35,15 +34,12 @@ namespace Blink {
         viewportStateCreateInfo.viewportCount = 1;
         viewportStateCreateInfo.scissorCount = 1;
 
-        VkVertexInputBindingDescription bindingDescription = Vertex::getBindingDescription();
-        VertexAttributeDescriptions attributeDescriptions = Vertex::getAttributeDescriptions();
-
         VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
         vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-        vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDescription;
-        vertexInputStateCreateInfo.vertexAttributeDescriptionCount = (uint32_t) attributeDescriptions.size();
-        vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+        vertexInputStateCreateInfo.pVertexBindingDescriptions = config.vertexBindingDescription;
+        vertexInputStateCreateInfo.vertexAttributeDescriptionCount = (uint32_t) config.vertexAttributeDescriptions->size();
+        vertexInputStateCreateInfo.pVertexAttributeDescriptions = config.vertexAttributeDescriptions->data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
         inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -83,17 +79,12 @@ namespace Blink {
         colorBlendStateCreateInfo.attachmentCount = 1;
         colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
 
-        VkPushConstantRange pushConstantRange{};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(PushConstantData);
-
         VkPipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        layoutCreateInfo.setLayoutCount = 1;
-        layoutCreateInfo.pSetLayouts = &config.descriptorSetLayout;
+        layoutCreateInfo.setLayoutCount = config.descriptorSetLayouts->size();
+        layoutCreateInfo.pSetLayouts = config.descriptorSetLayouts->data();
         layoutCreateInfo.pushConstantRangeCount = 1;
-        layoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+        layoutCreateInfo.pPushConstantRanges = config.pushConstantRange;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createPipelineLayout(&layoutCreateInfo, &layout));
 
@@ -109,7 +100,7 @@ namespace Blink {
         pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
         pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
         pipelineCreateInfo.layout = layout;
-        pipelineCreateInfo.renderPass = config.swapChain->getRenderPass();
+        pipelineCreateInfo.renderPass = config.renderPass;
         pipelineCreateInfo.subpass = 0;
         pipelineCreateInfo.pDepthStencilState = &depthStencil;
 

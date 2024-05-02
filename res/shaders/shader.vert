@@ -1,25 +1,35 @@
 #version 450
 
-layout(binding = 0) uniform UniformBufferData {
+// Per frame descriptor set
+layout(set = 0, binding = 0) uniform UniformBufferData {
     mat4 view;
     mat4 projection;
 } uniformBufferData;
 
+// Per mesh model matrix
 layout(push_constant) uniform PushConstantData {
     mat4 model;
 } pushConstantData;
 
+// Vertex attributes
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
 layout(location = 2) in vec2 textureCoordinate;
+layout(location = 3) in uint textureIndex;
 
-layout(location = 0) out VertexOutput {
+// Vertex data to forward to fragment shader
+layout(location = 0) out VertexData {
     vec3 color;
     vec2 textureCoordinate;
-} vertexOutput;
+    uint textureIndex;
+} vertexData;
 
 void main() {
+    // Vertex position
     gl_Position = uniformBufferData.projection * uniformBufferData.view * pushConstantData.model * vec4(position, 1.0);
-    vertexOutput.color = color;
-    vertexOutput.textureCoordinate = textureCoordinate;
+
+    // Forward data to fragment shader
+    vertexData.color = color;
+    vertexData.textureCoordinate = textureCoordinate;
+    vertexData.textureIndex = textureIndex;
 }

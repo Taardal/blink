@@ -107,6 +107,7 @@ namespace Blink {
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
         auto& transformComponent = binding->entityRegistry->get<TransformComponent>(entity);
         transformComponent.position = { x, y, z };
+        transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
 
         return 0;
     }

@@ -20,6 +20,7 @@ namespace Blink {
         VkImageAspectFlags aspect = 0;
         uint32_t width = 0;
         uint32_t height = 0;
+        std::string debugName = "";
     };
 
     class VulkanImage {
@@ -35,6 +36,8 @@ namespace Blink {
 
         ~VulkanImage();
 
+        const std::string& getDebugName() { return config.debugName; };
+
         operator VkImage() const;
 
         operator VkImageView() const;
@@ -43,9 +46,11 @@ namespace Blink {
 
         VkImageView getImageView() const;
 
+        VkImageLayout getImageLayout() const;
+
         void setLayout(VkImageLayout layout);
 
-        void setData(const Image& image) const;
+        void setData(std::shared_ptr<ImageFile> imageFile) const;
 
     private:
         void createImage();

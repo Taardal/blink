@@ -36,16 +36,15 @@ add_executable(
         ${SRC_DIR}/App.h
         ${SRC_DIR}/AppConfig.h
         ${SRC_DIR}/graphics/Mesh.h
-        ${SRC_DIR}/graphics/Quad.h
+        ${SRC_DIR}/graphics/MeshManager.cpp
+        ${SRC_DIR}/graphics/MeshManager.h
+        ${SRC_DIR}/graphics/PushConstantData.h
         ${SRC_DIR}/graphics/Renderer.cpp
         ${SRC_DIR}/graphics/Renderer.h
-        ${SRC_DIR}/graphics/PushConstantData.h
-        ${SRC_DIR}/graphics/Texture.cpp
-        ${SRC_DIR}/graphics/Texture.h
+        ${SRC_DIR}/graphics/ShaderManager.cpp
+        ${SRC_DIR}/graphics/ShaderManager.h
         ${SRC_DIR}/graphics/UniformBufferData.h
         ${SRC_DIR}/graphics/Vertex.h
-        ${SRC_DIR}/graphics/VertexAttribute.cpp
-        ${SRC_DIR}/graphics/VertexAttribute.h
         ${SRC_DIR}/graphics/ViewProjection.h
         ${SRC_DIR}/graphics/VulkanApp.cpp
         ${SRC_DIR}/graphics/VulkanApp.h
@@ -92,8 +91,11 @@ add_executable(
         ${SRC_DIR}/system/Error.h
         ${SRC_DIR}/system/FileSystem.cpp
         ${SRC_DIR}/system/FileSystem.h
+        ${SRC_DIR}/system/ImageFile.cpp
+        ${SRC_DIR}/system/ImageFile.h
         ${SRC_DIR}/system/Log.cpp
         ${SRC_DIR}/system/Log.h
+        ${SRC_DIR}/system/ObjFile.h
         ${SRC_DIR}/system/Random.cpp
         ${SRC_DIR}/system/Random.h
         ${SRC_DIR}/system/Signal.cpp
@@ -147,15 +149,20 @@ add_custom_target(
         COMMENT "Compiling shaders"
 )
 
-set(TEXTURES_SOURCE_DIR ${PROJECT_SOURCE_DIR}/res/textures)
-set(TEXTURES_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/textures)
+set(MODELS_SOURCE_DIR ${PROJECT_SOURCE_DIR}/res/models)
+set(MODELS_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/models)
 add_custom_target(
-        CopyTextures
-        COMMAND ${CMAKE_COMMAND} -D TEXTURES_SOURCE_DIR=${TEXTURES_SOURCE_DIR} -D TEXTURES_OUTPUT_DIR=${TEXTURES_OUTPUT_DIR} -P ${CMAKE_DIR}/copy_textures.cmake
+        CopyModels
+        COMMAND ${CMAKE_COMMAND} -D MODELS_SOURCE_DIR=${MODELS_SOURCE_DIR} -D MODELS_OUTPUT_DIR=${MODELS_OUTPUT_DIR} -P ${CMAKE_DIR}/copy_models.cmake
         COMMENT "Copying textures"
 )
 
-add_dependencies(${PROJECT_NAME} CompileLua CompileShaders CopyTextures)
+add_dependencies(
+        ${PROJECT_NAME}
+        CompileLua
+        CompileShaders
+        CopyModels
+)
 
 #########################################
 # Preprocessor macros (used in C++)     #
@@ -221,6 +228,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${LIB_DIR}/stb_image)
+target_include_directories(${PROJECT_NAME} PRIVATE ${LIB_DIR}/tiny_obj_loader)
 
 #########################################
 # Installation                          #

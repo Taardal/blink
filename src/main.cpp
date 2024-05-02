@@ -8,15 +8,13 @@ int main() {
 
     Log::setLevel(LogLevel::Debug);
 
-    AppConfig config;
+    AppConfig config{};
     config.name = "Blink";
     config.windowWidth = 1280;
     config.windowHeight = 768;
     config.windowResizable = true;
+    config.windowMaximized = false;
 
-    auto app = new App(config);
-    app->run();
-    delete app;
-
-    return EXIT_SUCCESS;
+    App app(config);
+    app.run();
 }
