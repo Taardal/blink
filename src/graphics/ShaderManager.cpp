@@ -5,13 +5,20 @@ namespace Blink {
     }
 
     std::shared_ptr<VulkanShader> ShaderManager::getShader(const std::string& path) {
-        auto iterator = cache.find(path);
+        const auto iterator = cache.find(path);
         if (iterator != cache.end()) {
             return iterator->second;
         }
         std::shared_ptr<VulkanShader> shader = loadShader(path);
-        cache[path] = loadShader(path);
+        cache[path] = shader;
         return shader;
+    }
+
+    void ShaderManager::reloadShaders() {
+        compileShaders();
+        for (const auto& [path, _] : cache) {
+            cache[path] = loadShader(path);
+        }
     }
 
     std::shared_ptr<VulkanShader> ShaderManager::loadShader(const std::string& path) const {
@@ -19,14 +26,6 @@ namespace Blink {
         shaderConfig.bytes = config.fileSystem->readBytes(path);
         shaderConfig.device = config.device;
         return std::make_shared<VulkanShader>(shaderConfig);
-    }
-
-    void ShaderManager::reloadShaders() {
-        compileShaders();
-        for (const std::pair<const std::string, std::shared_ptr<VulkanShader>>& entry : cache) {
-            const std::string& path = entry.first;
-            cache[path] = loadShader(path);
-        }
     }
 
     void ShaderManager::compileShaders() const {

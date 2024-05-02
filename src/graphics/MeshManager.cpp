@@ -23,7 +23,7 @@ namespace Blink {
     }
 
     std::shared_ptr<Mesh> MeshManager::getMesh(const MeshInfo& meshInfo) {
-        auto iterator = meshCache.find(meshInfo.modelPath);
+        const auto iterator = meshCache.find(meshInfo.modelPath);
         if (iterator != meshCache.end()) {
             return iterator->second;
         }
