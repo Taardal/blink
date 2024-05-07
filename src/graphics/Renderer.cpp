@@ -72,8 +72,8 @@ namespace Blink {
         //
         // This change causes the vertices to be drawn in counter-clockwise order instead of clockwise order.
         // This causes backface culling to kick in and prevents any geometry from being drawn.
-        // To fix this the graphics pipeline's rasterization state should have a counter clockwise front-facing triangle orientation to be used for culling.
         //
+        // To fix this the graphics pipeline's rasterization state should have a counter clockwise front-facing triangle orientation to be used for culling.
         // VkPipelineRasterizationStateCreateInfo rasterizationState{};
         // rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
         // rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;

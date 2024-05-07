@@ -15,6 +15,9 @@ int main() {
     config.windowResizable = true;
     config.windowMaximized = false;
 
+    //config.scene = "viking_room";
+    //config.scene = "fighter_jet";
+
     App app(config);
     app.run();
 }

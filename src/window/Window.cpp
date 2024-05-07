@@ -66,6 +66,20 @@ namespace Blink {
         return glfwGetKey(glfwWindow, key) == GLFW_PRESS;
     }
 
+    bool Window::isMouseButtonPressed(uint16_t key) const {
+        return glfwGetMouseButton(glfwWindow, key) == GLFW_PRESS;
+    }
+
+    glm::vec2 Window::getMousePosition() const {
+        double x, y;
+        glfwGetCursorPos(glfwWindow, &x, &y);
+        return {x, y};
+    }
+
+    void Window::setMouseCursorHidden(bool hidden) const {
+        glfwSetInputMode(glfwWindow, GLFW_CURSOR, hidden ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+    }
+
     void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
         glfwGetFramebufferSize(glfwWindow, width, height);
     }

@@ -7,6 +7,7 @@ namespace Blink {
 
     struct AppConfig {
         std::string name = "App";
+        //std::string scene = "viking_room";
         int32_t windowWidth = 800;
         int32_t windowHeight = 600;
         bool windowMaximized = false;

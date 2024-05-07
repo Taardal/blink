@@ -4,6 +4,7 @@
 #include "system/FileSystem.h"
 #include "window/Window.h"
 #include "window/Keyboard.h"
+#include "window/Mouse.h"
 #include "graphics/MeshManager.h"
 #include "graphics/Renderer.h"
 #include "graphics/ShaderManager.h"
@@ -11,7 +12,7 @@
 #include "graphics/VulkanPhysicalDevice.h"
 #include "graphics/VulkanDevice.h"
 #include "lua/LuaEngine.h"
-#include "scene/Camera.h"
+#include "scene/SceneCamera.h"
 #include "scene/Scene.h"
 #include "window/Event.h"
 
@@ -22,6 +23,7 @@ namespace Blink {
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;
+        Mouse* mouse = nullptr;
         VulkanApp* vulkanApp = nullptr;
         VulkanPhysicalDevice* vulkanPhysicalDevice = nullptr;
         VulkanDevice* vulkanDevice = nullptr;
@@ -29,7 +31,7 @@ namespace Blink {
         ShaderManager* shaderManager = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
-        Camera* camera = nullptr;
+        SceneCamera* sceneCamera = nullptr;
         Scene* scene = nullptr;
         bool initialized = false;
         double lastTime = 0.0;

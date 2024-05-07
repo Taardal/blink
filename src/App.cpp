@@ -18,6 +18,7 @@ namespace Blink {
     }
 
     App::~App() {
+        BL_LOG_INFO("Terminating...");
         terminate();
     }
 
@@ -53,7 +54,6 @@ namespace Blink {
             fpsUpdateTimestep = 0;
         }
 
-        camera->update(timestep);
         scene->update(timestep);
     }
 
@@ -71,7 +71,6 @@ namespace Blink {
             return;
         }
         renderer->onEvent(event);
-        camera->onEvent(event);
         scene->onEvent(event);
     }
 
@@ -92,6 +91,10 @@ namespace Blink {
         KeyboardConfig keyboardConfig{};
         keyboardConfig.window = window;
         BL_EXECUTE_THROW(keyboard = new Keyboard(keyboardConfig));
+
+        MouseConfig mouseConfig{};
+        mouseConfig.window = window;
+        BL_EXECUTE_THROW(mouse = new Mouse(mouseConfig));
 
         VulkanAppConfig vulkanAppConfig{};
         vulkanAppConfig.window = window;
@@ -133,24 +136,27 @@ namespace Blink {
         luaEngineConfig.keyboard = keyboard;
         BL_EXECUTE_THROW(luaEngine = new LuaEngine(luaEngineConfig));
 
-        CameraConfig cameraConfig{};
+        SceneCameraConfig cameraConfig{};
         cameraConfig.window = window;
         cameraConfig.keyboard = keyboard;
-        BL_EXECUTE_THROW(camera = new Camera(cameraConfig));
+        cameraConfig.mouse = mouse;
+        BL_EXECUTE_THROW(sceneCamera = new SceneCamera(cameraConfig));
 
         SceneConfig sceneConfig{};
+        //sceneConfig.name = config.scene;
         sceneConfig.keyboard = keyboard;
         sceneConfig.meshManager = meshManager;
         sceneConfig.renderer = renderer;
         sceneConfig.luaEngine = luaEngine;
-        sceneConfig.camera = camera;
+        sceneConfig.sceneCamera = sceneCamera;
         BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
+
+
     }
 
     void App::terminate() const {
-        BL_LOG_INFO("Terminating...");
         delete scene;
-        delete camera;
+        delete sceneCamera;
         delete luaEngine;
         delete renderer;
         delete meshManager;

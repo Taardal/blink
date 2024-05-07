@@ -38,7 +38,7 @@ namespace Blink {
         for (entt::entity entity : entityRegistry->view<LuaComponent>()) {
             const LuaComponent& luaComponent = entityRegistry->get<LuaComponent>(entity);
             const std::string& tableName = luaComponent.type;
-            const std::string& filepath = luaComponent.filepath;
+            const std::string& filepath = luaComponent.path;
             lua_newtable(L);
             lua_setglobal(L, tableName.c_str());
             if (luaL_dofile(L, filepath.c_str()) != LUA_OK) {
@@ -74,7 +74,7 @@ namespace Blink {
             if (lua_pcall(L, argumentCount, returnValueCount, messageHandlerIndex) != LUA_OK) {
                 BL_LOG_ERROR(
                     "Could not invoke [{}:{}:{}] for entity [{}]: {}",
-                    luaComponent.filepath,
+                    luaComponent.path,
                     luaComponent.type,
                     functionName,
                     entity,

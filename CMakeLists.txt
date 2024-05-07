@@ -80,11 +80,11 @@ add_executable(
         ${SRC_DIR}/lua/LuaEngine.h
         ${SRC_DIR}/lua/luaUtils.cpp
         ${SRC_DIR}/lua/luaUtils.h
-        ${SRC_DIR}/scene/Camera.cpp
-        ${SRC_DIR}/scene/Camera.h
         ${SRC_DIR}/scene/Components.h
         ${SRC_DIR}/scene/Scene.cpp
         ${SRC_DIR}/scene/Scene.h
+        ${SRC_DIR}/scene/SceneCamera.cpp
+        ${SRC_DIR}/scene/SceneCamera.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/Error.cpp
@@ -109,6 +109,8 @@ add_executable(
         ${SRC_DIR}/window/Keyboard.h
         ${SRC_DIR}/window/KeyEvent.cpp
         ${SRC_DIR}/window/KeyEvent.h
+        ${SRC_DIR}/window/Mouse.cpp
+        ${SRC_DIR}/window/Mouse.h
         ${SRC_DIR}/window/MouseEvent.cpp
         ${SRC_DIR}/window/MouseEvent.h
         ${SRC_DIR}/window/Window.cpp

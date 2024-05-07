@@ -3,26 +3,26 @@
 #include "window/Keyboard.h"
 #include "graphics/Renderer.h"
 #include "lua/LuaEngine.h"
-#include "scene/Camera.h"
+#include "scene/SceneCamera.h"
 
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 
 namespace Blink {
     struct SceneConfig {
+        std::string name;
         Keyboard* keyboard = nullptr;
         MeshManager* meshManager = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
-        Camera* camera = nullptr;
+        SceneCamera* sceneCamera = nullptr;
     };
 
     class Scene {
     private:
         SceneConfig config;
         entt::registry registry;
-        entt::entity player;
-        entt::entity enemy;
+        bool useSceneCamera = false;
 
     public:
         explicit Scene(const SceneConfig& config);
@@ -36,8 +36,10 @@ namespace Blink {
         void render();
 
     private:
-        void initializePlayerComponents();
+        void initializeScene();
 
-        void initializeEnemyComponents();
+        void initializeVikingRoomScene();
+
+        void initializeFighterJetScene();
     };
 }
