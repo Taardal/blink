@@ -31,6 +31,7 @@ namespace Blink {
         X = GLFW_KEY_X,
         Y = GLFW_KEY_Y,
         Z = GLFW_KEY_Z,
+        Num_0 = GLFW_KEY_0,
         Num_1 = GLFW_KEY_1,
         Num_2 = GLFW_KEY_2,
         Num_3 = GLFW_KEY_3,
@@ -40,6 +41,7 @@ namespace Blink {
         Num_7 = GLFW_KEY_7,
         Num_8 = GLFW_KEY_8,
         Num_9 = GLFW_KEY_9,
+        Numpad_0 = GLFW_KEY_KP_0,
         Numpad_1 = GLFW_KEY_KP_1,
         Numpad_2 = GLFW_KEY_KP_2,
         Numpad_3 = GLFW_KEY_KP_3,
@@ -86,17 +88,11 @@ namespace Blink {
     public:
         explicit Keyboard(const KeyboardConfig& config);
 
-        const std::vector<Key>& getKeys() const {
-            return keys;
-        }
+        const std::vector<Key>& getKeys() const;
 
-        const std::unordered_map<std::string, Key>& getKeysByName() const {
-            return keysByName;
-        }
+        const std::unordered_map<std::string, Key>& getKeysByName() const;
 
-        std::unordered_map<Key, std::string> getNamesByKey() const {
-            return namesByKey;
-        }
+        std::unordered_map<Key, std::string> getNamesByKey() const;
 
         bool isPressed(Key key) const;
 

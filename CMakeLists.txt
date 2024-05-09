@@ -74,12 +74,16 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanVertexBuffer.h
         ${SRC_DIR}/lua/EntityLuaBinding.cpp
         ${SRC_DIR}/lua/EntityLuaBinding.h
+        ${SRC_DIR}/lua/GlmLuaBinding.cpp
+        ${SRC_DIR}/lua/GlmLuaBinding.h
         ${SRC_DIR}/lua/KeyboardLuaBinding.cpp
         ${SRC_DIR}/lua/KeyboardLuaBinding.h
         ${SRC_DIR}/lua/LuaEngine.cpp
         ${SRC_DIR}/lua/LuaEngine.h
         ${SRC_DIR}/lua/luaUtils.cpp
         ${SRC_DIR}/lua/luaUtils.h
+        ${SRC_DIR}/lua/MouseLuaBinding.cpp
+        ${SRC_DIR}/lua/MouseLuaBinding.h
         ${SRC_DIR}/scene/Components.h
         ${SRC_DIR}/scene/Scene.cpp
         ${SRC_DIR}/scene/Scene.h

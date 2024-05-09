@@ -1,72 +1,60 @@
 local Vector = require("vector")
 
-local moveSpeed = 1
+local moveSpeed = 2.5
 
 function Player.onUpdate(entityId, timestep)
     local transformComponent = Entity:getTransformComponent(entityId)
 
-    local position = transformComponent.position
-    local forwardDirection = transformComponent.forwardDirection
-    local rightDirection = transformComponent.rightDirection
-    local pitch = transformComponent.pitch
-    local yaw = transformComponent.yaw
-    local roll = transformComponent.roll
+    local inputEnabled = true
 
-    local velocity = moveSpeed * timestep
-
-    if Keyboard:isPressed(Key.K) or Keyboard:isPressed(Key.Numpad_8) then
-        --pitch = pitch - 1
-        --pitch = math.max(pitch - 1, -89.0)
-        position = Vector.add(position, Vector.multiply(forwardDirection, velocity))
-    end
-    if Keyboard:isPressed(Key.J) or Keyboard:isPressed(Key.Numpad_5) then
-        --pitch = pitch + 1
-        --pitch = math.min(pitch + 1, 89.0)
-        position = Vector.subtract(position, Vector.multiply(forwardDirection, velocity))
-    end
-    if (Keyboard:isPressed(Key.L) or Keyboard:isPressed(Key.Numpad_6)) then
-        --roll = roll + 1
-        --roll = math.min(roll + 1, 30)
-        position = Vector.add(position, Vector.multiply(rightDirection, velocity))
-    end
-    if (Keyboard:isPressed(Key.H) or Keyboard:isPressed(Key.Numpad_4)) then
-        --roll = roll - 1
-        --roll = math.max(roll - 1, -30)
-        position = Vector.subtract(position, Vector.multiply(rightDirection, velocity))
-    end
-    if (Keyboard:isPressed(Key.Numpad_9)) then
-        yaw = yaw + 1
-    end
-    if (Keyboard:isPressed(Key.Numpad_7)) then
-        yaw = yaw - 1
+    if inputEnabled then
+    	local velocity = moveSpeed * timestep
+        if Keyboard:isPressed(Key.W) then
+            transformComponent.position = Vector.add(transformComponent.position, Vector.multiply(transformComponent.forwardDirection, velocity))
+        end
+        if Keyboard:isPressed(Key.S) then
+            transformComponent.position = Vector.subtract(transformComponent.position, Vector.multiply(transformComponent.forwardDirection, velocity))
+        end
+        if Keyboard:isPressed(Key.D) then
+            transformComponent.position = Vector.add(transformComponent.position, Vector.multiply(transformComponent.rightDirection, velocity))
+        end
+        if Keyboard:isPressed(Key.A) then
+            transformComponent.position = Vector.subtract(transformComponent.position, Vector.multiply(transformComponent.rightDirection, velocity))
+        end
     end
 
-    transformComponent.position = position
-    transformComponent.yaw = yaw
-    transformComponent.pitch = pitch
-    transformComponent.roll = roll
+    if Keyboard:isPressed(Key.Numpad_6) or Keyboard:isPressed(Key.L) then
+        transformComponent.yaw = transformComponent.yaw + 1
+    end
+    if Keyboard:isPressed(Key.Numpad_4) or Keyboard:isPressed(Key.H) then
+        transformComponent.yaw = transformComponent.yaw - 1
+    end
+    if Keyboard:isPressed(Key.Numpad_8) or Keyboard:isPressed(Key.K) then
+        transformComponent.pitch = transformComponent.pitch - 1
+    end
+    if Keyboard:isPressed(Key.Numpad_5) or Keyboard:isPressed(Key.J) then
+        transformComponent.pitch = transformComponent.pitch + 1
+    end
+    if Keyboard:isPressed(Key.Numpad_9) or Keyboard:isPressed(Key.O) then
+        transformComponent.roll = transformComponent.roll + 1
+    end
+    if Keyboard:isPressed(Key.Numpad_7) or Keyboard:isPressed(Key.U) then
+        transformComponent.roll = transformComponent.roll - 1
+    end
+    if transformComponent.pitch > 89.0 then
+        transformComponent.pitch = 89.0
+    end
+    if transformComponent.pitch < -89.0 then
+        transformComponent.pitch = -89.0
+    end
 
-    --local speed = 0.1 -- Example speed
-    --
-    --local a = speed * timestep
-    --print("a: " .. a)
-    --local b = Vector.multiply(transformComponent.forwardDirection, a)
-    --print("b: " .. b.x .. ", " .. b.y .. ", " .. b.z .. "]")
-    --local c = Vector.add(transformComponent.position, b)
-    --print("c: " .. c.x .. ", " .. c.y .. ", " .. c.z .. "]")
+    transformComponent.forwardDirection.x = math.cos(math.rad(transformComponent.yaw)) * math.cos(math.rad(transformComponent.pitch));
+    transformComponent.forwardDirection.y = math.sin(math.rad(transformComponent.pitch));
+    transformComponent.forwardDirection.z = math.sin(math.rad(transformComponent.yaw)) * math.cos(math.rad(transformComponent.pitch));
+    transformComponent.forwardDirection = glm.normalize(transformComponent.forwardDirection);
 
-    --local a = Vector.add(transformComponent.position, transformComponent.forwardDirection)
-    --print("a: " .. a.x .. ", " .. a.y .. ", " .. a.z .. "]")
-    --local b = Vector.multiply(a, speed)
-    --print("b: " .. b.x .. ", " .. b.y .. ", " .. b.z .. "]")
-    --local c = Vector.multiply(b, timestep)
-    --print("c: " .. c.x .. ", " .. c.y .. ", " .. c.z .. "]")
-
-    --transformComponent.position = c
+    transformComponent.rightDirection = glm.normalize(glm.cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+    transformComponent.upDirection = glm.normalize(glm.cross(transformComponent.rightDirection, transformComponent.forwardDirection));
 
     Entity:setTransformComponent(entityId, transformComponent)
-
-    --print("yaw [" .. transformComponent.yaw .. "]")
-    --print("pitch [" .. transformComponent.pitch .. "]")
-    --print("roll [" .. transformComponent.roll .. "]")
 end

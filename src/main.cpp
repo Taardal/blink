@@ -13,10 +13,7 @@ int main() {
     config.windowWidth = 1280;
     config.windowHeight = 768;
     config.windowResizable = true;
-    config.windowMaximized = false;
-
-    //config.scene = "viking_room";
-    //config.scene = "fighter_jet";
+    config.windowMaximized = true;
 
     App app(config);
     app.run();

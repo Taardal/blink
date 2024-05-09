@@ -41,6 +41,12 @@ namespace Blink {
     public:
         explicit Mouse(const MouseConfig& config);
 
+        std::vector<MouseButton> getButtons() const;
+
+        std::unordered_map<std::string, MouseButton> getButtonsByName() const;
+
+        std::unordered_map<MouseButton, std::string> getBamesByButton() const;
+
         glm::vec2 getPosition() const;
 
         void setCursorHidden(bool hidden) const;
@@ -51,13 +57,13 @@ namespace Blink {
 
         bool isPressed(const std::string& mouseButtonName) const;
 
-        std::string getButtonName(MouseButton mouseButton) const;
+        std::string getName(MouseButton mouseButton) const;
 
-        std::string getButtonName(uint16_t mouseButton) const;
+        std::string getName(uint16_t mouseButton) const;
 
-        static std::string getMouseButtonName(MouseButton mouseButton);
+        static std::string getButtonName(MouseButton mouseButton);
 
-        static std::string getMouseButtonName(uint16_t mouseButton);
+        static std::string getButtonName(uint16_t mouseButton);
 
     private:
         static std::vector<MouseButton> createButtons();

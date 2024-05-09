@@ -8,13 +8,6 @@
 namespace Blink {
     SceneCamera::SceneCamera(const SceneCameraConfig& config) : config(config) {
         mouseSensitivity = 0.1f;
-
-        yaw = -90.0f;
-        worldUpDirection = {0, 1, 0};
-        forwardDirection = {0, 0, -1};
-        rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
-        upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
-
         updateAspectRatio();
         updateDirections();
     }
@@ -65,49 +58,51 @@ namespace Blink {
             pitch += -delta.y;
         }
 
-        float velocity = moveSpeed * timestep;
-        if (config.keyboard->isPressed(Key::W)) {
-            position += forwardDirection * velocity;
-        }
-        if (config.keyboard->isPressed(Key::S)) {
-            position -= forwardDirection * velocity;
-        }
-        if (config.keyboard->isPressed(Key::D)) {
-            position += rightDirection * velocity;
-        }
-        if (config.keyboard->isPressed(Key::A)) {
-            position -= rightDirection * velocity;
-        }
-        if (config.keyboard->isPressed(Key::Space)) {
-            position += worldUpDirection * velocity;
-        }
-        if (config.keyboard->isPressed(Key::C)) {
-            position -= worldUpDirection * velocity;
-        }
-        if (config.keyboard->isPressed(Key::Up)) {
-            pitch += rotationSpeed;
-        }
-        if (config.keyboard->isPressed(Key::Down)) {
-            pitch -= rotationSpeed;
-        }
-        if (config.keyboard->isPressed(Key::Left)) {
-            yaw -= rotationSpeed;
-        }
-        if (config.keyboard->isPressed(Key::Right)) {
-            yaw += rotationSpeed;
-        }
-        if (config.keyboard->isPressed(Key::Q)) {
-            roll += rotationSpeed;
-        }
-        if (config.keyboard->isPressed(Key::E)) {
-            roll -= rotationSpeed;
-        }
-        // Clamp pitch to prevent camera flipping
-        if (pitch > 89.0f) {
-            pitch = 89.0f;
-        }
-        if (pitch < -89.0f) {
-            pitch = -89.0f;
+        if (inputEnabled) {
+            float velocity = moveSpeed * timestep;
+            if (config.keyboard->isPressed(Key::W)) {
+                position += forwardDirection * velocity;
+            }
+            if (config.keyboard->isPressed(Key::S)) {
+                position -= forwardDirection * velocity;
+            }
+            if (config.keyboard->isPressed(Key::D)) {
+                position += rightDirection * velocity;
+            }
+            if (config.keyboard->isPressed(Key::A)) {
+                position -= rightDirection * velocity;
+            }
+            if (config.keyboard->isPressed(Key::Space)) {
+                position += worldUpDirection * velocity;
+            }
+            if (config.keyboard->isPressed(Key::C)) {
+                position -= worldUpDirection * velocity;
+            }
+            if (config.keyboard->isPressed(Key::Up)) {
+                pitch += rotationSpeed;
+            }
+            if (config.keyboard->isPressed(Key::Down)) {
+                pitch -= rotationSpeed;
+            }
+            if (config.keyboard->isPressed(Key::Left)) {
+                yaw -= rotationSpeed;
+            }
+            if (config.keyboard->isPressed(Key::Right)) {
+                yaw += rotationSpeed;
+            }
+            if (config.keyboard->isPressed(Key::Q)) {
+                roll -= rotationSpeed;
+            }
+            if (config.keyboard->isPressed(Key::E)) {
+                roll += rotationSpeed;
+            }
+            // Clamp pitch to prevent camera flipping
+            if (pitch > 89.0f) {
+                pitch = 89.0f;
+            }
+            if (pitch < -89.0f) {
+                pitch = -89.0f;
+            }
         }
 
         forwardDirection.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
@@ -125,7 +120,7 @@ namespace Blink {
         view = glm::lookAt(position, position + forwardDirection, upDirection);
         projection = glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
 
-        logState();
+        //logState();
     }
 
     void SceneCamera::processKeyboardInput(float timestep) {

@@ -2,6 +2,7 @@
 #include "LuaEngine.h"
 #include "luaUtils.h"
 #include "EntityLuaBinding.h"
+#include "GlmLuaBinding.h"
 #include "KeyboardLuaBinding.h"
 #include "scene/Components.h"
 
@@ -88,6 +89,7 @@ namespace Blink {
     }
 
     void LuaEngine::createGlobalBindings() const {
+        GlmLuaBinding::initialize(L);
         KeyboardLuaBinding::initialize(L, config.keyboard);
     }
 

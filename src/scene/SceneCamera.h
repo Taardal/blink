@@ -37,6 +37,8 @@ namespace Blink {
         glm::vec2 lastMousePosition = {0.0f, 0.0f};
         float mouseSensitivity = 0.0;
 
+        bool inputEnabled = true;
+
     public:
         explicit SceneCamera(const SceneCameraConfig& config);
 

@@ -7,6 +7,18 @@ namespace Blink {
         namesByKey(createNamesByKey()) {
     }
 
+    const std::vector<Key>& Keyboard::getKeys() const {
+        return keys;
+    }
+
+    const std::unordered_map<std::string, Key>& Keyboard::getKeysByName() const {
+        return keysByName;
+    }
+
+    std::unordered_map<Key, std::string> Keyboard::getNamesByKey() const {
+        return namesByKey;
+    }
+
     bool Keyboard::isPressed(Key key) const {
         return config.window->isKeyPressed((uint16_t) key);
     }
@@ -86,6 +98,8 @@ namespace Blink {
                 return "Y";
             case Key::Z:
                 return "Z";
+            case Key::Num_0:
+                return "Num_0";
             case Key::Num_1:
                 return "Num_1";
             case Key::Num_2:
@@ -104,6 +118,8 @@ namespace Blink {
                 return "Num_8";
             case Key::Num_9:
                 return "Num_9";
+            case Key::Numpad_0:
+                return "Numpad_0";
             case Key::Numpad_1:
                 return "Numpad_1";
             case Key::Numpad_2:
@@ -197,6 +213,7 @@ namespace Blink {
             Key::X,
             Key::Y,
             Key::Z,
+            Key::Num_0,
             Key::Num_1,
             Key::Num_2,
             Key::Num_3,
@@ -206,6 +223,7 @@ namespace Blink {
             Key::Num_7,
             Key::Num_8,
             Key::Num_9,
+            Key::Numpad_0,
             Key::Numpad_1,
             Key::Numpad_2,
             Key::Numpad_3,
@@ -267,6 +285,7 @@ namespace Blink {
             { "X", Key::X },
             { "Y", Key::Y },
             { "Z", Key::Z },
+            { "Num_0", Key::Num_0 },
             { "Num_1", Key::Num_1 },
             { "Num_2", Key::Num_2 },
             { "Num_3", Key::Num_3 },
@@ -276,6 +295,7 @@ namespace Blink {
             { "Num_7", Key::Num_7 },
             { "Num_8", Key::Num_8 },
             { "Num_9", Key::Num_9 },
+            { "Numpad_0", Key::Numpad_0 },
             { "Numpad_1", Key::Numpad_1 },
             { "Numpad_2", Key::Numpad_2 },
             { "Numpad_3", Key::Numpad_3 },
@@ -337,6 +357,7 @@ namespace Blink {
             { Key::X, "X" },
             { Key::Y, "Y" },
             { Key::Z, "Z" },
+            { Key::Num_0, "Num_0" },
             { Key::Num_1, "Num_1" },
             { Key::Num_2, "Num_2" },
             { Key::Num_3, "Num_3" },
@@ -346,6 +367,7 @@ namespace Blink {
             { Key::Num_7, "Num_7" },
             { Key::Num_8, "Num_8" },
             { Key::Num_9, "Num_9" },
+            { Key::Numpad_0, "Numpad_0" },
             { Key::Numpad_1, "Numpad_1" },
             { Key::Numpad_2, "Numpad_2" },
             { Key::Numpad_3, "Numpad_3" },

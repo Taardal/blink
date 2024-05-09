@@ -6,6 +6,16 @@ namespace Blink {
     Mouse::Mouse(const MouseConfig& config): config(config) {
     }
 
+    std::vector<MouseButton> Mouse::getButtons() const {
+        return buttons;
+    }
+    std::unordered_map<std::string, MouseButton> Mouse::getButtonsByName() const {
+        return buttonsByName;
+    }
+    std::unordered_map<MouseButton, std::string> Mouse::getBamesByButton() const {
+        return namesByButton;
+    }
+
     glm::vec2 Mouse::getPosition() const {
         return config.window->getMousePosition();
     }
@@ -27,19 +37,19 @@ namespace Blink {
         return config.window->isMouseButtonPressed((uint16_t) mouseButton);
     }
 
-    std::string Mouse::getButtonName(MouseButton mouseButton) const {
+    std::string Mouse::getName(MouseButton mouseButton) const {
         return namesByButton.at(mouseButton);
     }
 
-    std::string Mouse::getButtonName(uint16_t mouseButton) const {
-        return getButtonName((MouseButton) mouseButton);
+    std::string Mouse::getName(uint16_t mouseButton) const {
+        return this->getButtonName((MouseButton) mouseButton);
     }
 
-    std::string Mouse::getMouseButtonName(uint16_t mouseButton) {
-        return getMouseButtonName((MouseButton) mouseButton);
+    std::string Mouse::getButtonName(uint16_t mouseButton) {
+        return Mouse::getButtonName((MouseButton) mouseButton);
     }
 
-    std::string Mouse::getMouseButtonName(MouseButton mouseButton) {
+    std::string Mouse::getButtonName(MouseButton mouseButton) {
         switch (mouseButton) {
             case MouseButton::Button_1:
                 return "Button_1";
