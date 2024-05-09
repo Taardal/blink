@@ -40,6 +40,7 @@ namespace Blink {
                     continue;
                 }
                 auto& transformComponent = registry.get<TransformComponent>(entity);
+                transformComponent.position = {0, 0, 0};
                 transformComponent.upDirection = transformComponent.worldUpDirection;
                 transformComponent.forwardDirection = {0, 0, -1};
                 transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
@@ -119,9 +120,9 @@ namespace Blink {
 
     void Scene::initializeScene() {
         // Scene camera
-        config.sceneCamera->position = {0, 0, 0};
-        config.sceneCamera->moveSpeed = 5;
-        config.sceneCamera->rotationSpeed = 1;
+        config.sceneCamera->position = {0, 50, 0};
+        config.sceneCamera->moveSpeed = 50;
+        config.sceneCamera->rotationSpeed = 2;
         config.sceneCamera->yaw = -90.0f;
         config.sceneCamera->worldUpDirection = {0, 1, 0};
         config.sceneCamera->forwardDirection = {0, 0, -1};
@@ -164,7 +165,7 @@ namespace Blink {
             entt::entity entity = registry.create();
 
             TransformComponent transformComponent{};
-            transformComponent.position = {0, 0, 0};
+            transformComponent.position = {0, 2, 0};
 
             transformComponent.worldUpDirection = {0, 1, 0};
             transformComponent.forwardDirection = {0, 0, -1};
@@ -202,6 +203,58 @@ namespace Blink {
             meshComponent.mesh = config.meshManager->getMesh(meshInfo);
             registry.emplace<MeshComponent>(entity, meshComponent);
         }
+        // Sibenik
+        {
+            entt::entity entity = registry.create();
+
+            TransformComponent transformComponent{};
+            transformComponent.position = {-161.29372, -7.5, -54.056705};
+            transformComponent.worldUpDirection = {0, 1, 0};
+            transformComponent.forwardDirection = {0, 0, -1};
+            transformComponent.yaw = -90.0f;
+            transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+            transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+            transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
+            registry.emplace<TransformComponent>(entity, transformComponent);
+
+            TagComponent tagComponent{};
+            tagComponent.tag = "Sibenik";
+            registry.emplace<TagComponent>(entity, tagComponent);
+
+            MeshInfo meshInfo{};
+            meshInfo.modelPath = "models/sibenik/sibenik.obj";
+            meshInfo.texturesDirectoryPath = "models/sibenik";
+
+            MeshComponent meshComponent{};
+            meshComponent.mesh = config.meshManager->getMesh(meshInfo);
+            registry.emplace<MeshComponent>(entity, meshComponent);
+        }
+        // Terrain
+        {
+            entt::entity entity = registry.create();
+
+            TransformComponent transformComponent{};
+            transformComponent.position = {0, -50, 0};
+            transformComponent.worldUpDirection = {0, 1, 0};
+            transformComponent.forwardDirection = {0, 0, -1};
+            transformComponent.yaw = -90.0f;
+            transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+            transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+            transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
+            registry.emplace<TransformComponent>(entity, transformComponent);
+
+            TagComponent tagComponent{};
+            tagComponent.tag = "Terrain";
+            registry.emplace<TagComponent>(entity, tagComponent);
+
+            MeshInfo meshInfo{};
+            meshInfo.modelPath = "models/terrain/terrain.obj";
+            meshInfo.textureAtlasPath = "models/terrain/diff2.jpg";
+
+            MeshComponent meshComponent{};
+            meshComponent.mesh = config.meshManager->getMesh(meshInfo);
+            registry.emplace<MeshComponent>(entity, meshComponent);
+        }
         // {
         //     entt::entity entity = registry.create();
         //
@@ -224,31 +277,6 @@ namespace Blink {
         //     meshComponent.mesh = config.meshManager->getMesh(meshInfo);
         //     registry.emplace<MeshComponent>(entity, meshComponent);
         // }
-        {
-            entt::entity entity = registry.create();
-
-            TransformComponent transformComponent{};
-            transformComponent.position = {0, 0, 0};
-            transformComponent.worldUpDirection = {0, 1, 0};
-            transformComponent.forwardDirection = {0, 0, -1};
-            transformComponent.yaw = -90.0f;
-            transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
-            transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
-            transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-            registry.emplace<TransformComponent>(entity, transformComponent);
-
-            TagComponent tagComponent{};
-            tagComponent.tag = "Sibenik";
-            registry.emplace<TagComponent>(entity, tagComponent);
-
-            MeshInfo meshInfo{};
-            meshInfo.modelPath = "models/sibenik/sibenik.obj";
-            meshInfo.texturesDirectoryPath = "models/sibenik";
-
-            MeshComponent meshComponent{};
-            meshComponent.mesh = config.meshManager->getMesh(meshInfo);
-            registry.emplace<MeshComponent>(entity, meshComponent);
-        }
     }
 
     // void Scene::initializeScene() {

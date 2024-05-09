@@ -1,60 +1,87 @@
 local Vector = require("vector")
 
-local moveSpeed = 2.5
+local thrust = 0.1
+local moveSpeed = 0
+local maxMoveSpeed = 20
+local lookSpeed = 0.75
+local maxPitch = 89
 
 function Player.onUpdate(entityId, timestep)
     local transformComponent = Entity:getTransformComponent(entityId)
 
-    local inputEnabled = true
+    local translation = transformComponent.translation
+    local rotation = transformComponent.rotation
+    local scale = transformComponent.scale
+    local position = transformComponent.position
+    local forwardDirection = transformComponent.forwardDirection
+    local rightDirection = transformComponent.rightDirection
+    local upDirection = transformComponent.upDirection
+    local worldUpDirection = transformComponent.worldUpDirection
+    local yaw = transformComponent.yaw
+    local pitch = transformComponent.pitch
+    local roll = transformComponent.roll
 
-    if inputEnabled then
-    	local velocity = moveSpeed * timestep
-        if Keyboard:isPressed(Key.W) then
-            transformComponent.position = Vector.add(transformComponent.position, Vector.multiply(transformComponent.forwardDirection, velocity))
+    if Keyboard:isPressed(Key.X) then
+        moveSpeed = math.min(moveSpeed + thrust, maxMoveSpeed)
+    end
+    if Keyboard:isPressed(Key.Z) then
+        moveSpeed = math.max(moveSpeed - thrust, -maxMoveSpeed)
+    end
+    if not Keyboard:isPressed(Key.X) and not Keyboard:isPressed(Key.Z) then
+        if moveSpeed > 0 then
+            moveSpeed = math.max(moveSpeed - thrust, 0)
         end
-        if Keyboard:isPressed(Key.S) then
-            transformComponent.position = Vector.subtract(transformComponent.position, Vector.multiply(transformComponent.forwardDirection, velocity))
-        end
-        if Keyboard:isPressed(Key.D) then
-            transformComponent.position = Vector.add(transformComponent.position, Vector.multiply(transformComponent.rightDirection, velocity))
-        end
-        if Keyboard:isPressed(Key.A) then
-            transformComponent.position = Vector.subtract(transformComponent.position, Vector.multiply(transformComponent.rightDirection, velocity))
+        if moveSpeed < 0 then
+            moveSpeed = math.min(moveSpeed + thrust, 0)
         end
     end
+    local velocity = moveSpeed * timestep
+    position = Vector.add(position, Vector.multiply(forwardDirection, velocity))
 
     if Keyboard:isPressed(Key.Numpad_6) or Keyboard:isPressed(Key.L) then
-        transformComponent.yaw = transformComponent.yaw + 1
+        yaw = yaw + lookSpeed
     end
     if Keyboard:isPressed(Key.Numpad_4) or Keyboard:isPressed(Key.H) then
-        transformComponent.yaw = transformComponent.yaw - 1
+        yaw = yaw - lookSpeed
     end
     if Keyboard:isPressed(Key.Numpad_8) or Keyboard:isPressed(Key.K) then
-        transformComponent.pitch = transformComponent.pitch - 1
+        pitch = pitch - lookSpeed
     end
     if Keyboard:isPressed(Key.Numpad_5) or Keyboard:isPressed(Key.J) then
-        transformComponent.pitch = transformComponent.pitch + 1
+        pitch = pitch + lookSpeed
     end
-    if Keyboard:isPressed(Key.Numpad_9) or Keyboard:isPressed(Key.O) then
-        transformComponent.roll = transformComponent.roll + 1
+    --if Keyboard:isPressed(Key.Numpad_9) or Keyboard:isPressed(Key.O) then
+    --    roll = roll + 1
+    --end
+    --if Keyboard:isPressed(Key.Numpad_7) or Keyboard:isPressed(Key.U) then
+    --    roll = roll - 1
+    --end
+    if pitch > maxPitch then
+        pitch = maxPitch
     end
-    if Keyboard:isPressed(Key.Numpad_7) or Keyboard:isPressed(Key.U) then
-        transformComponent.roll = transformComponent.roll - 1
-    end
-    if transformComponent.pitch > 89.0 then
-        transformComponent.pitch = 89.0
-    end
-    if transformComponent.pitch < -89.0 then
-        transformComponent.pitch = -89.0
+    if pitch < -maxPitch then
+        pitch = -maxPitch
     end
 
-    transformComponent.forwardDirection.x = math.cos(math.rad(transformComponent.yaw)) * math.cos(math.rad(transformComponent.pitch));
-    transformComponent.forwardDirection.y = math.sin(math.rad(transformComponent.pitch));
-    transformComponent.forwardDirection.z = math.sin(math.rad(transformComponent.yaw)) * math.cos(math.rad(transformComponent.pitch));
-    transformComponent.forwardDirection = glm.normalize(transformComponent.forwardDirection);
+    forwardDirection.x = math.cos(math.rad(yaw)) * math.cos(math.rad(pitch));
+    forwardDirection.y = math.sin(math.rad(pitch));
+    forwardDirection.z = math.sin(math.rad(yaw)) * math.cos(math.rad(pitch));
+    forwardDirection = glm.normalize(forwardDirection);
 
-    transformComponent.rightDirection = glm.normalize(glm.cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
-    transformComponent.upDirection = glm.normalize(glm.cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+    rightDirection = glm.normalize(glm.cross(forwardDirection, worldUpDirection));
+    upDirection = glm.normalize(glm.cross(rightDirection, forwardDirection));
+
+    transformComponent.translation = translation
+    transformComponent.rotation = rotation
+    transformComponent.scale = scale
+    transformComponent.position = position
+    transformComponent.forwardDirection = forwardDirection
+    transformComponent.rightDirection = rightDirection
+    transformComponent.upDirection = upDirection
+    transformComponent.worldUpDirection = worldUpDirection
+    transformComponent.yaw = yaw
+    transformComponent.pitch = pitch
+    transformComponent.roll = roll
 
     Entity:setTransformComponent(entityId, transformComponent)
 end

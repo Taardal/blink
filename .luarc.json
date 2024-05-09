@@ -1,6 +1,10 @@
 {
     "diagnostics.globals": [
         "Camera",
-        "Entity"
+        "Entity",
+        "Player",
+        "Keyboard",
+        "Key",
+        "glm"
     ]
 }

@@ -120,7 +120,7 @@ namespace Blink {
         view = glm::lookAt(position, position + forwardDirection, upDirection);
         projection = glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
 
-        //logState();
+        logState();
     }
 
     void SceneCamera::processKeyboardInput(float timestep) {
