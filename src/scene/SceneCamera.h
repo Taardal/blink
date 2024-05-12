@@ -38,6 +38,7 @@ namespace Blink {
         float mouseSensitivity = 0.0;
 
         bool inputEnabled = true;
+        bool loggingEnabled = false;
 
     public:
         explicit SceneCamera(const SceneCameraConfig& config);
@@ -56,13 +57,9 @@ namespace Blink {
 
         void update(double timestep);
 
+        void logState() const;
     private:
-        void processKeyboardInput(float timestep);
-
-        void updateDirections();
-
         void updateAspectRatio();
 
-        void logState() const;
     };
 }

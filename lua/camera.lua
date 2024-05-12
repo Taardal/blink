@@ -15,15 +15,17 @@ function Camera.onUpdate(cameraId, timestep)
     --cameraTransformComponent.position.y = playerTransformComponent.position.y + math.sin(math.rad(playerTransformComponent.pitch))
     --cameraTransformComponent.position.z = playerTransformComponent.position.z - distanceBehindPlayer * math.cos(math.rad(playerTransformComponent.yaw + YAW_ANGLE_OFFSET))
 
-    -- Calculate the offset based on the player's yaw and pitch
-        local offset = glm.vec3(
-            distanceBehindPlayer * math.sin(math.rad(playerTransformComponent.yaw + YAW_ANGLE_OFFSET)) * math.cos(math.rad(playerTransformComponent.pitch)),
-            heightAbovePlayer - distanceBehindPlayer * math.sin(math.rad(playerTransformComponent.pitch)),
-            -distanceBehindPlayer * math.cos(math.rad(playerTransformComponent.yaw + YAW_ANGLE_OFFSET)) * math.cos(math.rad(playerTransformComponent.pitch))
-        )
+    local yawRadians = math.rad(playerTransformComponent.yaw + YAW_ANGLE_OFFSET)
+    local pitchRadians = math.rad(playerTransformComponent.pitch)
 
-        -- Set camera position relative to the player's position
-        cameraTransformComponent.position = Vector.add(playerTransformComponent.position, offset)
+    -- Calculate the offset based on the player's yaw and pitch
+    local offset = glm.vec3()
+    offset.x = distanceBehindPlayer * math.sin(yawRadians) * math.cos(pitchRadians)
+    offset.y = heightAbovePlayer - distanceBehindPlayer * math.sin(pitchRadians)
+    offset.z = -distanceBehindPlayer * math.cos(yawRadians) * math.cos(pitchRadians)
+
+    -- Set camera position relative to the player's position
+    cameraTransformComponent.position = Vector.add(playerTransformComponent.position, offset)
 
     cameraTransformComponent.yaw = playerTransformComponent.yaw
     cameraTransformComponent.pitch = playerTransformComponent.pitch

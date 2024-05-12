@@ -20,6 +20,6 @@ namespace Blink {
 #ifdef BL_PRINT_UNIX_STACKTRACE
     void printUnixStacktrace();
 
-    void demangleUnixSymbol(std::string* symbol);
+    void demangleUnixStacktraceLine(std::string* stacktraceLine);
 #endif
 }

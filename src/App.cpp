@@ -4,11 +4,11 @@
 #include "window/KeyEvent.h"
 
 namespace Blink {
-    App::App(const AppConfig& config) : config(config) {
+    App::App(const AppConfig& config) : config(config), secondsPerFrame(1.0 / (double) config.fps) {
         try {
             BL_LOG_INFO("Initializing...");
             initialize();
-            initialized = true;
+            state = AppState::Initialized;
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Initialization error");
             e.printStacktrace();
@@ -23,14 +23,13 @@ namespace Blink {
     }
 
     void App::run() {
-        if (!initialized) {
+        if (state == AppState::None) {
             return;
         }
         try {
             BL_LOG_INFO("Running...");
             while (!window->shouldClose()) {
                 update();
-                render();
             }
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Runtime error");
@@ -45,29 +44,72 @@ namespace Blink {
         double time = window->update();
         double timestep = time - lastTime;
         lastTime = time;
+        secondsSinceLastFrame += timestep;
+        secondsSinceLastFrame = std::min(secondsSinceLastFrame, 0.1);
+        secondsSinceLastStatsUpdate += timestep;
 
-        fps++;
-        fpsUpdateTimestep += timestep;
-        if (fpsUpdateTimestep >= 1.0) {
-            BL_LOG_DEBUG("FPS [{}]", fps);
-            fps = 0;
-            fpsUpdateTimestep = 0;
+        if (state == AppState::Paused) {
+            return;
         }
 
-        scene->update(timestep);
-    }
+        while (secondsSinceLastFrame >= secondsPerFrame) {
+            scene->update(timestep);
 
-    void App::render() const {
+            fps++;
+            secondsSinceLastFrame -= secondsPerFrame;
+        }
+
         if (!renderer->beginFrame()) {
             return;
         }
         scene->render();
         renderer->endFrame();
+
+        if (secondsSinceLastStatsUpdate >= 1) {
+            BL_LOG_DEBUG("FPS [{}]", fps);
+            fps = 0;
+            secondsSinceLastStatsUpdate = 0;
+        }
     }
 
-    void App::onEvent(Event& event) const {
+    void App::onEvent(Event& event) {
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Escape) {
             window->setShouldClose(true);
+            return;
+        }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::P) {
+            state = AppState::Paused;
+            return;
+        }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
+            state = AppState::Running;
+            return;
+        }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::F12) {
+            renderer->waitUntilIdle();
+
+            delete scene;
+            delete sceneCamera;
+            delete luaEngine;
+
+            LuaEngineConfig luaEngineConfig{};
+            luaEngineConfig.keyboard = keyboard;
+            BL_EXECUTE_THROW(luaEngine = new LuaEngine(luaEngineConfig));
+
+            SceneCameraConfig cameraConfig{};
+            cameraConfig.window = window;
+            cameraConfig.keyboard = keyboard;
+            cameraConfig.mouse = mouse;
+            BL_EXECUTE_THROW(sceneCamera = new SceneCamera(cameraConfig));
+
+            SceneConfig sceneConfig{};
+            sceneConfig.keyboard = keyboard;
+            sceneConfig.meshManager = meshManager;
+            sceneConfig.renderer = renderer;
+            sceneConfig.luaEngine = luaEngine;
+            sceneConfig.sceneCamera = sceneCamera;
+            BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
+
             return;
         }
         renderer->onEvent(event);

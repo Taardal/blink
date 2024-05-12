@@ -36,10 +36,10 @@ namespace Blink {
         void render();
 
     private:
-        void initializeScene();
+        void initializeCamera() const;
 
-        void initializeVikingRoomScene();
+        void createEntities();
 
-        void initializeFighterJetScene();
+        void destroyEntities();
     };
 }

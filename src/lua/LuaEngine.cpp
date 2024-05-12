@@ -38,23 +38,27 @@ namespace Blink {
         EntityLuaBinding::initialize(L, entityRegistry);
         for (entt::entity entity : entityRegistry->view<LuaComponent>()) {
             const LuaComponent& luaComponent = entityRegistry->get<LuaComponent>(entity);
+            auto& tagComponent = entityRegistry->get<TagComponent>(entity);
             const std::string& tableName = luaComponent.type;
             const std::string& filepath = luaComponent.path;
             lua_newtable(L);
             lua_setglobal(L, tableName.c_str());
             if (luaL_dofile(L, filepath.c_str()) != LUA_OK) {
                 BL_LOG_ERROR(
-                    "Could not load Lua script [{}] for entity of type [{}]: {}",
+                    "Could not load Lua script [{}] for entity [id: {}, type: {}, tag: {}]: {}",
                     filepath,
                     tableName,
+                    tagComponent.tag,
                     lua_tostring(L, -1)
                 );
                 BL_THROW("Could not load Lua script");
             }
             BL_LOG_INFO(
-                "Loaded Lua script [{}] for entity of type [{}]",
+                "Loaded Lua script [{}] for entity [id: {}, type: {}, tag: {}]",
                 filepath,
-                tableName
+                entity,
+                tableName,
+                tagComponent.tag
             );
         }
     }
@@ -73,12 +77,14 @@ namespace Blink {
             constexpr int returnValueCount = 0;
             constexpr int messageHandlerIndex = 0;
             if (lua_pcall(L, argumentCount, returnValueCount, messageHandlerIndex) != LUA_OK) {
+                auto& tagComponent = entityRegistry->get<TagComponent>(entity);
                 BL_LOG_ERROR(
-                    "Could not invoke [{}:{}:{}] for entity [{}]: {}",
+                    "Could not invoke [{}:{}:{}] for entity [id: {}, tag: {}]: {}",
                     luaComponent.path,
                     luaComponent.type,
                     functionName,
                     entity,
+                    tagComponent.tag,
                     lua_tostring(L, -1)
                 );
                 BL_THROW("Could not update Lua script for entity");

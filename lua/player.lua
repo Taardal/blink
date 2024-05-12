@@ -1,8 +1,8 @@
 local Vector = require("vector")
 
-local thrust = 0.1
+local thrust = 1
 local moveSpeed = 0
-local maxMoveSpeed = 20
+local maxMoveSpeed = 50
 local lookSpeed = 0.75
 local maxPitch = 89
 

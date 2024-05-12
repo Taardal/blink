@@ -8,12 +8,13 @@
 
 namespace Blink {
     Scene::Scene(const SceneConfig& config) : config(config), useSceneCamera(true) {
-        initializeScene();
+        initializeCamera();
+        createEntities();
         config.luaEngine->createEntityBindings(&registry);
     }
 
     Scene::~Scene() {
-        registry.clear();
+        destroyEntities();
     }
 
     void Scene::onEvent(Event& event) {
@@ -34,22 +35,19 @@ namespace Blink {
             return;
         }
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::R) {
-            for (auto entity : registry.view<TransformComponent, TagComponent>()) {
-                auto& tagComponent = registry.get<TagComponent>(entity);
-                if (tagComponent.tag != "Player") {
-                    continue;
-                }
-                auto& transformComponent = registry.get<TransformComponent>(entity);
-                transformComponent.position = {0, 0, 0};
-                transformComponent.upDirection = transformComponent.worldUpDirection;
-                transformComponent.forwardDirection = {0, 0, -1};
-                transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
-                transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
-                transformComponent.yaw = -90.0f;
-                transformComponent.pitch = 0;
-                transformComponent.roll = 0;
-            }
+            initializeCamera();
             return;
+        }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::T) {
+            config.renderer->waitUntilIdle();
+            destroyEntities();
+            config.meshManager->reset();
+            createEntities();
+            config.luaEngine->reloadScripts(&registry);
+            return;
+        }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Y) {
+            config.sceneCamera->loggingEnabled = !config.sceneCamera->loggingEnabled;
         }
         config.sceneCamera->onEvent(event);
     }
@@ -62,32 +60,24 @@ namespace Blink {
 
             transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
 
-            // transformComponent.forwardDirection.x = cos(glm::radians(transformComponent.yaw)) * cos(glm::radians(transformComponent.pitch));
-            // transformComponent.forwardDirection.y = sin(glm::radians(transformComponent.pitch));
-            // transformComponent.forwardDirection.z = sin(glm::radians(transformComponent.yaw)) * cos(glm::radians(transformComponent.pitch));
-            // transformComponent.forwardDirection = glm::normalize(transformComponent.forwardDirection);
-            //
-            // transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
-            // transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
-
             glm::mat4 yawMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(transformComponent.yaw), {0.0f, 1.0f, 0.0f});
             glm::mat4 pitchMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(transformComponent.pitch), transformComponent.rightDirection);
             glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(transformComponent.roll), {0.0f, 0.0f, 1.0f});
-
             transformComponent.rotation = glm::transpose(yawMatrix * pitchMatrix * rollMatrix);
         }
 
         for (const entt::entity entity : registry.view<TransformComponent, MeshComponent>()) {
             auto& transformComponent = registry.get<TransformComponent>(entity);
             auto& meshComponent = registry.get<MeshComponent>(entity);
-            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.yawOffset), {0.0f, 1.0f, 0.0f});
-            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.pitchOffset), {1.0f, 0.0f, 0.0f});
-            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.rollOffset), {0.0f, 0.0f, 1.0f});
+            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.yawRenderingOffset), {0.0f, 1.0f, 0.0f});
+            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.pitchRenderingOffset), {1.0f, 0.0f, 0.0f});
+            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.rollRenderingOffset), {0.0f, 0.0f, 1.0f});
             meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
 
         if (useSceneCamera) {
             config.sceneCamera->update(timestep);
+            //config.sceneCamera->logState();
         } else {
             for (const entt::entity entity : registry.view<TransformComponent, CameraComponent>()) {
                 auto& transformComponent = registry.get<TransformComponent>(entity);
@@ -112,33 +102,50 @@ namespace Blink {
             viewProjection.view = cameraComponent.view;
             viewProjection.projection = cameraComponent.projection;
         }
-        for (const entt::entity entity : registry.view<MeshComponent>()) {
+        for (const entt::entity entity : registry.view<MeshComponent, TagComponent>()) {
+            auto& tagComponent = registry.get<TagComponent>(entity);
+            if (tagComponent.tag == "Camera" && !useSceneCamera) {
+                continue;
+            }
             auto& meshComponent = registry.get<MeshComponent>(entity);
             config.renderer->renderMesh(meshComponent.mesh, viewProjection);
         }
     }
 
-    void Scene::initializeScene() {
-        // Scene camera
-        config.sceneCamera->position = {0, 50, 0};
-        config.sceneCamera->moveSpeed = 50;
-        config.sceneCamera->rotationSpeed = 2;
-        config.sceneCamera->yaw = -90.0f;
+    void Scene::initializeCamera() const {
+        config.sceneCamera->position = {105.584175, 44.01467, 103.974266};
+        config.sceneCamera->position = {625.0857, 183.64235, -393.7724};
+        config.sceneCamera->position = //{-405.73834, 600, -577.0076};
+
         config.sceneCamera->worldUpDirection = {0, 1, 0};
-        config.sceneCamera->forwardDirection = {0, 0, -1};
+        config.sceneCamera->forwardDirection = {0.12036891, -0.15643448, -0.9803263};
         config.sceneCamera->rightDirection = glm::normalize(glm::cross(config.sceneCamera->forwardDirection, config.sceneCamera->worldUpDirection));
         config.sceneCamera->upDirection = glm::normalize(glm::cross(config.sceneCamera->rightDirection, config.sceneCamera->forwardDirection));
 
+        config.sceneCamera->yaw = -83;
+        config.sceneCamera->pitch = -9;
+
+        config.sceneCamera->moveSpeed = 100;
+        config.sceneCamera->rotationSpeed = 1;
+    }
+
+    void Scene::createEntities() {
+        //--------------------------------------------------------------------------------------------------------------
         // Player
+        //--------------------------------------------------------------------------------------------------------------
         {
             entt::entity entity = registry.create();
+
+            FighterJetComponent fighterJetComponent{};
+            fighterJetComponent.type = "crono782";
+            registry.emplace<FighterJetComponent>(entity, fighterJetComponent);
 
             TransformComponent transformComponent{};
             transformComponent.position = {0, 0, 0};
             transformComponent.worldUpDirection = {0, 1, 0};
             transformComponent.forwardDirection = {0, 0, -1};
             transformComponent.yaw = -90.0f;
-            transformComponent.yawOffset = 180.0f;
+            transformComponent.yawRenderingOffset = 180.0f;
             transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
             transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
             registry.emplace<TransformComponent>(entity, transformComponent);
@@ -154,13 +161,15 @@ namespace Blink {
 
             MeshInfo meshInfo{};
             meshInfo.modelPath = "models/fighter/fighter.obj";
-            meshInfo.textureAtlasPath = "models/fighter/crono782.jpg";
+            meshInfo.textureAtlasPath = "models/fighter/" + fighterJetComponent.type + ".jpg";
 
             MeshComponent meshComponent{};
             meshComponent.mesh = config.meshManager->getMesh(meshInfo);
             registry.emplace<MeshComponent>(entity, meshComponent);
         }
+        //--------------------------------------------------------------------------------------------------------------
         // Camera
+        //--------------------------------------------------------------------------------------------------------------
         {
             entt::entity entity = registry.create();
 
@@ -174,8 +183,8 @@ namespace Blink {
             transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
             transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
 
-            transformComponent.yawOffset = 90;
-            transformComponent.pitchOffset = -90;
+            transformComponent.yawRenderingOffset = 90;
+            transformComponent.pitchRenderingOffset = -90;
             // transformComponent.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(270.0f), {0.0f, 1.0f, 0.0f});
             // transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(270.0f), {1.0f, 0.0f, 0.0f});
             transformComponent.scale = glm::scale(glm::mat4(1.0f), {0.05, 0.05, 0.05});
@@ -203,7 +212,9 @@ namespace Blink {
             meshComponent.mesh = config.meshManager->getMesh(meshInfo);
             registry.emplace<MeshComponent>(entity, meshComponent);
         }
-        // Sibenik
+        //--------------------------------------------------------------------------------------------------------------
+        // Sibenik cathedral
+        //--------------------------------------------------------------------------------------------------------------
         {
             entt::entity entity = registry.create();
 
@@ -229,7 +240,9 @@ namespace Blink {
             meshComponent.mesh = config.meshManager->getMesh(meshInfo);
             registry.emplace<MeshComponent>(entity, meshComponent);
         }
+        //--------------------------------------------------------------------------------------------------------------
         // Terrain
+        //--------------------------------------------------------------------------------------------------------------
         {
             entt::entity entity = registry.create();
 
@@ -255,111 +268,145 @@ namespace Blink {
             meshComponent.mesh = config.meshManager->getMesh(meshInfo);
             registry.emplace<MeshComponent>(entity, meshComponent);
         }
+        //--------------------------------------------------------------------------------------------------------------
+        // Viking room
+        //--------------------------------------------------------------------------------------------------------------
+        {
+            entt::entity entity = registry.create();
+
+            TransformComponent transformComponent{};
+            transformComponent.position = {-100, -25, -900};
+            transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
+
+            transformComponent.worldUpDirection = {0, 1, 0};
+            transformComponent.forwardDirection = {0, 0, -1};
+            transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+            transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+
+            transformComponent.yaw = -225.0f;
+
+            transformComponent.pitchRenderingOffset = -90.0f;
+
+            transformComponent.scale = glm::scale(glm::mat4(1.0f), {100, 100, 100});
+
+            registry.emplace<TransformComponent>(entity, transformComponent);
+
+            TagComponent tagComponent{};
+            tagComponent.tag = "Viking Room";
+            registry.emplace<TagComponent>(entity, tagComponent);
+
+            MeshInfo meshInfo{};
+            meshInfo.modelPath = "models/viking_room/viking_room.obj";
+            meshInfo.textureAtlasPath = "models/viking_room/viking_room.png";
+
+            MeshComponent meshComponent{};
+            meshComponent.mesh = config.meshManager->getMesh(meshInfo);
+            registry.emplace<MeshComponent>(entity, meshComponent);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+        // Freighter
+        //--------------------------------------------------------------------------------------------------------------
+        {
+            entt::entity entity = registry.create();
+
+            TransformComponent transformComponent{};
+            transformComponent.position = {-405.73834, 260, -577.0076};
+            transformComponent.worldUpDirection = {0, 1, 0};
+            transformComponent.forwardDirection = {0, 0, -1};
+            transformComponent.yaw = -90.0f;
+            transformComponent.yawRenderingOffset = 180.0f;
+            transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+            transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+
+            transformComponent.scale = glm::scale(glm::mat4(1.0f), {10, 10, 10});
+            registry.emplace<TransformComponent>(entity, transformComponent);
+
+            TagComponent tagComponent{};
+            tagComponent.tag = "Mothership";
+            registry.emplace<TagComponent>(entity, tagComponent);
+
+            MeshInfo meshInfo{};
+            meshInfo.modelPath = "models/oxar_freighter/Meshes/oxar_freighter.obj";
+            meshInfo.textureAtlasPath = "models/oxar_freighter/Textures/Oxar_Diffuse.png";
+
+            MeshComponent meshComponent{};
+            meshComponent.mesh = config.meshManager->getMesh(meshInfo);
+            registry.emplace<MeshComponent>(entity, meshComponent);
+        }
+        //--------------------------------------------------------------------------------------------------------------
+        // Circle patrol squadron
+        //--------------------------------------------------------------------------------------------------------------
+        //glm::vec3 squadronLeaderPosition = {50, 50, -100};
+        //glm::vec3 squadronLeaderPosition = {-380.0f, 400.0f, -490.0f};
+        glm::vec3 squadronLeaderPosition = {-700.0f, 140.0f, -500.0f};
+        float squadronLeaderScale = 100.0f;
+        {
+            entt::entity entity = registry.create();
+
+            FighterJetComponent fighterJetComponent{};
+            fighterJetComponent.type = "krulspeld1";
+            registry.emplace<FighterJetComponent>(entity, fighterJetComponent);
+
+            TransformComponent transformComponent{};
+            transformComponent.position = squadronLeaderPosition;
+            transformComponent.worldUpDirection = {0, 1, 0};
+            transformComponent.forwardDirection = {0, 0, -1};
+            transformComponent.yaw = 00.0f;
+            transformComponent.yawRenderingOffset = 180.0f;
+            transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+            transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+
+            transformComponent.scale = glm::scale(glm::mat4(1.0f), {squadronLeaderScale, squadronLeaderScale, squadronLeaderScale});
+            registry.emplace<TransformComponent>(entity, transformComponent);
+
+            TagComponent tagComponent{};
+            tagComponent.tag = "Circle patrol 1";
+            registry.emplace<TagComponent>(entity, tagComponent);
+
+            LuaComponent luaComponent{};
+            luaComponent.type = "AiPatrolCircle";
+            luaComponent.path = "lua/ai_patrol_circle.out";
+            registry.emplace<LuaComponent>(entity, luaComponent);
+
+            MeshInfo meshInfo{};
+            meshInfo.modelPath = "models/fighter/fighter.obj";
+            meshInfo.textureAtlasPath = "models/fighter/" + fighterJetComponent.type + ".jpg";
+
+            MeshComponent meshComponent{};
+            meshComponent.mesh = config.meshManager->getMesh(meshInfo);
+            registry.emplace<MeshComponent>(entity, meshComponent);
+        }
         // {
         //     entt::entity entity = registry.create();
         //
+        //     FighterJetComponent fighterJetComponent{};
+        //     fighterJetComponent.type = "krulspeld2";
+        //     registry.emplace<FighterJetComponent>(entity, fighterJetComponent);
+        //
         //     TransformComponent transformComponent{};
-        //     transformComponent.position = {0, 0, 1};
-        //     transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-        //     transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        //     transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        //     transformComponent.position = { squadronLeaderPosition.x + squadronLeaderScale, squadronLeaderPosition.y, squadronLeaderPosition.z + squadronLeaderScale};
+        //     transformComponent.worldUpDirection = {0, 1, 0};
+        //     transformComponent.forwardDirection = {0, 0, -1};
+        //     transformComponent.yaw = 00.0f;
+        //     transformComponent.yawRenderingOffset = 180.0f;
+        //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+        //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+        //
+        //     transformComponent.scale = glm::scale(glm::mat4(1.0f), {squadronLeaderScale, squadronLeaderScale, squadronLeaderScale});
         //     registry.emplace<TransformComponent>(entity, transformComponent);
         //
         //     TagComponent tagComponent{};
-        //     tagComponent.tag = "Viking Room";
-        //     registry.emplace<TagComponent>(entity, tagComponent);
-        //
-        //     MeshInfo meshInfo{};
-        //     meshInfo.modelPath = "models/viking_room/viking_room.obj";
-        //     meshInfo.textureAtlasPath = "models/viking_room/viking_room.png";
-        //
-        //     MeshComponent meshComponent{};
-        //     meshComponent.mesh = config.meshManager->getMesh(meshInfo);
-        //     registry.emplace<MeshComponent>(entity, meshComponent);
-        // }
-    }
-
-    // void Scene::initializeScene() {
-    //     if (config.name == "fighter_jet") {
-    //         initializeFighterJetScene();
-    //     } else if (config.name == "viking_room") {
-    //         initializeVikingRoomScene();
-    //     } else {
-    //         if (config.name.empty()) {
-    //             BL_THROW("Missing scene name");
-    //         }
-    //         BL_THROW("Unknown scene [" + config.name + "]");
-    //     }
-    // }
-
-    void Scene::initializeVikingRoomScene() {
-        // entt::entity entity = registry.create();
-        //
-        // TransformComponent transformComponent{};
-        // transformComponent.position = { 0, 0, 1 };
-        // transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-        // transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        // transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        // registry.emplace<TransformComponent>(entity, transformComponent);
-        //
-        // TagComponent tagComponent{};
-        // tagComponent.tag = "Viking Room";
-        // registry.emplace<TagComponent>(entity, tagComponent);
-        //
-        // MeshInfo meshInfo{};
-        // meshInfo.modelPath = "models/viking_room/viking_room.obj";
-        // meshInfo.textureAtlasPath = "models/viking_room/viking_room.png";
-        //
-        // MeshComponent meshComponent{};
-        // meshComponent.mesh = config.meshManager->getMesh(meshInfo);
-        // registry.emplace<MeshComponent>(entity, meshComponent);
-    }
-
-    void Scene::initializeFighterJetScene() {
-        // // Player
-        // {
-        //     entt::entity entity = registry.create();
-        //
-        //     TransformComponent transformComponent{};
-        //     transformComponent.position = { 0, 0, 0 };
-        //     transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-        //     registry.emplace<TransformComponent>(entity, transformComponent);
-        //
-        //     TagComponent tagComponent{};
-        //     tagComponent.tag = "Player";
+        //     tagComponent.tag = "Circle patrol 2";
         //     registry.emplace<TagComponent>(entity, tagComponent);
         //
         //     LuaComponent luaComponent{};
-        //     luaComponent.type = "Player";
-        //     luaComponent.filepath = "lua/player.out";
+        //     luaComponent.type = "AiPatrolCircle";
+        //     luaComponent.path = "lua/ai_patrol_circle.out";
         //     registry.emplace<LuaComponent>(entity, luaComponent);
         //
         //     MeshInfo meshInfo{};
         //     meshInfo.modelPath = "models/fighter/fighter.obj";
-        //     meshInfo.textureAtlasPath = "models/fighter/crono782.jpg";
-        //
-        //     MeshComponent meshComponent{};
-        //     meshComponent.mesh = config.meshManager->getMesh(meshInfo);
-        //     registry.emplace<MeshComponent>(entity, meshComponent);
-        // }
-        // // Enemies
-        // {
-        //     entt::entity entity = registry.create();
-        //
-        //     TransformComponent transformComponent{};
-        //     transformComponent.position = { 0, 0, 1 };
-        //     transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-        //     transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        //     transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        //     registry.emplace<TransformComponent>(entity, transformComponent);
-        //
-        //     TagComponent tagComponent{};
-        //     tagComponent.tag = "Viking Room";
-        //     registry.emplace<TagComponent>(entity, tagComponent);
-        //
-        //     MeshInfo meshInfo{};
-        //     meshInfo.modelPath = "models/viking_room/viking_room.obj";
-        //     meshInfo.textureAtlasPath = "models/viking_room/viking_room.png";
+        //     meshInfo.textureAtlasPath = "models/fighter/" + fighterJetComponent.type + ".jpg";
         //
         //     MeshComponent meshComponent{};
         //     meshComponent.mesh = config.meshManager->getMesh(meshInfo);
@@ -368,22 +415,117 @@ namespace Blink {
         // {
         //     entt::entity entity = registry.create();
         //
+        //     FighterJetComponent fighterJetComponent{};
+        //     fighterJetComponent.type = "krulspeld3";
+        //     registry.emplace<FighterJetComponent>(entity, fighterJetComponent);
+        //
         //     TransformComponent transformComponent{};
-        //     transformComponent.position = { 0, 0, 0 };
-        //     transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
+        //     transformComponent.position = { squadronLeaderPosition.x + squadronLeaderScale, squadronLeaderPosition.y, squadronLeaderPosition.z - squadronLeaderScale};
+        //     transformComponent.worldUpDirection = {0, 1, 0};
+        //     transformComponent.forwardDirection = {0, 0, -1};
+        //     transformComponent.yaw = 00.0f;
+        //     transformComponent.yawRenderingOffset = 180.0f;
+        //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+        //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+        //
+        //     transformComponent.scale = glm::scale(glm::mat4(1.0f), {squadronLeaderScale, squadronLeaderScale, squadronLeaderScale});
         //     registry.emplace<TransformComponent>(entity, transformComponent);
         //
         //     TagComponent tagComponent{};
-        //     tagComponent.tag = "Sibenik";
+        //     tagComponent.tag = "Circle patrol 3";
         //     registry.emplace<TagComponent>(entity, tagComponent);
         //
+        //     LuaComponent luaComponent{};
+        //     luaComponent.type = "AiPatrolCircle";
+        //     luaComponent.path = "lua/ai_patrol_circle.out";
+        //     registry.emplace<LuaComponent>(entity, luaComponent);
+        //
         //     MeshInfo meshInfo{};
-        //     meshInfo.modelPath = "models/sibenik/sibenik.obj";
-        //     meshInfo.texturesDirectoryPath = "models/sibenik";
+        //     meshInfo.modelPath = "models/fighter/fighter.obj";
+        //     meshInfo.textureAtlasPath = "models/fighter/" + fighterJetComponent.type + ".jpg";
         //
         //     MeshComponent meshComponent{};
         //     meshComponent.mesh = config.meshManager->getMesh(meshInfo);
         //     registry.emplace<MeshComponent>(entity, meshComponent);
         // }
+        //--------------------------------------------------------------------------------------------------------------
+        // Line patrol squadron
+        //--------------------------------------------------------------------------------------------------------------
+        {
+            entt::entity entity = registry.create();
+
+            FighterJetComponent fighterJetComponent{};
+            fighterJetComponent.type = "krulspeld4";
+            registry.emplace<FighterJetComponent>(entity, fighterJetComponent);
+
+            TransformComponent transformComponent{};
+            transformComponent.position = { -50, 50, -50 };
+            transformComponent.worldUpDirection = {0, 1, 0};
+            transformComponent.forwardDirection = {-1, 0, 0};
+            transformComponent.yaw = -180.0f;
+            transformComponent.yawRenderingOffset = 180.0f;
+            transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+            transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+
+            transformComponent.scale = glm::scale(glm::mat4(1.0f), {100, 100, 100});
+            registry.emplace<TransformComponent>(entity, transformComponent);
+
+            TagComponent tagComponent{};
+            tagComponent.tag = "Line patrol 1";
+            registry.emplace<TagComponent>(entity, tagComponent);
+
+            LuaComponent luaComponent{};
+            luaComponent.type = "AiPatrolLine";
+            luaComponent.path = "lua/ai_patrol_line.out";
+            registry.emplace<LuaComponent>(entity, luaComponent);
+
+            MeshInfo meshInfo{};
+            meshInfo.modelPath = "models/fighter/fighter.obj";
+            meshInfo.textureAtlasPath = "models/fighter/" + fighterJetComponent.type + ".jpg";
+
+            MeshComponent meshComponent{};
+            meshComponent.mesh = config.meshManager->getMesh(meshInfo);
+            registry.emplace<MeshComponent>(entity, meshComponent);
+        }
+        {
+            entt::entity entity = registry.create();
+
+            FighterJetComponent fighterJetComponent{};
+            fighterJetComponent.type = "krulspeld5";
+            registry.emplace<FighterJetComponent>(entity, fighterJetComponent);
+
+            TransformComponent transformComponent{};
+            transformComponent.position = { -50, 50, -150 };
+            transformComponent.worldUpDirection = {0, 1, 0};
+            transformComponent.forwardDirection = {-1, 0, 0};
+            transformComponent.yaw = -180.0f;
+            transformComponent.yawRenderingOffset = 180.0f;
+            transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
+            transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
+
+            transformComponent.scale = glm::scale(glm::mat4(1.0f), {100, 100, 100});
+            registry.emplace<TransformComponent>(entity, transformComponent);
+
+            TagComponent tagComponent{};
+            tagComponent.tag = "Line patrol 2";
+            registry.emplace<TagComponent>(entity, tagComponent);
+
+            LuaComponent luaComponent{};
+            luaComponent.type = "AiPatrolLine";
+            luaComponent.path = "lua/ai_patrol_line.out";
+            registry.emplace<LuaComponent>(entity, luaComponent);
+
+            MeshInfo meshInfo{};
+            meshInfo.modelPath = "models/fighter/fighter.obj";
+            meshInfo.textureAtlasPath = "models/fighter/" + fighterJetComponent.type + ".jpg";
+
+            MeshComponent meshComponent{};
+            meshComponent.mesh = config.meshManager->getMesh(meshInfo);
+            registry.emplace<MeshComponent>(entity, meshComponent);
+        }
+    }
+
+    void Scene::destroyEntities() {
+        registry.clear();
     }
 }

@@ -1,5 +1,9 @@
 local Vector = {}
 
+function Vector.tostring(v)
+	return "x: " .. v.x .. ", y: " .. v.y .. ", z: " .. v.z
+end
+
 function Vector.add(a, b)
     if type(b) == "number" then
         return {

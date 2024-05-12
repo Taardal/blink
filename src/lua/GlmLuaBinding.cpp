@@ -256,23 +256,33 @@ namespace Blink {
     }
 
     // Lua stack
+    // glm.vec()
+    // - Empty
+    // glm.vec(x, y, z)
     // - [-1] number    Z
     // - [-2] number    Y
     // - [-3] number    X
     int GlmLuaBinding::vec3(lua_State* L) {
-        glm::vec3 vector{};
+        glm::vec3 vector{0, 0, 0};
 
-        auto z = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-        vector.z = z;
+        uint32_t argumentCount = lua_gettop(L);
+        if (argumentCount > 0 && argumentCount != 3) {
+            BL_THROW("Invalid argument count [" + std::to_string(argumentCount) + "]");
+        }
 
-        auto y = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-        vector.y = y;
+        if (argumentCount == 3) {
+            auto z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vector.z = z;
 
-        auto x = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-        vector.x = x;
+            auto y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vector.y = y;
+
+            auto x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vector.x = x;
+        }
 
         lua_newtable(L);
         lua_pushnumber(L, vector.x);

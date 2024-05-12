@@ -9,7 +9,6 @@ namespace Blink {
     SceneCamera::SceneCamera(const SceneCameraConfig& config) : config(config) {
         mouseSensitivity = 0.1f;
         updateAspectRatio();
-        updateDirections();
     }
 
     glm::mat4 SceneCamera::getView() const {
@@ -120,13 +119,9 @@ namespace Blink {
         view = glm::lookAt(position, position + forwardDirection, upDirection);
         projection = glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
 
-        logState();
-    }
-
-    void SceneCamera::processKeyboardInput(float timestep) {
-    }
-
-    void SceneCamera::updateDirections() {
+        if (loggingEnabled) {
+            logState();
+        }
     }
 
     void SceneCamera::updateAspectRatio() {

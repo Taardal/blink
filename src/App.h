@@ -17,9 +17,17 @@
 #include "window/Event.h"
 
 namespace Blink {
+    enum class AppState {
+        None = 0,
+        Initialized = 1,
+        Running = 2,
+        Paused = 3,
+    };
+
     class App {
     private:
         AppConfig config;
+        AppState state = AppState::None;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;
@@ -33,10 +41,14 @@ namespace Blink {
         LuaEngine* luaEngine = nullptr;
         SceneCamera* sceneCamera = nullptr;
         Scene* scene = nullptr;
-        bool initialized = false;
         double lastTime = 0.0;
-        double fpsUpdateTimestep = 0.0;
+        double secondsSinceLastStatsUpdate = 0.0;
         uint32_t fps = 0;
+        uint32_t ups = 0;
+
+        double secondsSinceLastFrame = 0.0;
+        double lastUpdateTime = 0.0;
+        double secondsPerFrame = 1.0 / 60.0;
 
     public:
         explicit App(const AppConfig& config);
@@ -48,9 +60,7 @@ namespace Blink {
     private:
         void update();
 
-        void render() const;
-
-        void onEvent(Event& event) const;
+        void onEvent(Event& event);
 
         void initialize();
 
