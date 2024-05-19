@@ -51,11 +51,15 @@ namespace Blink {
 
     double Window::update() const {
         glfwPollEvents();
-
-        // glfwGetTime() returns the value of the GLFW timer.
-        // Unless the timer has been set using glfwSetTime, the timer measures time elapsed since GLFW was initialized.
-        // Returns the current value, in seconds, or zero if an error occurred.
         return glfwGetTime();
+    }
+
+    double Window::getTime() const {
+        return glfwGetTime(); // Seconds
+    }
+
+    void Window::pollEvents() const {
+        glfwPollEvents();
     }
 
     bool Window::shouldClose() const {

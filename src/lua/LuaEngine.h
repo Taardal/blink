@@ -1,6 +1,7 @@
 #pragma once
 
-#include "EntityLuaBinding.h"
+#include "lua/EntityLuaBinding.h"
+#include "lua/SceneCameraLuaBinding.h"
 #include "window/Keyboard.h"
 
 #include <lua.hpp>
@@ -8,7 +9,11 @@
 namespace Blink {
     struct LuaEngineConfig {
         Keyboard* keyboard;
+        SceneCamera* sceneCamera;
     };
+
+    // Forward declaration
+    class Scene;
 
     class LuaEngine {
     private:
@@ -20,16 +25,20 @@ namespace Blink {
 
         ~LuaEngine();
 
-        void reloadScripts(entt::registry* entityRegistry) const;
+        void initializeScene(const std::string& sceneLuaFilePath, Scene* scene) const;
 
-        void createEntityBindings(entt::registry* entityRegistry) const;
+        void updateEntities(Scene* scene, double timestep) const;
 
-        void updateEntityBindings(entt::registry* entityRegistry, double timestep) const;
+        void reloadScripts(Scene* scene);
 
-    private:
-        void createGlobalBindings() const;
+    public:
+        void initializeEntities(const std::string& sceneLuaFilePath) const;
 
-        static void compileLuaScripts();
+        void initializeCoreLuaBindings(Scene* scene) const;
+
+        void initializeEntityLuaBindings(Scene* scene) const;
+
+        void compileLuaFiles() const;
 
         static int luaPrint(lua_State* L);
     };

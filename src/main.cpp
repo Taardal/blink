@@ -15,6 +15,7 @@ int main() {
     config.windowResizable = true;
     config.windowMaximized = false;
     config.fps = 120;
+    config.scene = "lua/scenes/sandbox.out";
 
     App app(config);
     app.run();

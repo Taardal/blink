@@ -76,6 +76,17 @@ namespace Blink {
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+        // Define _framebuffer space_ to be used after _NDC space_ (normalized device coordinates)
+        //
+        // Use same coordinate system as _NDC space_ (right-handed):
+        // - Positive X-axis pointing right
+        // - Positive Y-axis pointing down
+        // - Positive Z-axis pointing away from viewer/screen
+        //
+        // Viewport X and Y in top left corner
+        // Viewport width and height covering entire framebuffer (screen)
+        // Viewport depth increasing along the positive Z-axis (away from viewer/screen)
+        //
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;

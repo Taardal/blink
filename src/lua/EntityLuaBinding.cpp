@@ -1,13 +1,15 @@
 #include "pch.h"
-#include "EntityLuaBinding.h"
-#include "luaUtils.h"
+#include "lua/EntityLuaBinding.h"
+#include "lua/luaUtils.h"
+#include "graphics/MeshManager.h"
 #include "scene/Components.h"
+#include "scene/Scene.h"
 
 namespace Blink {
-    EntityLuaBinding::EntityLuaBinding(entt::registry* entityRegistry): entityRegistry(entityRegistry) {
+    EntityLuaBinding::EntityLuaBinding(Scene* scene) : scene(scene) {
     }
 
-    void EntityLuaBinding::initialize(lua_State* L, entt::registry* entityRegistry) {
+    void EntityLuaBinding::initialize(lua_State* L, Scene* scene) {
         std::string typeName = "Entity";
         std::string metatableName = typeName + "__meta";
 
@@ -15,7 +17,7 @@ namespace Blink {
         void* userdata = lua_newuserdata(L, sizeof(EntityLuaBinding));
 
         // Construct the C++ object in the allocated memory block
-        new(userdata) EntityLuaBinding(entityRegistry);
+        new(userdata) EntityLuaBinding(scene);
 
         // Create a new metatable and push it onto the Lua stack
         luaL_newmetatable(L, metatableName.c_str());
@@ -54,9 +56,41 @@ namespace Blink {
 
     // Lua stack
     // - [-1] string    Name of the index being accessed
-    // - [-2] userdata  EntityBinding
+    // - [-2] userdata  Entity binding
     int EntityLuaBinding::index(lua_State* L) {
         std::string indexName = lua_tostring(L, -1);
+        if (indexName == "create") {
+            lua_pushcfunction(L, EntityLuaBinding::createEntity);
+            return 1;
+        }
+        if (indexName == "setMeshComponent") {
+            lua_pushcfunction(L, EntityLuaBinding::setMeshComponent);
+            return 1;
+        }
+        if (indexName == "setLuaComponent") {
+            lua_pushcfunction(L, EntityLuaBinding::setLuaComponent);
+            return 1;
+        }
+        if (indexName == "getTagComponent") {
+            lua_pushcfunction(L, EntityLuaBinding::getTagComponent);
+            return 1;
+        }
+        if (indexName == "setTagComponent") {
+            lua_pushcfunction(L, EntityLuaBinding::setTagComponent);
+            return 1;
+        }
+        if (indexName == "getTransformComponent") {
+            lua_pushcfunction(L, EntityLuaBinding::getTransformComponent);
+            return 1;
+        }
+        if (indexName == "setTransformComponent") {
+            lua_pushcfunction(L, EntityLuaBinding::setTransformComponent);
+            return 1;
+        }
+        if (indexName == "setCameraComponent") {
+            lua_pushcfunction(L, EntityLuaBinding::setCameraComponent);
+            return 1;
+        }
         if (indexName == "getPosition") {
             lua_pushcfunction(L, EntityLuaBinding::getPosition);
             return 1;
@@ -69,85 +103,119 @@ namespace Blink {
             lua_pushcfunction(L, EntityLuaBinding::getIdByTag);
             return 1;
         }
-        if (indexName == "getTransformComponent") {
-            lua_pushcfunction(L, EntityLuaBinding::getTransformComponent);
-            return 1;
-        }
-        if (indexName == "setTransformComponent") {
-            lua_pushcfunction(L, EntityLuaBinding::setTransformComponent);
-            return 1;
-        }
-        BL_LOG_WARN("Could not index [{}]", indexName);
+        BL_LOG_WARN("Could not resolve index [{}]", indexName);
         return 0;
     }
 
     // Lua stack
-    // - [-1] number    Entity ID
-    // - [-2] userdata  EntityBinding
-    int EntityLuaBinding::getPosition(lua_State* L) {
-        entt::entity entity = (entt::entity) lua_tonumber(L, -1);
-        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
-        auto& transformComponent = binding->entityRegistry->get<TransformComponent>(entity);
-        const glm::vec3& position = transformComponent.position;
-        lua_newtable(L);
-        lua_pushnumber(L, position.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, position.y);
-        lua_setfield(L, -2, "y");
-        lua_pushnumber(L, position.z);
-        lua_setfield(L, -2, "z");
+    // - [-1] userdata  Entity binding
+    int EntityLuaBinding::createEntity(lua_State* L) {
+        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -1);
+        entt::entity entity = binding->scene->createEntity();
+        lua_pushnumber(L, (uint32_t) entity);
         return 1;
     }
 
     // Lua stack
-    // - [-1] table    Position vector
-    // - [-2] number   Entity ID
-    // - [-3] userdata EntityBinding
-    int EntityLuaBinding::setPosition(lua_State* L) {
-        lua_getfield(L, -1, "x");
-        auto x = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "y");
-        auto y = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "z");
-        auto z = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
+    // - [-1] table     Mesh component
+    // - [-2] number    Entity ID
+    // - [-3] userdata  Entity binding
+    int EntityLuaBinding::setMeshComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -2);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
-        auto& transformComponent = binding->entityRegistry->get<TransformComponent>(entity);
-        transformComponent.position = { x, y, z };
+        auto& meshComponent = binding->scene->entityRegistry.get_or_emplace<MeshComponent>(entity);
+
+        MeshInfo meshInfo{};
+        {
+            lua_getfield(L, -1, "modelPath");
+            meshInfo.modelPath = lua_tostring(L, -1);
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "textureAtlasPath");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                const char* textureAtlasPath = lua_tostring(L, -1);
+                meshInfo.textureAtlasPath = textureAtlasPath;
+            }
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "texturesDirectoryPath");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                const char* texturesDirectoryPath = lua_tostring(L, -1);
+                meshInfo.texturesDirectoryPath = texturesDirectoryPath;
+            }
+            lua_pop(L, 1);
+        }
+
+        // Only set the mesh metadata here
+        // Resource loading should happen explicitly in the Scene class, after all components are created
+        meshComponent.meshInfo = meshInfo;
+        //meshComponent.mesh = binding->scene->config.meshManager->getMesh(meshInfo);
 
         return 0;
     }
 
     // Lua stack
-    // - [-1] string   Entity tag
-    // - [-2] userdata EntityBinding
-    int EntityLuaBinding::getIdByTag(lua_State* L) {
-        const char* entityTag = lua_tostring(L, -1);
-        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
-        for (entt::entity entity : binding->entityRegistry->view<TagComponent>()) {
-            auto& [tag] = binding->entityRegistry->get<TagComponent>(entity);
-            if (tag == entityTag) {
-                lua_pushnumber(L, (uint32_t) entity);
-                return 1;
-            }
-        }
-        BL_LOG_WARN("Could not find entity by tag [{}]", entityTag);
+    // - [-1] table     Lua component
+    // - [-2] number    Entity ID
+    // - [-3] userdata  Entity binding
+    int EntityLuaBinding::setLuaComponent(lua_State* L) {
+        entt::entity entity = (entt::entity) lua_tonumber(L, -2);
+        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
+        auto& luaComponent = binding->scene->entityRegistry.get_or_emplace<LuaComponent>(entity);
+
+        lua_getfield(L, -1, "type");
+        luaComponent.type = lua_tostring(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "path");
+        luaComponent.path = lua_tostring(L, -1);
+        lua_pop(L, 1);
+
         return 0;
     }
 
     // Lua stack
     // - [-1] number    Entity ID
-    // - [-2] userdata  EntityBinding
+    // - [-2] userdata  Entity binding
+    int EntityLuaBinding::getTagComponent(lua_State* L) {
+        entt::entity entity = (entt::entity) lua_tonumber(L, -1);
+        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
+        auto& tagComponent = binding->scene->entityRegistry.get<TagComponent>(entity);
+
+        lua_newtable(L);
+        lua_pushstring(L, tagComponent.tag.c_str());
+        lua_setfield(L, -2, "tag");
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Tag component
+    // - [-2] number    Entity ID
+    // - [-3] userdata  Entity binding
+    int EntityLuaBinding::setTagComponent(lua_State* L) {
+        entt::entity entity = (entt::entity) lua_tonumber(L, -2);
+        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
+        auto& tagComponent = binding->scene->entityRegistry.get_or_emplace<TagComponent>(entity);
+
+        lua_getfield(L, -1, "tag");
+        tagComponent.tag = lua_tostring(L, -1);
+        lua_pop(L, 1);
+
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] number    Entity ID
+    // - [-2] userdata  Entity binding
     int EntityLuaBinding::getTransformComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -1);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
-        auto& transformComponent = binding->entityRegistry->get<TransformComponent>(entity);
+        auto& transformComponent = binding->scene->entityRegistry.get<TransformComponent>(entity);
 
         lua_newtable(L);
 
@@ -160,6 +228,16 @@ namespace Blink {
         lua_pushnumber(L, position.z);
         lua_setfield(L, -2, "z");
         lua_setfield(L, -2, "position");
+
+        const glm::vec3& size = transformComponent.size;
+        lua_newtable(L);
+        lua_pushnumber(L, size.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, size.y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, size.z);
+        lua_setfield(L, -2, "z");
+        lua_setfield(L, -2, "size");
 
         const glm::vec3& forwardDirection = transformComponent.forwardDirection;
         lua_newtable(L);
@@ -213,6 +291,18 @@ namespace Blink {
         lua_pushnumber(L, roll);
         lua_setfield(L, -2, "roll");
 
+        const float yawModelSpaceOffset = transformComponent.yawModelSpaceOffset;
+        lua_pushnumber(L, yawModelSpaceOffset);
+        lua_setfield(L, -2, "yawModelSpaceOffset");
+
+        const float pitchModelSpaceOffset = transformComponent.pitchModelSpaceOffset;
+        lua_pushnumber(L, pitchModelSpaceOffset);
+        lua_setfield(L, -2, "pitchModelSpaceOffset");
+
+        const float rollModelSpaceOffset = transformComponent.rollModelSpaceOffset;
+        lua_pushnumber(L, rollModelSpaceOffset);
+        lua_setfield(L, -2, "rollModelSpaceOffset");
+
         return 1;
     }
 
@@ -223,95 +313,229 @@ namespace Blink {
     int EntityLuaBinding::setTransformComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -2);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
-        auto& transformComponent = binding->entityRegistry->get<TransformComponent>(entity);
+        auto& transformComponent = binding->scene->entityRegistry.get_or_emplace<TransformComponent>(entity);
         {
             lua_getfield(L, -1, "position");
-            lua_getfield(L, -1, "x");
-            auto x = (float) lua_tonumber(L, -1);
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                lua_getfield(L, -1, "x");
+                auto x = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "y");
+                auto y = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "z");
+                auto z = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                transformComponent.position = { x, y, z };
+            }
             lua_pop(L, 1);
-            lua_getfield(L, -1, "y");
-            auto y = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            lua_getfield(L, -1, "z");
-            auto z = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            transformComponent.position = { x, y, z };
+        }
+        {
+            lua_getfield(L, -1, "size");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                lua_getfield(L, -1, "x");
+                auto x = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "y");
+                auto y = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "z");
+                auto z = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                transformComponent.size = { x, y, z };
+            }
             lua_pop(L, 1);
         }
         {
             lua_getfield(L, -1, "forwardDirection");
-            lua_getfield(L, -1, "x");
-            auto x = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            lua_getfield(L, -1, "y");
-            auto y = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            lua_getfield(L, -1, "z");
-            auto z = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            transformComponent.forwardDirection = { x, y, z };
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                lua_getfield(L, -1, "x");
+                auto x = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "y");
+                auto y = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "z");
+                auto z = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                transformComponent.forwardDirection = { x, y, z };
+            }
             lua_pop(L, 1);
         }
         {
             lua_getfield(L, -1, "rightDirection");
-            lua_getfield(L, -1, "x");
-            auto x = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            lua_getfield(L, -1, "y");
-            auto y = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            lua_getfield(L, -1, "z");
-            auto z = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            transformComponent.rightDirection = { x, y, z };
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                lua_getfield(L, -1, "x");
+                auto x = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "y");
+                auto y = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "z");
+                auto z = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                transformComponent.rightDirection = {x, y, z};
+            }
             lua_pop(L, 1);
         }
         {
             lua_getfield(L, -1, "upDirection");
-            lua_getfield(L, -1, "x");
-            auto x = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            lua_getfield(L, -1, "y");
-            auto y = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            lua_getfield(L, -1, "z");
-            auto z = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            transformComponent.upDirection = { x, y, z };
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                lua_getfield(L, -1, "x");
+                auto x = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "y");
+                auto y = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "z");
+                auto z = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                transformComponent.upDirection = { x, y, z };
+            }
             lua_pop(L, 1);
         }
         {
             lua_getfield(L, -1, "worldUpDirection");
-            lua_getfield(L, -1, "x");
-            auto x = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            lua_getfield(L, -1, "y");
-            auto y = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            lua_getfield(L, -1, "z");
-            auto z = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-            transformComponent.worldUpDirection = { x, y, z };
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                lua_getfield(L, -1, "x");
+                auto x = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "y");
+                auto y = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "z");
+                auto z = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                transformComponent.worldUpDirection = { x, y, z };
+            }
             lua_pop(L, 1);
         }
         {
             lua_getfield(L, -1, "yaw");
-            auto yaw = (float) lua_tonumber(L, -1);
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                transformComponent.yaw = (float) lua_tonumber(L, -1);
+            }
             lua_pop(L, 1);
-            transformComponent.yaw = yaw;
         }
         {
             lua_getfield(L, -1, "pitch");
-            auto pitch = (float) lua_tonumber(L, -1);
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                transformComponent.pitch = (float) lua_tonumber(L, -1);
+            }
             lua_pop(L, 1);
-            transformComponent.pitch = pitch;
         }
         {
             lua_getfield(L, -1, "roll");
-            auto roll = (float) lua_tonumber(L, -1);
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                transformComponent.roll = (float) lua_tonumber(L, -1);
+            }
             lua_pop(L, 1);
-            transformComponent.roll = roll;
         }
+        {
+            lua_getfield(L, -1, "yawModelSpaceOffset");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                transformComponent.yawModelSpaceOffset = (float) lua_tonumber(L, -1);
+            }
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "pitchModelSpaceOffset");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                transformComponent.pitchModelSpaceOffset = (float) lua_tonumber(L, -1);
+            }
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "rollModelSpaceOffset");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                transformComponent.rollModelSpaceOffset = (float) lua_tonumber(L, -1);
+            }
+            lua_pop(L, 1);
+        }
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] table    Camera component
+    // - [-2] number   Entity ID
+    // - [-3] userdata EntityBinding
+    int EntityLuaBinding::setCameraComponent(lua_State* L) {
+        entt::entity entity = (entt::entity) lua_tonumber(L, -2);
+        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
+        binding->scene->entityRegistry.emplace<CameraComponent>(entity);
+        return 0;
+    }
+
+
+    // Lua stack
+    // - [-1] number    Entity ID
+    // - [-2] userdata  Entity binding
+    int EntityLuaBinding::getPosition(lua_State* L) {
+        entt::entity entity = (entt::entity) lua_tonumber(L, -1);
+        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
+        auto& transformComponent = binding->scene->entityRegistry.get<TransformComponent>(entity);
+        const glm::vec3& position = transformComponent.position;
+        lua_newtable(L);
+        lua_pushnumber(L, position.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, position.y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, position.z);
+        lua_setfield(L, -2, "z");
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table    Position vector
+    // - [-2] number   Entity ID
+    // - [-3] userdata EntityBinding
+    int EntityLuaBinding::setPosition(lua_State* L) {
+        lua_getfield(L, -1, "x");
+        auto x = (float) lua_tonumber(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "y");
+        auto y = (float) lua_tonumber(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "z");
+        auto z = (float) lua_tonumber(L, -1);
+        lua_pop(L, 1);
+
+        entt::entity entity = (entt::entity) lua_tonumber(L, -2);
+        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
+        auto& transformComponent = binding->scene->entityRegistry.get<TransformComponent>(entity);
+        transformComponent.position = { x, y, z };
+
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] string   Entity tag
+    // - [-2] userdata EntityBinding
+    int EntityLuaBinding::getIdByTag(lua_State* L) {
+        const char* entityTag = lua_tostring(L, -1);
+        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
+        for (entt::entity entity : binding->scene->entityRegistry.view<TagComponent>()) {
+            auto& [tag] = binding->scene->entityRegistry.get<TagComponent>(entity);
+            if (tag == entityTag) {
+                lua_pushnumber(L, (uint32_t) entity);
+                return 1;
+            }
+        }
+        BL_LOG_WARN("Could not find entity by tag [{}]", entityTag);
         return 0;
     }
 }

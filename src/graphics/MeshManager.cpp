@@ -138,8 +138,8 @@ namespace Blink {
         return mesh;
     }
 
-    void MeshManager::reset() {
-        config.device->destroyDescriptorPool(descriptorPool);
+    void MeshManager::resetDescriptors() {
+        destroyDescriptorPool();
         createDescriptorPool();
     }
 

@@ -14,8 +14,8 @@
 namespace Blink {
     struct MeshInfo {
         std::string modelPath;
-        std::string textureAtlasPath; // Single texture atlas. Mutually exclusive with textureDirectoryPath.
-        std::string texturesDirectoryPath; // Multiple textures. Mutually exclusive with textureAtlasPath.
+        std::string textureAtlasPath; // Single texture atlas file. Mutually exclusive with textureDirectoryPath.
+        std::string texturesDirectoryPath; // Multiple texture files. Mutually exclusive with textureAtlasPath.
     };
 
     struct MeshManagerConfig {
@@ -25,8 +25,8 @@ namespace Blink {
 
     class MeshManager {
     private:
-        static constexpr uint32_t MAX_MESHES = 100;
-        static constexpr uint32_t MAX_TEXTURES_PER_MESH = 16;
+        static constexpr uint32_t MAX_MESHES = 1000;
+        static constexpr uint32_t MAX_TEXTURES_PER_MESH = 16; // `uniform sampler2D textureSamplers[16];` @ fragment shader
         static constexpr uint32_t MAX_TEXTURES = MAX_MESHES * MAX_TEXTURES_PER_MESH;
 
     private:
@@ -42,21 +42,13 @@ namespace Blink {
     public:
         explicit MeshManager(const MeshManagerConfig& config);
 
-        void destroyTextureSampler();
-
-        void destroyDescriptorSetLayout() const;
-
-        void destroyDescriptorPool() const;
-
-        void destroyCommandPool() const;
-
         ~MeshManager();
 
         VkDescriptorSetLayout getDescriptorSetLayout() const;
 
         std::shared_ptr<Mesh> getMesh(const MeshInfo& meshInfo);
 
-        void reset();
+        void resetDescriptors();
 
     private:
         std::shared_ptr<ObjFile> getObjFile(const std::string& path);
@@ -67,11 +59,19 @@ namespace Blink {
 
         void createCommandPool();
 
+        void destroyCommandPool() const;
+
         void createDescriptorPool();
+
+        void destroyDescriptorPool() const;
 
         void createDescriptorSetLayout();
 
+        void destroyDescriptorSetLayout() const;
+
         void createTextureSampler();
+
+        void destroyTextureSampler();
 
         void createPlaceholderTexture();
     };

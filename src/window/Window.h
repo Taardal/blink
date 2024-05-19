@@ -38,6 +38,10 @@ namespace Blink {
 
         double update() const;
 
+        double getTime() const;
+
+        void pollEvents() const;
+
         bool shouldClose() const;
 
         void setShouldClose(bool shouldClose) const;

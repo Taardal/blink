@@ -21,5 +21,9 @@ namespace Blink {
         static int rotateZ(lua_State* L);
 
         static int vec3(lua_State* L);
+
+        static int multiply(lua_State* L);
+
+        static int add(lua_State* L);
     };
 }

@@ -41,14 +41,6 @@ namespace Blink {
         LuaEngine* luaEngine = nullptr;
         SceneCamera* sceneCamera = nullptr;
         Scene* scene = nullptr;
-        double lastTime = 0.0;
-        double secondsSinceLastStatsUpdate = 0.0;
-        uint32_t fps = 0;
-        uint32_t ups = 0;
-
-        double secondsSinceLastFrame = 0.0;
-        double lastUpdateTime = 0.0;
-        double secondsPerFrame = 1.0 / 60.0;
 
     public:
         explicit App(const AppConfig& config);
@@ -58,7 +50,7 @@ namespace Blink {
         void run();
 
     private:
-        void update();
+        void runGameLoop() const;
 
         void onEvent(Event& event);
 

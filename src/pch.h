@@ -29,5 +29,6 @@
 #include "system/Log.h"
 #include "system/Error.h"
 #include "system/Assert.h"
+#include "utils/utils.h"
 
 #define BL_TO_STRING(x) #x

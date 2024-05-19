@@ -55,12 +55,21 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::vec3);
             return 1;
         }
+        if (indexName == "multiply") {
+            lua_pushcfunction(L, GlmLuaBinding::multiply);
+            return 1;
+        }
+        if (indexName == "add") {
+            lua_pushcfunction(L, GlmLuaBinding::add);
+            return 1;
+        }
+        BL_LOG_WARN("Could not resolve index [{}]", indexName);
         return 0;
     }
 
     // Lua stack
-    // - [-1] table     Vector A
-    // - [-2] table     Vector B
+    // - [-1] table     Vector B
+    // - [-2] table     Vector A
     int GlmLuaBinding::cross(lua_State* L) {
         glm::vec3 vectorA{};
         {
@@ -256,32 +265,44 @@ namespace Blink {
     }
 
     // Lua stack
+    //
     // glm.vec()
     // - Empty
+    //
+    // glm.vec({ x, y, z })
+    // - [-1] table
+    //
     // glm.vec(x, y, z)
     // - [-1] number    Z
     // - [-2] number    Y
     // - [-3] number    X
     int GlmLuaBinding::vec3(lua_State* L) {
         glm::vec3 vector{0, 0, 0};
-
         uint32_t argumentCount = lua_gettop(L);
-        if (argumentCount > 0 && argumentCount != 3) {
-            BL_THROW("Invalid argument count [" + std::to_string(argumentCount) + "]");
+
+        if (argumentCount == 1) {
+            lua_getfield(L, -1, "x");
+            vector.x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            vector.y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            vector.z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
         }
 
         if (argumentCount == 3) {
-            auto z = (float) lua_tonumber(L, -1);
+            vector.z = (float) lua_tonumber(L, -1);
             lua_pop(L, 1);
-            vector.z = z;
 
-            auto y = (float) lua_tonumber(L, -1);
+            vector.y = (float) lua_tonumber(L, -1);
             lua_pop(L, 1);
-            vector.y = y;
 
-            auto x = (float) lua_tonumber(L, -1);
+            vector.x = (float) lua_tonumber(L, -1);
             lua_pop(L, 1);
-            vector.x = x;
         }
 
         lua_newtable(L);
@@ -290,6 +311,113 @@ namespace Blink {
         lua_pushnumber(L, vector.y);
         lua_setfield(L, -2, "y");
         lua_pushnumber(L, vector.z);
+        lua_setfield(L, -2, "z");
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vector B
+    // - [-2] table     Vector A
+    int GlmLuaBinding::multiply(lua_State* L) {
+        // glm::vec3 vectorB{};
+        // {
+        //     lua_getfield(L, -1, "x");
+        //     auto x = (float) lua_tonumber(L, -1);
+        //     lua_pop(L, 1);
+        //     vectorB.x = x;
+        //
+        //     lua_getfield(L, -1, "y");
+        //     auto y = (float) lua_tonumber(L, -1);
+        //     lua_pop(L, 1);
+        //     vectorB.y = y;
+        //
+        //     lua_getfield(L, -1, "z");
+        //     auto z = (float) lua_tonumber(L, -1);
+        //     lua_pop(L, 1);
+        //     vectorB.z = z;
+        // }
+
+        float scalar = (float) lua_tonumber(L, -1);
+
+        glm::vec3 vectorA{};
+        {
+            lua_getfield(L, -2, "x");
+            auto x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vectorA.x = x;
+
+            lua_getfield(L, -2, "y");
+            auto y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vectorA.y = y;
+
+            lua_getfield(L, -2, "z");
+            auto z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vectorA.z = z;
+        }
+
+        auto result = vectorA * scalar;
+
+        lua_newtable(L);
+        lua_pushnumber(L, result.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, result.y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, result.z);
+        lua_setfield(L, -2, "z");
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vector B
+    // - [-2] table     Vector A
+    int GlmLuaBinding::add(lua_State* L) {
+        glm::vec3 vectorB{};
+        {
+            lua_getfield(L, -2, "x");
+            auto x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vectorB.x = x;
+
+            lua_getfield(L, -2, "y");
+            auto y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vectorB.y = y;
+
+            lua_getfield(L, -2, "z");
+            auto z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vectorB.z = z;
+        }
+        glm::vec3 vectorA{};
+        {
+            lua_getfield(L, -1, "x");
+            auto x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vectorA.x = x;
+
+            lua_getfield(L, -1, "y");
+            auto y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vectorA.y = y;
+
+            lua_getfield(L, -1, "z");
+            auto z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            vectorA.z = z;
+        }
+
+        auto result = vectorA + vectorB;
+
+        lua_newtable(L);
+        lua_pushnumber(L, result.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, result.y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, result.z);
         lua_setfield(L, -2, "z");
 
         return 1;

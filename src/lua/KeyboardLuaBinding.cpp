@@ -80,6 +80,7 @@ namespace Blink {
             lua_pushcfunction(L, KeyboardLuaBinding::isPressed);
             return 1;
         }
+        BL_LOG_WARN("Could not resolve index [{}]", indexName);
         return 0;
     }
 

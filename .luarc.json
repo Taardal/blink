@@ -2,9 +2,11 @@
     "diagnostics.globals": [
         "Camera",
         "Entity",
-        "Player",
-        "Keyboard",
+        "glm",
         "Key",
-        "glm"
+        "Keyboard",
+        "Player",
+        "Scene",
+        "SceneCamera"
     ]
 }

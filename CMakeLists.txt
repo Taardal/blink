@@ -84,6 +84,8 @@ add_executable(
         ${SRC_DIR}/lua/luaUtils.h
         ${SRC_DIR}/lua/MouseLuaBinding.cpp
         ${SRC_DIR}/lua/MouseLuaBinding.h
+        ${SRC_DIR}/lua/SceneCameraLuaBinding.cpp
+        ${SRC_DIR}/lua/SceneCameraLuaBinding.h
         ${SRC_DIR}/scene/Components.h
         ${SRC_DIR}/scene/Scene.cpp
         ${SRC_DIR}/scene/Scene.h
@@ -106,7 +108,8 @@ add_executable(
         ${SRC_DIR}/system/Signal.h
         ${SRC_DIR}/system/Uuid.cpp
         ${SRC_DIR}/system/Uuid.h
-        ${SRC_DIR}/utils/size.h
+        ${SRC_DIR}/utils/utils.cpp
+        ${SRC_DIR}/utils/utils.h
         ${SRC_DIR}/window/Event.cpp
         ${SRC_DIR}/window/Event.h
         ${SRC_DIR}/window/Keyboard.cpp
