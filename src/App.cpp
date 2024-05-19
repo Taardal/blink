@@ -84,11 +84,11 @@ namespace Blink {
             window->setShouldClose(true);
             return;
         }
-        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::N) {
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::P) {
             state = AppState::Paused;
             return;
         }
-        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::M) {
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
             state = AppState::Running;
             return;
         }

@@ -7,13 +7,13 @@
 #include <lua.hpp>
 
 namespace Blink {
+    // Forward declaration
+    class Scene;
+
     struct LuaEngineConfig {
         Keyboard* keyboard;
         SceneCamera* sceneCamera;
     };
-
-    // Forward declaration
-    class Scene;
 
     class LuaEngine {
     private:
@@ -25,21 +25,17 @@ namespace Blink {
 
         ~LuaEngine();
 
-        void initializeScene(const std::string& sceneLuaFilePath, Scene* scene) const;
+        void initializeCoreBindings(Scene* scene) const;
+
+        void initializeEntityBindings(Scene* scene) const;
+
+        void createEntities(const std::string& sceneLuaFilePath) const;
 
         void updateEntities(Scene* scene, double timestep) const;
 
-        void reloadScripts(Scene* scene);
-
-    public:
-        void initializeEntities(const std::string& sceneLuaFilePath) const;
-
-        void initializeCoreLuaBindings(Scene* scene) const;
-
-        void initializeEntityLuaBindings(Scene* scene) const;
-
         void compileLuaFiles() const;
 
+    private:
         static int luaPrint(lua_State* L);
     };
 }
