@@ -291,17 +291,17 @@ namespace Blink {
         lua_pushnumber(L, roll);
         lua_setfield(L, -2, "roll");
 
-        const float yawModelSpaceOffset = transformComponent.yawModelSpaceOffset;
-        lua_pushnumber(L, yawModelSpaceOffset);
-        lua_setfield(L, -2, "yawModelSpaceOffset");
+        const float yawOffset = transformComponent.yawOffset;
+        lua_pushnumber(L, yawOffset);
+        lua_setfield(L, -2, "yawOffset");
 
-        const float pitchModelSpaceOffset = transformComponent.pitchModelSpaceOffset;
-        lua_pushnumber(L, pitchModelSpaceOffset);
-        lua_setfield(L, -2, "pitchModelSpaceOffset");
+        const float pitchOffset = transformComponent.pitchOffset;
+        lua_pushnumber(L, pitchOffset);
+        lua_setfield(L, -2, "pitchOffset");
 
-        const float rollModelSpaceOffset = transformComponent.rollModelSpaceOffset;
-        lua_pushnumber(L, rollModelSpaceOffset);
-        lua_setfield(L, -2, "rollModelSpaceOffset");
+        const float rollOffset = transformComponent.rollOffset;
+        lua_pushnumber(L, rollOffset);
+        lua_setfield(L, -2, "rollOffset");
 
         return 1;
     }
@@ -441,26 +441,26 @@ namespace Blink {
             lua_pop(L, 1);
         }
         {
-            lua_getfield(L, -1, "yawModelSpaceOffset");
+            lua_getfield(L, -1, "yawOffset");
             bool missing = lua_isnil(L, -1);
             if (!missing) {
-                transformComponent.yawModelSpaceOffset = (float) lua_tonumber(L, -1);
+                transformComponent.yawOffset = (float) lua_tonumber(L, -1);
             }
             lua_pop(L, 1);
         }
         {
-            lua_getfield(L, -1, "pitchModelSpaceOffset");
+            lua_getfield(L, -1, "pitchOffset");
             bool missing = lua_isnil(L, -1);
             if (!missing) {
-                transformComponent.pitchModelSpaceOffset = (float) lua_tonumber(L, -1);
+                transformComponent.pitchOffset = (float) lua_tonumber(L, -1);
             }
             lua_pop(L, 1);
         }
         {
-            lua_getfield(L, -1, "rollModelSpaceOffset");
+            lua_getfield(L, -1, "rollOffset");
             bool missing = lua_isnil(L, -1);
             if (!missing) {
-                transformComponent.rollModelSpaceOffset = (float) lua_tonumber(L, -1);
+                transformComponent.rollOffset = (float) lua_tonumber(L, -1);
             }
             lua_pop(L, 1);
         }

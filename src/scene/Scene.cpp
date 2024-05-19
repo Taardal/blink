@@ -20,7 +20,7 @@ namespace Blink {
         config.luaEngine->initializeCoreLuaBindings(this);
         config.luaEngine->initializeEntities(config.scene);
         config.luaEngine->initializeEntityLuaBindings(this);
-        updateEntityDirections();
+        calculateTransformsPostInitialization();
         loadEntityMeshes();
     }
 
@@ -49,7 +49,7 @@ namespace Blink {
             config.luaEngine->compileLuaFiles();
             config.luaEngine->initializeEntities(config.scene);
             config.luaEngine->initializeEntityLuaBindings(this);
-            updateEntityDirections();
+            calculateTransformsPostInitialization();
             loadEntityMeshes();
             return;
         }
@@ -69,61 +69,13 @@ namespace Blink {
     void Scene::update(double timestep) {
         config.luaEngine->updateEntities(this, timestep);
 
-        for (const entt::entity entity : entityRegistry.view<TransformComponent>()) {
-            auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
-
-            glm::vec3& forward = transformComponent.forwardDirection;
-            glm::vec3& right = transformComponent.rightDirection;
-            glm::vec3& up = transformComponent.upDirection;
-            glm::vec3& worldUp = transformComponent.worldUpDirection;
-
-            float yawRadians = glm::radians(transformComponent.yaw);
-            float pitchRadians = glm::radians(transformComponent.pitch);
-            float rollRadians = glm::radians(transformComponent.roll);
-
-            // Apply pitch and yaw rotation to calculate the new forward direction
-            forward.x = clampToZero(cos(yawRadians) * cos(pitchRadians));
-            forward.y = clampToZero(sin(pitchRadians));
-            forward.z = clampToZero(sin(yawRadians) * cos(pitchRadians));
-            forward = glm::normalize(forward);
-
-            // Ensure orthogonality between forward, right, and up after pitch and yaw rotation
-            right = glm::normalize(glm::cross(forward, worldUp));
-            up = glm::normalize(glm::cross(right, forward));
-
-            // Apply roll rotation to adjust right and up directions
-            glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), rollRadians, forward);
-            right = glm::normalize(glm::vec3(rollMatrix * glm::vec4(right, 0.0f)));
-            up = glm::normalize(glm::vec3(rollMatrix * glm::vec4(up, 0.0f)));
-
-            // Ensure orthogonality between forward, right, and up after roll rotation
-            up = glm::normalize(glm::cross(forward, right));
-            forward = glm::normalize(glm::cross(right, up));
-
-            // Calculate quaternions for yaw, pitch, and roll rotations
-            glm::quat quatYaw = glm::angleAxis(yawRadians, up);
-            glm::quat quatPitch = glm::angleAxis(pitchRadians, right);
-            glm::quat quatRoll = glm::angleAxis(rollRadians, forward);
-
-            // Combine quaternions to obtain the final orientation quaternion
-            glm::quat orientation = quatYaw * quatPitch * quatRoll;
-
-            transformComponent.rotation = glm::toMat4(orientation);
-
-            transformComponent.translation = glm::translate(glm::mat4(1.0f), transformComponent.position);
-            transformComponent.scale = glm::scale(glm::mat4(1.0f), transformComponent.size);
-        }
-
         for (const entt::entity entity : entityRegistry.view<TransformComponent, MeshComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
 
-            // Models (.obj) may use different coordinate systems in model space
-            // This makes their rotation inconsistent with their transform when they are moved into world space
-            // Resolve this by applying extra rotation offsets to make models face the correct way in world space
-            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.yawModelSpaceOffset), Y_AXIS);
-            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.pitchModelSpaceOffset), X_AXIS);
-            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.rollModelSpaceOffset), Z_AXIS);
+            calculateTranslation(&transformComponent);
+            calculateRotation(&transformComponent);
+            calculateScale(&transformComponent);
 
             meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
@@ -140,38 +92,15 @@ namespace Blink {
         }
     }
 
-    void Scene::render() {
-        ViewProjection viewProjection{};
-        if (useSceneCamera) {
-            viewProjection.view = config.sceneCamera->getView();
-            viewProjection.projection = config.sceneCamera->getProjection();
-        } else {
-            const entt::entity& cameraEntity = entityRegistry.view<CameraComponent>().front();
-            if (cameraEntity == entt::null) {
-                BL_THROW("Could not find camera entity");
-            }
-            const auto& cameraComponent = entityRegistry.get<CameraComponent>(cameraEntity);
-            viewProjection.view = cameraComponent.view;
-            viewProjection.projection = cameraComponent.projection;
-        }
-        for (const entt::entity entity : entityRegistry.view<MeshComponent, TagComponent>()) {
-            auto& tagComponent = entityRegistry.get<TagComponent>(entity);
-            if (tagComponent.tag == "Camera" && !useSceneCamera) {
-                continue;
-            }
-            auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
-            config.renderer->renderMesh(meshComponent.mesh, viewProjection);
-        }
+    void Scene::calculateTranslation(TransformComponent* transformComponent) const {
+        transformComponent->translation = glm::translate(glm::mat4(1.0f), transformComponent->position);
     }
 
-    void Scene::updateEntityDirections() {
-        for (const entt::entity entity : entityRegistry.view<TransformComponent>()) {
-            auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
-            updateDirections(&transformComponent);
-        }
-    }
+    void Scene::calculateRotation(TransformComponent* transformComponent) const {
+        // --------------------------------------------------------------------------------------------------------------
+        // Calculate the new orientation of the mesh
+        // --------------------------------------------------------------------------------------------------------------
 
-    void Scene::updateDirections(TransformComponent* transformComponent) const {
         glm::vec3& forward = transformComponent->forwardDirection;
         glm::vec3& right = transformComponent->rightDirection;
         glm::vec3& up = transformComponent->upDirection;
@@ -199,6 +128,95 @@ namespace Blink {
         // Ensure orthogonality between forward, right, and up after roll rotation
         up = glm::normalize(glm::cross(forward, right));
         forward = glm::normalize(glm::cross(right, up));
+
+        // Calculate quaternions for yaw, pitch, and roll rotations
+        glm::quat yawOrientation = glm::angleAxis(yawRadians, up);
+        glm::quat pitchOrientation = glm::angleAxis(pitchRadians, right);
+        glm::quat rollOrientation = glm::angleAxis(rollRadians, forward);
+
+        // Combine quaternions to obtain the final orientation quaternion
+        transformComponent->orientation = yawOrientation * pitchOrientation * rollOrientation;
+
+        // --------------------------------------------------------------------------------------------------------------
+        // Calculate extra model space offsets
+        // --------------------------------------------------------------------------------------------------------------
+        // Models may use different coordinate systems in model space. This makes their rotation inconsistent with
+        // their transform when they are moved into world space.
+        //
+        // For example, a model may be facing the _positive_ Z-axis even though the transform says it's facing the
+        // _negative_ Z-axis (i.e. it's facing the wrong way). In this case, we apply a "model space offset" of
+        // 180 degrees yaw to make it face the correct way.
+        // --------------------------------------------------------------------------------------------------------------
+
+        // float yawOffsetRadians = glm::radians(transformComponent->yawOffset);
+        // float pitchOffsetRadians = glm::radians(transformComponent->pitchOffset);
+        // float rollOffsetRadians = glm::radians(transformComponent->rollOffset);
+        //
+        // // Calculate quaternions for yaw, pitch, and roll rotation offsets
+        // glm::quat yawOffsetOrientation = glm::angleAxis(yawOffsetRadians, Y_AXIS);
+        // glm::quat pitchOffsetOrientation = glm::angleAxis(pitchOffsetRadians, X_AXIS);
+        // glm::quat rollOffsetOrientation = glm::angleAxis(rollOffsetRadians, Z_AXIS);
+        //
+        // // Combine quaternions to obtain the final orientation quaternion
+        // glm::quat modelSpaceOffsetOrientation = yawOffsetOrientation * pitchOffsetOrientation * rollOffsetOrientation;
+
+        // --------------------------------------------------------------------------------------------------------------
+        // Calculate the final rotation
+        // --------------------------------------------------------------------------------------------------------------
+
+        transformComponent->rotation = glm::toMat4(transformComponent->orientation * transformComponent->orientationOffset);
+    }
+
+    void Scene::calculateRotationOffsets(TransformComponent* transformComponent) const {
+        float yawOffsetRadians = glm::radians(transformComponent->yawOffset);
+        float pitchOffsetRadians = glm::radians(transformComponent->pitchOffset);
+        float rollOffsetRadians = glm::radians(transformComponent->rollOffset);
+
+        // Calculate quaternions for yaw, pitch, and roll rotation offsets
+        glm::quat yawOffsetOrientation = glm::angleAxis(yawOffsetRadians, Y_AXIS);
+        glm::quat pitchOffsetOrientation = glm::angleAxis(pitchOffsetRadians, X_AXIS);
+        glm::quat rollOffsetOrientation = glm::angleAxis(rollOffsetRadians, Z_AXIS);
+
+        // Combine quaternions to obtain the final orientation quaternion
+        transformComponent->orientationOffset = yawOffsetOrientation * pitchOffsetOrientation * rollOffsetOrientation;
+    }
+
+    void Scene::calculateScale(TransformComponent* transformComponent) const {
+        transformComponent->scale = glm::scale(glm::mat4(1.0f), transformComponent->size);
+    }
+
+    void Scene::render() {
+        ViewProjection viewProjection{};
+        if (useSceneCamera) {
+            viewProjection.view = config.sceneCamera->getView();
+            viewProjection.projection = config.sceneCamera->getProjection();
+        } else {
+            const entt::entity& cameraEntity = entityRegistry.view<CameraComponent>().front();
+            if (cameraEntity == entt::null) {
+                BL_THROW("Could not find camera entity");
+            }
+            const auto& cameraComponent = entityRegistry.get<CameraComponent>(cameraEntity);
+            viewProjection.view = cameraComponent.view;
+            viewProjection.projection = cameraComponent.projection;
+        }
+        for (const entt::entity entity : entityRegistry.view<MeshComponent, TagComponent>()) {
+            auto& tagComponent = entityRegistry.get<TagComponent>(entity);
+            if (tagComponent.tag == "Camera" && !useSceneCamera) {
+                continue;
+            }
+            auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
+            config.renderer->renderMesh(meshComponent.mesh, viewProjection);
+        }
+    }
+
+    void Scene::calculateTransformsPostInitialization() {
+        for (const entt::entity entity : entityRegistry.view<TransformComponent>()) {
+            auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
+            calculateTranslation(&transformComponent);
+            calculateRotation(&transformComponent);
+            calculateRotationOffsets(&transformComponent);
+            calculateScale(&transformComponent);
+        }
     }
 
     void Scene::loadEntityMeshes() {
@@ -222,9 +240,6 @@ namespace Blink {
 
         // Align rotation with directions
         float yaw = 270.0f;
-        // float yaw = glm::degrees(std::atan2(forwardDirection.z, forwardDirection.x));
-        // float pitch = glm::degrees(std::asin(-forwardDirection.y));
-        // float roll = glm::degrees(std::atan2(rightDirection.y, upDirection.y));
 
         TransformComponent transformComponent{};
         transformComponent.worldUpDirection = worldUpDirection;
@@ -232,8 +247,6 @@ namespace Blink {
         transformComponent.rightDirection = rightDirection;
         transformComponent.upDirection = upDirection;
         transformComponent.yaw = yaw;
-        // transformComponent.pitch = pitch;
-        // transformComponent.roll = roll;
 
         entityRegistry.emplace<TransformComponent>(entity, transformComponent);
         return entity;
@@ -280,7 +293,7 @@ namespace Blink {
         //     transformComponent.worldUpDirection = {0, 1, 0};
         //     transformComponent.forwardDirection = {0, 0, -1};
         //     transformComponent.yaw = -90.0f;
-        //     transformComponent.yawModelSpaceOffset = 180.0f;
+        //     transformComponent.yawOffset = 180.0f;
         //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
         //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
         //     registry.emplace<TransformComponent>(entity, transformComponent);
@@ -319,8 +332,8 @@ namespace Blink {
         //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
         //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
         //
-        //     transformComponent.yawModelSpaceOffset = 90;
-        //     transformComponent.pitchModelSpaceOffset = -90;
+        //     transformComponent.yawOffset = 90;
+        //     transformComponent.pitchOffset = -90;
         //     // transformComponent.rotation = glm::rotate(glm::mat4(1.0f), glm::radians(270.0f), {0.0f, 1.0f, 0.0f});
         //     // transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(270.0f), {1.0f, 0.0f, 0.0f});
         //     transformComponent.scale = glm::scale(glm::mat4(1.0f), {0.05, 0.05, 0.05});
@@ -421,7 +434,7 @@ namespace Blink {
         //
         //     transformComponent.yaw = -225.0f;
         //
-        //     transformComponent.pitchModelSpaceOffset = -90.0f;
+        //     transformComponent.pitchOffset = -90.0f;
         //
         //     transformComponent.scale = glm::scale(glm::mat4(1.0f), {100, 100, 100});
         //
@@ -450,7 +463,7 @@ namespace Blink {
         //     transformComponent.worldUpDirection = {0, 1, 0};
         //     transformComponent.forwardDirection = {0, 0, -1};
         //     transformComponent.yaw = -90.0f;
-        //     transformComponent.yawModelSpaceOffset = 180.0f;
+        //     transformComponent.yawOffset = 180.0f;
         //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
         //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
         //
@@ -488,7 +501,7 @@ namespace Blink {
         // //     transformComponent.worldUpDirection = {0, 1, 0};
         // //     transformComponent.forwardDirection = {0, 0, -1};
         // //     transformComponent.yaw = 00.0f;
-        // //     transformComponent.yawModelSpaceOffset = 180.0f;
+        // //     transformComponent.yawOffset = 180.0f;
         // //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
         // //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
         // //
@@ -524,7 +537,7 @@ namespace Blink {
         // //     transformComponent.worldUpDirection = {0, 1, 0};
         // //     transformComponent.forwardDirection = {0, 0, -1};
         // //     transformComponent.yaw = 00.0f;
-        // //     transformComponent.yawModelSpaceOffset = 180.0f;
+        // //     transformComponent.yawOffset = 180.0f;
         // //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
         // //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
         // //
@@ -560,7 +573,7 @@ namespace Blink {
         // //     transformComponent.worldUpDirection = {0, 1, 0};
         // //     transformComponent.forwardDirection = {0, 0, -1};
         // //     transformComponent.yaw = 00.0f;
-        // //     transformComponent.yawModelSpaceOffset = 180.0f;
+        // //     transformComponent.yawOffset = 180.0f;
         // //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
         // //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
         // //
@@ -599,7 +612,7 @@ namespace Blink {
         //     transformComponent.worldUpDirection = {0, 1, 0};
         //     transformComponent.forwardDirection = {-1, 0, 0};
         //     transformComponent.yaw = -180.0f;
-        //     transformComponent.yawModelSpaceOffset = 180.0f;
+        //     transformComponent.yawOffset = 180.0f;
         //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
         //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
         //
@@ -635,7 +648,7 @@ namespace Blink {
         //     transformComponent.worldUpDirection = {0, 1, 0};
         //     transformComponent.forwardDirection = {-1, 0, 0};
         //     transformComponent.yaw = -180.0f;
-        //     transformComponent.yawModelSpaceOffset = 180.0f;
+        //     transformComponent.yawOffset = 180.0f;
         //     transformComponent.rightDirection = glm::normalize(glm::cross(transformComponent.forwardDirection, transformComponent.worldUpDirection));
         //     transformComponent.upDirection = glm::normalize(glm::cross(transformComponent.rightDirection, transformComponent.forwardDirection));
         //

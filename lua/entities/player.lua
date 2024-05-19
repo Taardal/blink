@@ -7,13 +7,8 @@ local maxMoveSpeed = 50
 local rotationSpeed = 1
 
 local maxYaw = 360
-local maxPitch = 33
-local maxRoll = 33
-
---local drag = 0
---local thrust = 0
---local lift = 0
---local gravity = 0
+local maxPitch = 89
+local maxRoll = 66
 
 local loggingEnabled = false
 
@@ -45,10 +40,10 @@ function Player.onUpdate(entityId, timestep)
     if Keyboard:isPressed(Key.Numpad_4) then
         yaw = yaw - rotationSpeed
     end
-    if yaw > 360 then
+    if yaw > maxYaw then
         yaw = 0
     end
-    if yaw < -360 then
+    if yaw < -maxYaw then
         yaw = 0
     end
 
@@ -73,26 +68,28 @@ function Player.onUpdate(entityId, timestep)
         end
     end
 
-    --if Keyboard:isPressed(Key.Numpad_6) then
-    --    roll = roll + rotationSpeed
-    --end
-    --if Keyboard:isPressed(Key.Numpad_4) then
-    --    roll = roll - rotationSpeed
-    --end
-    --if roll > maxRoll then
-    --    roll = maxRoll
-    --end
-    --if roll < -maxRoll then
-    --    roll = -maxRoll
-    --end
-    --if not Keyboard:isPressed(Key.Numpad_6) and not Keyboard:isPressed(Key.Numpad_4) then
-    --    if roll < 0 then
-    --        roll = roll + rotationSpeed
-    --    end
-    --    if roll > 0 then
-    --        roll = roll - rotationSpeed
-    --    end
-    --end
+    local rollRight = Keyboard:isPressed(Key.Numpad_6) or Keyboard:isPressed(Key.Numpad_9)
+    local rollLeft = Keyboard:isPressed(Key.Numpad_4) or Keyboard:isPressed(Key.Numpad_7)
+    if rollRight then
+        roll = roll + rotationSpeed
+    end
+    if rollLeft then
+        roll = roll - rotationSpeed
+    end
+    if roll > maxRoll then
+        roll = maxRoll
+    end
+    if roll < -maxRoll then
+        roll = -maxRoll
+    end
+    if not rollRight and not rollLeft then
+        if roll < 0 then
+            roll = roll + rotationSpeed
+        end
+        if roll > 0 then
+            roll = roll - rotationSpeed
+        end
+    end
 
     if Keyboard:isPressed(Key.X) then
         moveSpeed = math.min(moveSpeed + thrust, maxMoveSpeed)

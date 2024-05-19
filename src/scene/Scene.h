@@ -42,16 +42,22 @@ namespace Blink {
 
         void update(double timestep);
 
+        void calculateTranslation(TransformComponent* transformComponent) const;
+
+        void calculateRotation(TransformComponent* transformComponent) const;
+
+        void calculateRotationOffsets(TransformComponent* transformComponent) const;
+
+        void calculateScale(TransformComponent* transformComponent) const;
+
         void render();
 
+        entt::entity createEntity();
+
     private:
-        void updateEntityDirections();
-
-        void updateDirections(TransformComponent* transformComponent) const;
-
         void loadEntityMeshes();
 
-        entt::entity createEntity();
+        void calculateTransformsPostInitialization();
 
         void initializeCamera() const;
 

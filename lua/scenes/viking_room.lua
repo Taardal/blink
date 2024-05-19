@@ -22,7 +22,7 @@ function Scene.onCreate()
     })
     Entity:setTransformComponent(entityId, {
         position = glm.vec3(0, 0, 0),
-        yawModelSpaceOffset = 180.0,
-        pitchModelSpaceOffset = -90.0,
+        yawOffset = 180.0,
+        pitchOffset = -90.0,
     })
 end

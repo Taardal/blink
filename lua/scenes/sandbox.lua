@@ -50,7 +50,7 @@ function Scene.onCreate()
     })
     Entity:setTransformComponent(playerEntityId, {
         position = glm.vec3(0, 0, 0),
-        yawModelSpaceOffset = 180,
+        yawOffset = 180,
         size = glm.vec3(10, 10, 10)
     })
 
@@ -74,8 +74,8 @@ function Scene.onCreate()
     Entity:setTransformComponent(playerCameraEntityId, {
         position = glm.vec3(0, 0, 0),
         size = glm.vec3(0.05, 0.05, 0.05),
-        yawModelSpaceOffset = 90.0,
-        pitchModelSpaceOffset = -90.0,
+        yawOffset = 90.0,
+        pitchOffset = -90.0,
     })
     Entity:setCameraComponent(playerCameraEntityId, {})
 
@@ -99,7 +99,7 @@ function Scene.onCreate()
     Entity:setTransformComponent(linePatrol1EntityId, {
         position = glm.vec3(0, 50, 0),
         yaw = 180,
-        yawModelSpaceOffset = 180,
+        yawOffset = 180,
         size = glm.vec3(100, 100, 100)
     })
 
@@ -119,7 +119,7 @@ function Scene.onCreate()
     Entity:setTransformComponent(linePatrol2EntityId, {
         position = glm.vec3(0, 50, -100),
         yaw = 180,
-        yawModelSpaceOffset = 180,
+        yawOffset = 180,
         size = glm.vec3(100, 100, 100)
     })
 
@@ -138,7 +138,7 @@ function Scene.onCreate()
     })
     Entity:setTransformComponent(oxarFreighterEntityId, {
         position = glm.vec3(-405, 260, -577),
-        yawModelSpaceOffset = 180,
+        yawOffset = 180,
         size = glm.vec3(10, 10, 10)
     })
 
@@ -175,7 +175,7 @@ function Scene.onCreate()
     Entity:setTransformComponent(vikingRoomEntityId, {
         position = glm.vec3(-100, -25, -900),
         yaw = -225,
-        pitchModelSpaceOffset = -90,
+        pitchOffset = -90,
         size = glm.vec3(100, 100, 100)
     })
 end
