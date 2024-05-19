@@ -121,9 +121,9 @@ namespace Blink {
             // Models (.obj) may use different coordinate systems in model space
             // This makes their rotation inconsistent with their transform when they are moved into world space
             // Resolve this by applying extra rotation offsets to make models face the correct way in world space
-            // transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.yawModelSpaceOffset), Y_AXIS);
-            // transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.pitchModelSpaceOffset), X_AXIS);
-            // transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.rollModelSpaceOffset), Z_AXIS);
+            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.yawModelSpaceOffset), Y_AXIS);
+            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.pitchModelSpaceOffset), X_AXIS);
+            transformComponent.rotation = glm::rotate(transformComponent.rotation, glm::radians(transformComponent.rollModelSpaceOffset), Z_AXIS);
 
             meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
@@ -172,26 +172,33 @@ namespace Blink {
     }
 
     void Scene::updateDirections(TransformComponent* transformComponent) const {
-        glm::vec3& forwardDirection = transformComponent->forwardDirection;
-        glm::vec3& rightDirection = transformComponent->rightDirection;
-        glm::vec3& upDirection = transformComponent->upDirection;
-        glm::vec3& worldUpDirection = transformComponent->worldUpDirection;
+        glm::vec3& forward = transformComponent->forwardDirection;
+        glm::vec3& right = transformComponent->rightDirection;
+        glm::vec3& up = transformComponent->upDirection;
+        glm::vec3& worldUp = transformComponent->worldUpDirection;
 
         float yawRadians = glm::radians(transformComponent->yaw);
         float pitchRadians = glm::radians(transformComponent->pitch);
         float rollRadians = glm::radians(transformComponent->roll);
 
-        forwardDirection.x = clampToZero(cos(yawRadians) * cos(pitchRadians));
-        forwardDirection.y = clampToZero(sin(pitchRadians));
-        forwardDirection.z = clampToZero(sin(yawRadians) * cos(pitchRadians));
-        forwardDirection = glm::normalize(forwardDirection);
+        // Apply pitch and yaw rotation to calculate the new forward direction
+        forward.x = clampToZero(cos(yawRadians) * cos(pitchRadians));
+        forward.y = clampToZero(sin(pitchRadians));
+        forward.z = clampToZero(sin(yawRadians) * cos(pitchRadians));
+        forward = glm::normalize(forward);
 
-        rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
-        upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
+        // Ensure orthogonality between forward, right, and up after pitch and yaw rotation
+        right = glm::normalize(glm::cross(forward, worldUp));
+        up = glm::normalize(glm::cross(right, forward));
 
-        glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), rollRadians, forwardDirection);
-        rightDirection = glm::vec3(rollMatrix * glm::vec4(rightDirection, 0.0f));
-        upDirection = glm::vec3(rollMatrix * glm::vec4(upDirection, 0.0f));
+        // Apply roll rotation to adjust right and up directions
+        glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), rollRadians, forward);
+        right = glm::normalize(glm::vec3(rollMatrix * glm::vec4(right, 0.0f)));
+        up = glm::normalize(glm::vec3(rollMatrix * glm::vec4(up, 0.0f)));
+
+        // Ensure orthogonality between forward, right, and up after roll rotation
+        up = glm::normalize(glm::cross(forward, right));
+        forward = glm::normalize(glm::cross(right, up));
     }
 
     void Scene::loadEntityMeshes() {
@@ -214,7 +221,7 @@ namespace Blink {
         glm::vec3 upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
 
         // Align rotation with directions
-        //float yaw = 270.0f;
+        float yaw = 270.0f;
         // float yaw = glm::degrees(std::atan2(forwardDirection.z, forwardDirection.x));
         // float pitch = glm::degrees(std::asin(-forwardDirection.y));
         // float roll = glm::degrees(std::atan2(rightDirection.y, upDirection.y));
@@ -224,7 +231,7 @@ namespace Blink {
         transformComponent.forwardDirection = forwardDirection;
         transformComponent.rightDirection = rightDirection;
         transformComponent.upDirection = upDirection;
-        //transformComponent.yaw = yaw;
+        transformComponent.yaw = yaw;
         // transformComponent.pitch = pitch;
         // transformComponent.roll = roll;
 

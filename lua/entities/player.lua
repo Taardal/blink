@@ -51,20 +51,12 @@ function Player.onUpdate(entityId, timestep)
     if yaw < -360 then
         yaw = 0
     end
-    --if not Keyboard:isPressed(Key.Numpad_6) and not Keyboard:isPressed(Key.Numpad_4) then
-    --    if yaw < 270 then
-    --        yaw = yaw + rotationSpeed
-    --    end
-    --    if yaw > 270 then
-    --        yaw = yaw - rotationSpeed
-    --    end
-    --end
 
     if Keyboard:isPressed(Key.Numpad_8) then
-        pitch = pitch + rotationSpeed
+        pitch = pitch - rotationSpeed
     end
     if Keyboard:isPressed(Key.Numpad_5) then
-        pitch = pitch - rotationSpeed
+        pitch = pitch + rotationSpeed
     end
     if pitch > maxPitch then
         pitch = maxPitch
@@ -81,26 +73,26 @@ function Player.onUpdate(entityId, timestep)
         end
     end
 
-    if Keyboard:isPressed(Key.Numpad_9) then
-        roll = roll + rotationSpeed
-    end
-    if Keyboard:isPressed(Key.Numpad_7) then
-        roll = roll - rotationSpeed
-    end
-    if roll > maxRoll then
-        roll = maxRoll
-    end
-    if roll < -maxRoll then
-        roll = -maxRoll
-    end
-    if not Keyboard:isPressed(Key.Numpad_9) and not Keyboard:isPressed(Key.Numpad_7) then
-        if roll < 0 then
-            roll = roll + rotationSpeed
-        end
-        if roll > 0 then
-            roll = roll - rotationSpeed
-        end
-    end
+    --if Keyboard:isPressed(Key.Numpad_6) then
+    --    roll = roll + rotationSpeed
+    --end
+    --if Keyboard:isPressed(Key.Numpad_4) then
+    --    roll = roll - rotationSpeed
+    --end
+    --if roll > maxRoll then
+    --    roll = maxRoll
+    --end
+    --if roll < -maxRoll then
+    --    roll = -maxRoll
+    --end
+    --if not Keyboard:isPressed(Key.Numpad_6) and not Keyboard:isPressed(Key.Numpad_4) then
+    --    if roll < 0 then
+    --        roll = roll + rotationSpeed
+    --    end
+    --    if roll > 0 then
+    --        roll = roll - rotationSpeed
+    --    end
+    --end
 
     if Keyboard:isPressed(Key.X) then
         moveSpeed = math.min(moveSpeed + thrust, maxMoveSpeed)

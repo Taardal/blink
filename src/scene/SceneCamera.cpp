@@ -86,9 +86,9 @@ namespace Blink {
             pitch = -89.0f;
         }
 
-        forwardDirection.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        forwardDirection.y = sin(glm::radians(pitch));
-        forwardDirection.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        forwardDirection.x = clampToZero(cos(glm::radians(yaw)) * cos(glm::radians(pitch)));
+        forwardDirection.y = clampToZero(sin(glm::radians(pitch)));
+        forwardDirection.z = clampToZero(sin(glm::radians(yaw)) * cos(glm::radians(pitch)));
         forwardDirection = glm::normalize(forwardDirection);
 
         rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
