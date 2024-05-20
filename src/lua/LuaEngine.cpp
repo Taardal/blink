@@ -126,7 +126,7 @@ namespace Blink {
                     tagComponent.tag,
                     errorMessage
                 );
-                BL_THROW("Could not call Lua function");
+                //BL_THROW("Could not call Lua function");
             }
 
             lua_pop(L, lua_gettop(L));

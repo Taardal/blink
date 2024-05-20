@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "lua/EntityLuaBinding.h"
+#include "lua/GlmLuaBinding.h"
 #include "lua/luaUtils.h"
 #include "graphics/MeshManager.h"
 #include "scene/Components.h"
@@ -227,6 +228,8 @@ namespace Blink {
         lua_setfield(L, -2, "y");
         lua_pushnumber(L, position.z);
         lua_setfield(L, -2, "z");
+        luaL_getmetatable(L, GlmLuaBinding::VEC3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
         lua_setfield(L, -2, "position");
 
         const glm::vec3& size = transformComponent.size;
@@ -237,6 +240,8 @@ namespace Blink {
         lua_setfield(L, -2, "y");
         lua_pushnumber(L, size.z);
         lua_setfield(L, -2, "z");
+        luaL_getmetatable(L, GlmLuaBinding::VEC3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
         lua_setfield(L, -2, "size");
 
         const glm::vec3& forwardDirection = transformComponent.forwardDirection;
@@ -247,6 +252,8 @@ namespace Blink {
         lua_setfield(L, -2, "y");
         lua_pushnumber(L, forwardDirection.z);
         lua_setfield(L, -2, "z");
+        luaL_getmetatable(L, GlmLuaBinding::VEC3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
         lua_setfield(L, -2, "forwardDirection");
 
         const glm::vec3& rightDirection = transformComponent.rightDirection;
@@ -257,6 +264,8 @@ namespace Blink {
         lua_setfield(L, -2, "y");
         lua_pushnumber(L, rightDirection.z);
         lua_setfield(L, -2, "z");
+        luaL_getmetatable(L, GlmLuaBinding::VEC3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
         lua_setfield(L, -2, "rightDirection");
 
         const glm::vec3& upDirection = transformComponent.upDirection;
@@ -267,6 +276,8 @@ namespace Blink {
         lua_setfield(L, -2, "y");
         lua_pushnumber(L, upDirection.z);
         lua_setfield(L, -2, "z");
+        luaL_getmetatable(L, GlmLuaBinding::VEC3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
         lua_setfield(L, -2, "upDirection");
 
         const glm::vec3& worldUpDirection = transformComponent.worldUpDirection;
@@ -277,6 +288,8 @@ namespace Blink {
         lua_setfield(L, -2, "y");
         lua_pushnumber(L, worldUpDirection.z);
         lua_setfield(L, -2, "z");
+        luaL_getmetatable(L, GlmLuaBinding::VEC3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
         lua_setfield(L, -2, "worldUpDirection");
 
         const float yaw = transformComponent.yaw;
@@ -494,6 +507,8 @@ namespace Blink {
         lua_setfield(L, -2, "y");
         lua_pushnumber(L, position.z);
         lua_setfield(L, -2, "z");
+        luaL_getmetatable(L, GlmLuaBinding::VEC3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
         return 1;
     }
 

@@ -6,6 +6,10 @@
 namespace Blink {
     typedef int LuaReturnValueCount;
 
+    void printLuaStack(lua_State* L);
+
+    void printLuaDebugInfo(lua_State* L);
+
     void printLua(lua_State* L, const std::string& tag);
 
     void printLuaShort(lua_State* L, const std::string& tag = "");

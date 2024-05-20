@@ -42,9 +42,9 @@ namespace Blink {
         entt::entity createEntity();
 
     private:
-        void createEntities();
+        void initializeEntities();
 
-        void destroyEntities();
+        void terminateEntities();
 
         void calculateTranslation(TransformComponent* transformComponent) const;
 

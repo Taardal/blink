@@ -14,11 +14,11 @@
 namespace Blink {
     Scene::Scene(const SceneConfig& config) : config(config), useSceneCamera(true) {
         BL_ASSERT_THROW(!config.scene.empty());
-        createEntities();
+        initializeEntities();
     }
 
     Scene::~Scene() {
-        destroyEntities();
+        terminateEntities();
     }
 
     void Scene::onEvent(Event& event) {
@@ -37,10 +37,10 @@ namespace Blink {
         }
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::T) {
             config.renderer->waitUntilIdle();
-            destroyEntities();
+            terminateEntities();
             config.meshManager->resetDescriptors();
             config.luaEngine->compileLuaFiles();
-            createEntities();
+            initializeEntities();
             return;
         }
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Y) {
@@ -127,7 +127,7 @@ namespace Blink {
         return entity;
     }
 
-    void Scene::createEntities() {
+    void Scene::initializeEntities() {
         // Core bindings used by Lua scripts
         config.luaEngine->initializeCoreBindings(this);
 
@@ -156,7 +156,7 @@ namespace Blink {
         }
     }
 
-    void Scene::destroyEntities() {
+    void Scene::terminateEntities() {
         entityRegistry.clear();
     }
 
