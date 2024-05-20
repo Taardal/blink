@@ -33,9 +33,12 @@ namespace Blink {
     void LuaEngine::initializeEntityBindings(Scene* scene) const {
         for (entt::entity entity : scene->entityRegistry.view<LuaComponent>()) {
             const auto& luaComponent = scene->entityRegistry.get<LuaComponent>(entity);
-            const auto& tagComponent = scene->entityRegistry.get<TagComponent>(entity);
             const std::string& tableName = luaComponent.type;
             const std::string& filepath = luaComponent.path;
+
+            const auto* tagComponent = scene->entityRegistry.try_get<TagComponent>(entity);
+            const std::string& entityTag = tagComponent != nullptr ? tagComponent->tag : "Unknown";
+
             lua_newtable(L);
             lua_setglobal(L, tableName.c_str());
             if (luaL_dofile(L, filepath.c_str()) != LUA_OK) {
@@ -44,7 +47,7 @@ namespace Blink {
                     "Could not load Lua script [{}] for entity [id: {}, type: {}, tag: {}]: {}",
                     filepath,
                     tableName,
-                    tagComponent.tag,
+                    entityTag,
                     errorMessage
                 );
                 BL_THROW("Could not load Lua script");
@@ -54,7 +57,7 @@ namespace Blink {
                 filepath,
                 entity,
                 tableName,
-                tagComponent.tag
+                entityTag
             );
         }
     }
@@ -102,6 +105,7 @@ namespace Blink {
         static const char* functionName = "onUpdate";
         for (entt::entity entity : scene->entityRegistry.view<LuaComponent>()) {
             const LuaComponent& luaComponent = scene->entityRegistry.get<LuaComponent>(entity);
+
             std::string tableName = luaComponent.type;
             lua_getglobal(L, tableName.c_str());
             lua_getfield(L, -1, functionName);
@@ -112,7 +116,8 @@ namespace Blink {
             constexpr int returnValueCount = 0;
             constexpr int messageHandlerIndex = 0;
             if (lua_pcall(L, argumentCount, returnValueCount, messageHandlerIndex) != LUA_OK) {
-                auto& tagComponent = scene->entityRegistry.get<TagComponent>(entity);
+                const auto* tagComponent = scene->entityRegistry.try_get<TagComponent>(entity);
+                const std::string& entityTag = tagComponent != nullptr ? tagComponent->tag : "Unknown";
                 const char* errorMessage = lua_tostring(L, -1);
                 BL_LOG_ERROR(
                     "Could not invoke [{}:{}:{}] for entity [id: {}, tag: {}]: {}",
@@ -120,10 +125,10 @@ namespace Blink {
                     luaComponent.type,
                     functionName,
                     entity,
-                    tagComponent.tag,
+                    entityTag,
                     errorMessage
                 );
-                //BL_THROW("Could not call Lua function");
+                BL_THROW("Could not call Lua function");
             }
 
             lua_pop(L, lua_gettop(L));

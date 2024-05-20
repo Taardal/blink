@@ -146,6 +146,8 @@ namespace Blink {
             lua_getglobal(L, name.c_str());
         } else if (onGetFunction) {
             onGetFunction(L);
+        } else {
+            BL_THROW("Could not get function to invoke");
         }
         if (onPushArguments) {
             onPushArguments(L);
