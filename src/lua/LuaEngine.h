@@ -13,6 +13,7 @@ namespace Blink {
     struct LuaEngineConfig {
         Keyboard* keyboard;
         SceneCamera* sceneCamera;
+        Window* window;
     };
 
     class LuaEngine {
@@ -31,7 +32,9 @@ namespace Blink {
 
         void initializeEntityBindings(Scene* scene) const;
 
-        void createEntities(const std::string& sceneLuaFilePath) const;
+        void configureSceneCamera(const std::string& sceneFilePath) const;
+
+        void createEntities(const std::string& sceneFilePath) const;
 
         void updateEntities(Scene* scene, double timestep) const;
 

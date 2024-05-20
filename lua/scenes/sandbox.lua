@@ -1,19 +1,8 @@
-function Scene.onCreate()
-    -- --------------------------------------------------------------------------------------------------------------
-    -- Scene camera
-    -- --------------------------------------------------------------------------------------------------------------
+function Scene.onConfigureCamera()
+	SceneCamera:setPosition(glm.vec3(0, 0, 0))
+end
 
-    SceneCamera:setMoveSpeed(25.0)
-    SceneCamera:setRotationSpeed(1.0)
-    SceneCamera:setPosition(glm.vec3(0, 0, 0))
-    SceneCamera:setWorldUpDirection(glm.vec3(0, 1, 0))
-    SceneCamera:setForwardDirection(glm.vec3(0, 0, -1))
-    SceneCamera:setFrustum({
-        fieldOfView = math.rad(45.0),
-        nearClip = 0.1,
-        farClip = 10000.0,
-    })
-
+function Scene.onCreateEntities()
     -- --------------------------------------------------------------------------------------------------------------
     -- Terrain
     -- --------------------------------------------------------------------------------------------------------------
@@ -29,6 +18,7 @@ function Scene.onCreate()
     })
     Entity:setTransformComponent(terrainEntityId, {
         position = glm.vec3(0, -50, 0),
+        yawOffset = 180,
     })
 
     -- --------------------------------------------------------------------------------------------------------------
@@ -58,26 +48,31 @@ function Scene.onCreate()
     -- Player camera
     -- --------------------------------------------------------------------------------------------------------------
 
-    local playerCameraEntityId = Entity:create()
+    local cameraEntityId = Entity:create()
 
-    Entity:setTagComponent(playerCameraEntityId, {
+    Entity:setTagComponent(cameraEntityId, {
         tag = "Camera"
     })
-    Entity:setLuaComponent(playerCameraEntityId, {
+    Entity:setLuaComponent(cameraEntityId, {
         type = "Camera",
         path = "lua/entities/camera.out",
     })
-    Entity:setMeshComponent(playerCameraEntityId, {
+    Entity:setMeshComponent(cameraEntityId, {
         modelPath = "models/camera/11673_camera_v1_L3.obj",
         texturesDirectoryPath = "models/camera",
     })
-    Entity:setTransformComponent(playerCameraEntityId, {
+    Entity:setTransformComponent(cameraEntityId, {
         position = glm.vec3(0, 0, 0),
         size = glm.vec3(0.05, 0.05, 0.05),
         yawOffset = 90.0,
         pitchOffset = -90.0,
     })
-    Entity:setCameraComponent(playerCameraEntityId, {})
+    Entity:setCameraComponent(cameraEntityId, {
+        aspectRatio = Window:getAspectRatio(),
+        fieldOfView = SceneCamera:getFieldOfView(),
+        nearClip = SceneCamera:getNearClip(),
+        farClip = SceneCamera:getFarClip(),
+    })
 
     -- --------------------------------------------------------------------------------------------------------------
     -- Line patrol fighter jet squadron

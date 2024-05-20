@@ -14,21 +14,24 @@
 namespace Blink {
     Scene::Scene(const SceneConfig& config) : config(config), useSceneCamera(true) {
         BL_ASSERT_THROW(!config.scene.empty());
-        initializeEntities();
+        initializeScene();
     }
 
     Scene::~Scene() {
-        terminateEntities();
+        terminateScene();
     }
 
     void Scene::onEvent(Event& event) {
-        // Switch cameras
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Num_1) {
             useSceneCamera = true;
             return;
         }
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Num_2) {
             useSceneCamera = false;
+            return;
+        }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Num_0) {
+            resetSceneCamera();
             return;
         }
 
@@ -45,16 +48,15 @@ namespace Blink {
             config.renderer->waitUntilIdle();
 
             // Unload scene
-            terminateEntities();
+            terminateScene();
             config.meshManager->resetDescriptors();
             config.luaEngine->resetState();
 
-            // Recompile Lua scripts
+            // Recompile scene & entity scripts
             config.luaEngine->compileLuaFiles();
 
             // Load scene
-            initializeEntities();
-
+            initializeScene();
             return;
         }
 
@@ -89,36 +91,48 @@ namespace Blink {
             for (const entt::entity entity : entityRegistry.view<TransformComponent, CameraComponent>()) {
                 auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
                 auto& cameraComponent = entityRegistry.get<CameraComponent>(entity);
-                cameraComponent.view = glm::lookAt(transformComponent.position, transformComponent.position + transformComponent.forwardDirection, transformComponent.upDirection);
-                cameraComponent.projection = config.sceneCamera->projection;
+                cameraComponent.view = glm::lookAt(
+                    transformComponent.position,
+                    transformComponent.position + transformComponent.forwardDirection,
+                    transformComponent.upDirection
+                );
+                cameraComponent.projection = glm::perspective(
+                    cameraComponent.fieldOfView,
+                    cameraComponent.aspectRatio,
+                    cameraComponent.nearClip,
+                    cameraComponent.farClip
+                );
             }
         }
     }
 
     void Scene::render() {
+        entt::entity cameraEntity = entityRegistry.view<CameraComponent>().front();
+        bool useSceneCamera = this->useSceneCamera || cameraEntity == entt::null;
+
         ViewProjection viewProjection{};
-        if (!useSceneCamera) {
-            const entt::entity& cameraEntity = entityRegistry.view<CameraComponent>().front();
-            if (cameraEntity != entt::null) {
-                const auto& cameraComponent = entityRegistry.get<CameraComponent>(cameraEntity);
-                viewProjection.view = cameraComponent.view;
-                viewProjection.projection = cameraComponent.projection;
-            } else {
-                useSceneCamera = true;
-            }
-        }
         if (useSceneCamera) {
-            viewProjection.view = config.sceneCamera->getView();
-            viewProjection.projection = config.sceneCamera->getProjection();
+            viewProjection.view = config.sceneCamera->view;
+            viewProjection.projection = config.sceneCamera->projection;
+        } else {
+            const auto& cameraComponent = entityRegistry.get<CameraComponent>(cameraEntity);
+            viewProjection.view = cameraComponent.view;
+            viewProjection.projection = cameraComponent.projection;
         }
+        config.renderer->setViewProjection(viewProjection);
+
         for (const entt::entity entity : entityRegistry.view<MeshComponent>()) {
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
-            config.renderer->renderMesh(meshComponent.mesh, viewProjection);
+            config.renderer->renderMesh(meshComponent.mesh);
         }
     }
 
     entt::entity Scene::createEntity() {
         entt::entity entity = entityRegistry.create();
+
+        TagComponent tagComponent{};
+        tagComponent.tag = "Entity " + std::to_string((uint32_t) entity);
+        entityRegistry.emplace<TagComponent>(entity, tagComponent);
 
         // Align directions with world space coordinate system (right-handed):
         // - Positive X --> Right
@@ -138,25 +152,32 @@ namespace Blink {
         transformComponent.rightDirection = rightDirection;
         transformComponent.upDirection = upDirection;
         transformComponent.yaw = yaw;
-
         entityRegistry.emplace<TransformComponent>(entity, transformComponent);
+
         return entity;
     }
 
-    void Scene::initializeEntities() {
+    void Scene::initializeScene() {
         // Core bindings used by Lua scripts
         config.luaEngine->initializeCoreBindings(this);
 
+        // Configure scene camera with default settings
+        configureSceneCamera();
+
+        // Run Lua-script to configure scene camera with scene-specific settings
+        // Requires core bindings and default scene camera configuration
+        config.luaEngine->configureSceneCamera(config.scene);
+
         // Run Lua-script to create the entities for the scene and initialize them with components
-        // Requires core bindings
+        // Requires core bindings and scene camera configuration
         config.luaEngine->createEntities(config.scene);
 
         // Bindings to entities' associated Lua-script to be invoked each game update
-        // Requires entities to have been created and initialized with components
+        // Requires entities to have been created
         config.luaEngine->initializeEntityBindings(this);
 
         // Calculate transforms for entities in the scene
-        // Requires entities to have been created for the scene (Lua script)
+        // Requires entities to have been created
         for (const entt::entity entity : entityRegistry.view<TransformComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
             calculateTranslation(&transformComponent);
@@ -166,14 +187,53 @@ namespace Blink {
         }
 
         // Load meshes for entities in the scene
+        // Requires entities to have been created
         for (const entt::entity entity : entityRegistry.view<MeshComponent>()) {
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
             meshComponent.mesh = config.meshManager->getMesh(meshComponent.meshInfo);
         }
     }
 
-    void Scene::terminateEntities() {
+    void Scene::terminateScene() {
         entityRegistry.clear();
+    }
+
+    void Scene::resetSceneCamera() const {
+        configureSceneCamera();
+        config.luaEngine->configureSceneCamera(config.scene);
+    }
+
+    void Scene::configureSceneCamera() const {
+        glm::vec3 position = {0.0f, 0.0f, 0.0f};
+        float moveSpeed = 100.0f;
+        float rotationSpeed = 1.0f;
+        float fieldOfView = glm::radians(45.0f);
+        float nearClip = 0.1f;
+        float farClip = 10000.0f;
+
+        // Align directions with world space coordinate system (right-handed):
+        // - Positive X --> Right
+        // - Positive Y --> Up
+        // - Positive Z --> Towards viewer / Out of screen
+        glm::vec3 worldUpDirection = Y_AXIS;
+        glm::vec3 forwardDirection = {Z_AXIS.x, Z_AXIS.y, -Z_AXIS.z};
+        glm::vec3 rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
+        glm::vec3 upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
+
+        // Align rotation with directions
+        float yaw = 270.0f;
+
+        config.sceneCamera->position = position;
+        config.sceneCamera->moveSpeed = moveSpeed;
+        config.sceneCamera->rotationSpeed = rotationSpeed;
+        config.sceneCamera->fieldOfView = fieldOfView;
+        config.sceneCamera->nearClip = nearClip;
+        config.sceneCamera->farClip = farClip;
+        config.sceneCamera->worldUpDirection = worldUpDirection;
+        config.sceneCamera->forwardDirection = forwardDirection;
+        config.sceneCamera->rightDirection = rightDirection;
+        config.sceneCamera->upDirection = upDirection;
+        config.sceneCamera->yaw = yaw;
     }
 
     void Scene::calculateTranslation(TransformComponent* transformComponent) const {
@@ -210,19 +270,15 @@ namespace Blink {
         up = glm::normalize(glm::vec3(rollMatrix * glm::vec4(up, 0.0f)));
 
         // Ensure orthogonality between forward, right, and up after roll rotation
-        up = glm::normalize(glm::cross(forward, right));
-        forward = glm::normalize(glm::cross(right, up));
+        up = glm::normalize(glm::cross(right, forward));
+        forward = glm::normalize(glm::cross(up, right));
 
-        // Calculate quaternions for yaw, pitch, and roll rotations
         glm::quat yawOrientation = glm::angleAxis(yawRadians, up);
         glm::quat pitchOrientation = glm::angleAxis(pitchRadians, right);
         glm::quat rollOrientation = glm::angleAxis(rollRadians, forward);
 
-        // Combine quaternions to obtain the final orientation quaternion
         transformComponent->orientation = yawOrientation * pitchOrientation * rollOrientation;
-
-        // Calculate the final rotation
-        transformComponent->rotation = glm::toMat4(transformComponent->orientation * transformComponent->orientationOffset);
+        transformComponent->rotation = glm::toMat4(transformComponent->orientation);
     }
 
     // --------------------------------------------------------------------------------------------------------------
@@ -240,12 +296,10 @@ namespace Blink {
         float pitchOffsetRadians = glm::radians(transformComponent->pitchOffset);
         float rollOffsetRadians = glm::radians(transformComponent->rollOffset);
 
-        // Calculate quaternions for yaw, pitch, and roll rotation offsets
         glm::quat yawOffsetOrientation = glm::angleAxis(yawOffsetRadians, Y_AXIS);
         glm::quat pitchOffsetOrientation = glm::angleAxis(pitchOffsetRadians, X_AXIS);
         glm::quat rollOffsetOrientation = glm::angleAxis(rollOffsetRadians, Z_AXIS);
 
-        // Combine quaternions to obtain the final orientation quaternion
         transformComponent->orientationOffset = yawOffsetOrientation * pitchOffsetOrientation * rollOffsetOrientation;
     }
 }

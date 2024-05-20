@@ -58,6 +58,8 @@ namespace Blink {
 
         void getSizeInPixels(int32_t* width, int32_t* height) const;
 
+        float getAspectRatio() const;
+
         bool isVulkanSupported() const;
 
         std::vector<const char*> getRequiredVulkanExtensions() const;

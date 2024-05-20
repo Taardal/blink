@@ -88,15 +88,20 @@ namespace Blink {
         glfwSetInputMode(glfwWindow, GLFW_CURSOR, hidden ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
     }
 
-    void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
-        glfwGetFramebufferSize(glfwWindow, width, height);
-    }
-
     WindowSize Window::getSizeInPixels() const {
         int32_t width = 0;
         int32_t height = 0;
         getSizeInPixels(&width, &height);
         return { width, height };
+    }
+
+    void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
+        glfwGetFramebufferSize(glfwWindow, width, height);
+    }
+
+    float Window::getAspectRatio() const {
+        WindowSize size = getSizeInPixels();
+        return (float) size.width / (float) size.height;
     }
 
     bool Window::isVulkanSupported() const {

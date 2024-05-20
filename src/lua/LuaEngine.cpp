@@ -4,6 +4,8 @@
 #include "lua/EntityLuaBinding.h"
 #include "lua/GlmLuaBinding.h"
 #include "lua/KeyboardLuaBinding.h"
+#include "lua/SceneCameraLuaBinding.h"
+#include "lua/WindowLuaBinding.h"
 #include "scene/Components.h"
 #include "scene/Scene.h"
 
@@ -28,6 +30,7 @@ namespace Blink {
         GlmLuaBinding::initialize(L);
         KeyboardLuaBinding::initialize(L, config.keyboard);
         SceneCameraLuaBinding::initialize(L, config.sceneCamera);
+        WindowLuaBinding::initialize(L, config.window);
     }
 
     void LuaEngine::initializeEntityBindings(Scene* scene) const {
@@ -62,24 +65,68 @@ namespace Blink {
         }
     }
 
-    void LuaEngine::createEntities(const std::string& sceneLuaFilePath) const {
+    void LuaEngine::configureSceneCamera(const std::string& sceneFilePath) const {
         const char* tableName = "Scene";
-        const char* functionName = "onCreate";
+        const char* functionName = "onConfigureCamera";
 
         lua_newtable(L);
         lua_setglobal(L, tableName);
-        if (luaL_dofile(L, sceneLuaFilePath.c_str()) != LUA_OK) {
+        if (luaL_dofile(L, sceneFilePath.c_str()) != LUA_OK) {
             const char* errorMessage = lua_tostring(L, -1);
             BL_LOG_ERROR(
                 "Could not load Lua script [{}]: {}",
-                sceneLuaFilePath,
+                sceneFilePath,
                 errorMessage
             );
             BL_THROW("Could not load Lua script");
         }
         BL_LOG_INFO(
             "Loaded Lua script [{}]",
-            sceneLuaFilePath
+            sceneFilePath
+        );
+
+        lua_getglobal(L, tableName);
+        lua_getfield(L, -1, functionName);
+
+        bool functionMissing = lua_isnil(L, -1);
+        if (!functionMissing) {
+            constexpr int argumentCount = 0;
+            constexpr int returnValueCount = 0;
+            constexpr int messageHandlerIndex = 0;
+            if (lua_pcall(L, argumentCount, returnValueCount, messageHandlerIndex) != LUA_OK) {
+                const char* errorMessage = lua_tostring(L, -1);
+                BL_LOG_ERROR(
+                    "Could not invoke [{}:{}:{}]: {}",
+                    sceneFilePath,
+                    tableName,
+                    functionName,
+                    errorMessage
+                );
+                BL_THROW("Could not call Lua function");
+            }
+        }
+
+        lua_pop(L, lua_gettop(L));
+    }
+
+    void LuaEngine::createEntities(const std::string& sceneFilePath) const {
+        const char* tableName = "Scene";
+        const char* functionName = "onCreateEntities";
+
+        lua_newtable(L);
+        lua_setglobal(L, tableName);
+        if (luaL_dofile(L, sceneFilePath.c_str()) != LUA_OK) {
+            const char* errorMessage = lua_tostring(L, -1);
+            BL_LOG_ERROR(
+                "Could not load Lua script [{}]: {}",
+                sceneFilePath,
+                errorMessage
+            );
+            BL_THROW("Could not load Lua script");
+        }
+        BL_LOG_INFO(
+            "Loaded Lua script [{}]",
+            sceneFilePath
         );
 
         lua_getglobal(L, tableName);
@@ -91,7 +138,7 @@ namespace Blink {
             const char* errorMessage = lua_tostring(L, -1);
             BL_LOG_ERROR(
                 "Could not invoke [{}:{}:{}]: {}",
-                sceneLuaFilePath,
+                sceneFilePath,
                 tableName,
                 functionName,
                 errorMessage

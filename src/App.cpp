@@ -163,6 +163,7 @@ namespace Blink {
         LuaEngineConfig luaEngineConfig{};
         luaEngineConfig.keyboard = keyboard;
         luaEngineConfig.sceneCamera = sceneCamera;
+        luaEngineConfig.window = window;
         BL_EXECUTE_THROW(luaEngine = new LuaEngine(luaEngineConfig));
 
         SceneConfig sceneConfig{};

@@ -4,7 +4,7 @@ local moveSpeed = 0
 local thrust = 0.5
 local maxMoveSpeed = 50
 
-local rotationSpeed = 1
+local rotationSpeed = 2
 
 local maxYaw = 360
 local maxPitch = 89
@@ -68,8 +68,8 @@ function Player.onUpdate(entityId, timestep)
         end
     end
 
-    local rollRight = Keyboard:isPressed(Key.Numpad_6) or Keyboard:isPressed(Key.Numpad_9)
-    local rollLeft = Keyboard:isPressed(Key.Numpad_4) or Keyboard:isPressed(Key.Numpad_7)
+    local rollRight = Keyboard:isPressed(Key.Numpad_9) --or Keyboard:isPressed(Key.Numpad_6)
+    local rollLeft = Keyboard:isPressed(Key.Numpad_7) --or Keyboard:isPressed(Key.Numpad_4)
     if rollRight then
         roll = roll + rotationSpeed
     end

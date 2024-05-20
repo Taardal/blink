@@ -1,16 +1,12 @@
-function Scene.onCreate()
+function Scene.onConfigureCamera()
+    SceneCamera:setPosition(glm.vec3(2, 2, 2))
+    SceneCamera:setYaw(229)
+    SceneCamera:setPitch(-33)
+    SceneCamera:setMoveSpeed(1)
+    SceneCamera:setRotationSpeed(0.5)
+end
 
-    SceneCamera:setFrustum({
-        fieldOfView = math.rad(45.0),
-        nearClip = 0.1,
-        farClip = 10000.0,
-    })
-    SceneCamera:setMoveSpeed(1.0)
-    SceneCamera:setRotationSpeed(1.0)
-    SceneCamera:setPosition(glm.vec3(0, 0.5, 3))
-    SceneCamera:setWorldUpDirection(glm.vec3(0, 1, 0))
-    SceneCamera:setForwardDirection(glm.vec3(0, 0, -1))
-
+function Scene.onCreateEntities()
     local entityId = Entity:create()
 
     Entity:setTagComponent(entityId, {

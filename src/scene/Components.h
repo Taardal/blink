@@ -49,5 +49,9 @@ namespace Blink {
     struct CameraComponent {
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
+        float aspectRatio = 0.0f;
+        float fieldOfView = 0.0f;
+        float nearClip = 0.0f;
+        float farClip = 0.0f;
     };
 }

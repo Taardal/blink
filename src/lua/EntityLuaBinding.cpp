@@ -487,7 +487,39 @@ namespace Blink {
     int EntityLuaBinding::setCameraComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -2);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
-        binding->scene->entityRegistry.emplace<CameraComponent>(entity);
+        auto& cameraComponent = binding->scene->entityRegistry.get_or_emplace<CameraComponent>(entity);
+        {
+            lua_getfield(L, -1, "aspectRatio");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                cameraComponent.aspectRatio = (float) lua_tonumber(L, -1);
+            }
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "fieldOfView");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                cameraComponent.fieldOfView = (float) lua_tonumber(L, -1);
+            }
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "nearClip");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                cameraComponent.nearClip = (float) lua_tonumber(L, -1);
+            }
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "farClip");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                cameraComponent.farClip = (float) lua_tonumber(L, -1);
+            }
+            lua_pop(L, 1);
+        }
         return 0;
     }
 

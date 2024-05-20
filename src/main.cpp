@@ -16,6 +16,7 @@ int main() {
     config.windowMaximized = false;
     config.fps = 120;
     config.scene = "lua/scenes/sandbox.out";
+    //config.scene = "lua/scenes/viking_room.out";
 
     App app(config);
     app.run();

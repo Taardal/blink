@@ -33,10 +33,28 @@ namespace Blink {
 
         static int setUpDirection(lua_State* L);
 
-        static int setFrustum(lua_State* L);
+        static int setYaw(lua_State* L);
+
+        static int setPitch(lua_State* L);
+
+        static int setRoll(lua_State* L);
 
         static int setMoveSpeed(lua_State* L);
 
         static int setRotationSpeed(lua_State* L);
+
+        static int getFieldOfView(lua_State* L);
+
+        static int setFieldOfView(lua_State* L);
+
+        static int getNearClip(lua_State* L);
+
+        static int setNearClip(lua_State* L);
+
+        static int getFarClip(lua_State* L);
+
+        static int setFarClip(lua_State* L);
+
+        static int setFrustum(lua_State* L);
     };
 }

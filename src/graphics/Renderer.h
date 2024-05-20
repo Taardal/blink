@@ -51,7 +51,9 @@ namespace Blink {
 
         bool beginFrame();
 
-        void renderMesh(const std::shared_ptr<Mesh>& mesh, const ViewProjection& viewProjection) const;
+        void setViewProjection(const ViewProjection& viewProjection) const;
+
+        void renderMesh(const std::shared_ptr<Mesh>& mesh) const;
 
         void endFrame();
 

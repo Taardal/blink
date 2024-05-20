@@ -45,8 +45,11 @@ namespace Blink {
         return true;
     }
 
-    void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh, const ViewProjection& viewProjection) const {
+    void Renderer::setViewProjection(const ViewProjection& viewProjection) const {
         setUniformData(viewProjection);
+    }
+
+    void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh) const {
         setPushConstantData(mesh);
         bindMesh(mesh);
         drawMeshIndexed(mesh);

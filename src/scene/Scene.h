@@ -42,9 +42,13 @@ namespace Blink {
         entt::entity createEntity();
 
     private:
-        void initializeEntities();
+        void initializeScene();
 
-        void terminateEntities();
+        void terminateScene();
+
+        void resetSceneCamera() const;
+
+        void configureSceneCamera() const;
 
         void calculateTranslation(TransformComponent* transformComponent) const;
 
