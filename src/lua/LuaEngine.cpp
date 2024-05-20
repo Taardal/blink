@@ -10,20 +10,17 @@
 #include <lua.hpp>
 
 namespace Blink {
-    LuaEngine::LuaEngine(const LuaEngineConfig& config) : config(config), L(luaL_newstate()) {
-        // Enable Lua standard libraries
-        luaL_openlibs(L);
-
-        // Add paths to be searched for lua files
-        luaL_dostring(L, "package.path = './lua/?.out;' .. package.path");
-
-        // Override Lua 'print' function with custom logger
-        lua_pushcfunction(L, LuaEngine::luaPrint);
-        lua_setglobal(L, "print");
+    LuaEngine::LuaEngine(const LuaEngineConfig& config) : config(config) {
+        initialize();
     }
 
     LuaEngine::~LuaEngine() {
-        lua_close(L);
+        terminate();
+    }
+
+    void LuaEngine::resetState() {
+        terminate();
+        initialize();
     }
 
     void LuaEngine::initializeCoreBindings(Scene* scene) const {
@@ -141,6 +138,24 @@ namespace Blink {
         ss << " -P " << CMAKE_SCRIPTS_DIR << "/compile_lua.cmake";
         std::string command = ss.str();
         std::system(command.c_str());
+    }
+
+    void LuaEngine::initialize() {
+        L = luaL_newstate();
+
+        // Enable Lua standard libraries
+        luaL_openlibs(L);
+
+        // Add paths to be searched for lua files
+        luaL_dostring(L, "package.path = './lua/?.out;' .. package.path");
+
+        // Override Lua 'print' function with custom logger
+        lua_pushcfunction(L, LuaEngine::luaPrint);
+        lua_setglobal(L, "print");
+    }
+
+    void LuaEngine::terminate() const {
+        lua_close(L);
     }
 
     int LuaEngine::luaPrint(lua_State* L) {

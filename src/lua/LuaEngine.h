@@ -25,6 +25,8 @@ namespace Blink {
 
         ~LuaEngine();
 
+        void resetState();
+
         void initializeCoreBindings(Scene* scene) const;
 
         void initializeEntityBindings(Scene* scene) const;
@@ -36,6 +38,10 @@ namespace Blink {
         void compileLuaFiles() const;
 
     private:
+        void initialize();
+
+        void terminate() const;
+
         static int luaPrint(lua_State* L);
     };
 }

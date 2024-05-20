@@ -22,6 +22,7 @@ namespace Blink {
     }
 
     void Scene::onEvent(Event& event) {
+        // Switch cameras
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Num_1) {
             useSceneCamera = true;
             return;
@@ -30,19 +31,34 @@ namespace Blink {
             useSceneCamera = false;
             return;
         }
+
+        // Recompile Lua scripts while the scene is running (hot reload)
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::R) {
             config.luaEngine->compileLuaFiles();
             config.luaEngine->initializeEntityBindings(this);
             return;
         }
+
+        // Unload, recompile and load entire scene again (cold reload)
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::T) {
+            // Wait until it's safe to destroy the resources (descriptors) used by the meshes in the current scene
             config.renderer->waitUntilIdle();
+
+            // Unload scene
             terminateEntities();
             config.meshManager->resetDescriptors();
+            config.luaEngine->resetState();
+
+            // Recompile Lua scripts
             config.luaEngine->compileLuaFiles();
+
+            // Load scene
             initializeEntities();
+
             return;
         }
+
+        // Debug logging
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Y) {
             config.sceneCamera->loggingEnabled = !config.sceneCamera->loggingEnabled;
             return;
