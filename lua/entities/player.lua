@@ -13,17 +13,6 @@ local maxRoll = 66
 local loggingEnabled = false
 
 function Player.onUpdate(entityId, timestep)
-    local transformComponent = Entity:getTransformComponent(entityId)
-
-    local position = transformComponent.position
-    local forwardDirection = transformComponent.forwardDirection
-    local yaw = transformComponent.yaw
-    local pitch = transformComponent.pitch
-    local roll = transformComponent.roll
-
-    if Keyboard:isPressed(Key.Numpad_0) then
-        position = glm.vec3()
-    end
     if Keyboard:isPressed(Key.L) then
         loggingEnabled = true
     end
@@ -33,63 +22,17 @@ function Player.onUpdate(entityId, timestep)
     if loggingEnabled then
         printt(entityId)
     end
-
-    if Keyboard:isPressed(Key.Numpad_6) then
-        yaw = yaw + rotationSpeed
-    end
-    if Keyboard:isPressed(Key.Numpad_4) then
-        yaw = yaw - rotationSpeed
-    end
-    if yaw > maxYaw then
-        yaw = 0
-    end
-    if yaw < -maxYaw then
-        yaw = 0
+    if Keyboard:isPressed(Key.Numpad_0) then
+        Entity:setPosition(entityId, glm.vec3())
     end
 
-    if Keyboard:isPressed(Key.Numpad_8) then
-        pitch = pitch - rotationSpeed
-    end
-    if Keyboard:isPressed(Key.Numpad_5) then
-        pitch = pitch + rotationSpeed
-    end
-    if pitch > maxPitch then
-        pitch = maxPitch
-    end
-    if pitch < -maxPitch then
-        pitch = -maxPitch
-    end
-    if not Keyboard:isPressed(Key.Numpad_8) and not Keyboard:isPressed(Key.Numpad_5) then
-        if pitch < 0 then
-            pitch = pitch + rotationSpeed
-        end
-        if pitch > 0 then
-            pitch = pitch - rotationSpeed
-        end
-    end
+    local transformComponent = Entity:getTransformComponent(entityId)
 
-    local rollRight = Keyboard:isPressed(Key.Numpad_9) --or Keyboard:isPressed(Key.Numpad_6)
-    local rollLeft = Keyboard:isPressed(Key.Numpad_7) --or Keyboard:isPressed(Key.Numpad_4)
-    if rollRight then
-        roll = roll + rotationSpeed
-    end
-    if rollLeft then
-        roll = roll - rotationSpeed
-    end
-    if roll > maxRoll then
-        roll = maxRoll
-    end
-    if roll < -maxRoll then
-        roll = -maxRoll
-    end
-    if not rollRight and not rollLeft then
-        if roll < 0 then
-            roll = roll + rotationSpeed
-        end
-        if roll > 0 then
-            roll = roll - rotationSpeed
-        end
-    end
+    local position = transformComponent.position
+    local forwardDirection = transformComponent.forwardDirection
+    --local yaw = transformComponent.yaw
+    --local pitch = transformComponent.pitch
+    --local roll = transformComponent.roll
 
     if Keyboard:isPressed(Key.X) then
         moveSpeed = math.min(moveSpeed + thrust, maxMoveSpeed)
@@ -107,13 +50,13 @@ function Player.onUpdate(entityId, timestep)
     end
 
     local velocity = moveSpeed * timestep
-    local distance = glm.multiply(forwardDirection, velocity)
-    position = glm.add(position, distance)
+    local distance = forwardDirection * velocity
+    position = position + distance
 
     transformComponent.position = position
-    transformComponent.yaw = yaw
-    transformComponent.pitch = pitch
-    transformComponent.roll = roll
+    --transformComponent.yaw = yaw
+    --transformComponent.pitch = pitch
+    --transformComponent.roll = roll
 
     Entity:setTransformComponent(entityId, transformComponent)
 end

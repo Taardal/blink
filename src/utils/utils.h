@@ -6,9 +6,13 @@
 #include <numbers>
 
 namespace Blink {
-    constexpr glm::vec3 X_AXIS = {1.0f, 0.0f, 0.0f};
-    constexpr glm::vec3 Y_AXIS = {0.0f, 1.0f, 0.0f};
-    constexpr glm::vec3 Z_AXIS = {0.0f, 0.0f, 1.0f};
+    constexpr glm::vec3 POSITIVE_X_AXIS = {1.0f, 0.0f, 0.0f};
+    constexpr glm::vec3 POSITIVE_Y_AXIS = {0.0f, 1.0f, 0.0f};
+    constexpr glm::vec3 POSITIVE_Z_AXIS = {0.0f, 0.0f, 1.0f};
+
+    constexpr glm::vec3 NEGATIVE_X_AXIS = {-1.0f, 0.0f, 0.0f};
+    constexpr glm::vec3 NEGATIVE_Y_AXIS = {0.0f, -1.0f, 0.0f};
+    constexpr glm::vec3 NEGATIVE_Z_AXIS = {0.0f, 0.0f, -1.0f};
 
     float clampToZero(float x);
 

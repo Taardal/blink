@@ -9,7 +9,7 @@ namespace Blink {
     // error due to rounding in floating-point arithmetic.
     constexpr float EPSILON = 1e-7;
 
-    // Use epsilong to check if a floating-point result is close enough to zero to be considered
+    // Use epsilon to check if a floating-point result is close enough to zero to be considered
     // zero. This is necessary because floating-point calculations can introduce very small errors.
     float clampToZero(float x) {
         if (abs(x) < EPSILON) {

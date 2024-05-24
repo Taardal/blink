@@ -74,15 +74,19 @@ namespace Blink {
     }
 
     void SceneCamera::calculateDirections() {
-        forwardDirection.x = clampToZero(cos(glm::radians(yaw)) * cos(glm::radians(pitch)));
-        forwardDirection.y = clampToZero(sin(glm::radians(pitch)));
-        forwardDirection.z = clampToZero(sin(glm::radians(yaw)) * cos(glm::radians(pitch)));
+        float yawRadians = glm::radians(yaw);
+        float pitchRadians = glm::radians(pitch);
+        float rollRadians = glm::radians(roll);
+
+        forwardDirection.x = clampToZero(cos(yawRadians) * cos(pitchRadians));
+        forwardDirection.y = clampToZero(sin(pitchRadians));
+        forwardDirection.z = clampToZero(sin(yawRadians) * cos(pitchRadians));
         forwardDirection = glm::normalize(forwardDirection);
 
         rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
         upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
 
-        glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(roll), forwardDirection);
+        glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), rollRadians, forwardDirection);
         upDirection = glm::vec3(rollMatrix * glm::vec4(upDirection, 0.0f));
         rightDirection = glm::vec3(rollMatrix * glm::vec4(rightDirection, 0.0f));
     }
@@ -92,11 +96,14 @@ namespace Blink {
     }
 
     void SceneCamera::calculateProjection() {
-        projection = glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
+        projection = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearClip, farClip);
     }
 
     void SceneCamera::calculateAspectRatio() {
-        aspectRatio = config.window->getAspectRatio();
+        WindowSize size = config.window->getSizeInPixels();
+        width = (float) size.width;
+        height = (float) size.height;
+        aspectRatio = width / height;
     }
 
     void SceneCamera::logState() const {
@@ -112,6 +119,17 @@ namespace Blink {
         BL_LOG_DEBUG("Yaw: {}°", yaw);
         BL_LOG_DEBUG("Pitch: {}°", pitch);
         BL_LOG_DEBUG("Roll: {}°", roll);
+        BL_LOG_DEBUG("");
+        BL_LOG_DEBUG("Move speed: {}", moveSpeed);
+        BL_LOG_DEBUG("Rotation speed: {}", rotationSpeed);
+        BL_LOG_DEBUG("");
+        BL_LOG_DEBUG("Field of view: {}°", fieldOfView);
+        BL_LOG_DEBUG("Near clip: {}", nearClip);
+        BL_LOG_DEBUG("Far clip: {}", farClip);
+        BL_LOG_DEBUG("");
+        BL_LOG_DEBUG("Width: {}", width);
+        BL_LOG_DEBUG("Height: {}", height);
+        BL_LOG_DEBUG("Aspect ratio: {}", aspectRatio);
         BL_LOG_DEBUG("");
         BL_LOG_DEBUG("--------------------------------------------------------------------------------------------------------------");
         BL_LOG_DEBUG("");

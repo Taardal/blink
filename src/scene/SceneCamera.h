@@ -31,10 +31,12 @@ namespace Blink {
         float roll = 0.0f;
         float moveSpeed = 0.0f;
         float rotationSpeed = 0.0f;
-        float aspectRatio = 0.0f;
         float fieldOfView = 0.0f;
         float nearClip = 0.0f;
         float farClip = 0.0f;
+        float width = 0.0f;
+        float height = 0.0f;
+        float aspectRatio = 0.0f;
         bool loggingEnabled = false;
 
     public:

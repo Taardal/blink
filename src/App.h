@@ -50,7 +50,7 @@ namespace Blink {
         void run();
 
     private:
-        void runGameLoop() const;
+        void gameLoop() const;
 
         void onEvent(Event& event);
 

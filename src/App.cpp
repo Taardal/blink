@@ -29,7 +29,7 @@ namespace Blink {
         try {
             BL_LOG_INFO("Running...");
             state = AppState::Running;
-            runGameLoop();
+            gameLoop();
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Runtime error");
             e.printStacktrace();
@@ -39,7 +39,7 @@ namespace Blink {
         renderer->waitUntilIdle();
     }
 
-    void App::runGameLoop() const {
+    void App::gameLoop() const {
         constexpr double oneSecond = 1.0;
         double secondsPerFrame = oneSecond / (double) config.fps;
         double lastTime = window->getTime();
