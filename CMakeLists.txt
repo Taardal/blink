@@ -93,6 +93,7 @@ add_executable(
         ${SRC_DIR}/scene/Scene.h
         ${SRC_DIR}/scene/SceneCamera.cpp
         ${SRC_DIR}/scene/SceneCamera.h
+        ${SRC_DIR}/scene/CoordinateSystem.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/Error.cpp

@@ -24,11 +24,6 @@ namespace Blink {
         friend class EntityLuaBinding;
 
     private:
-        static const glm::vec3 WORLD_RIGHT_DIRECTION;
-        static const glm::vec3 WORLD_UP_DIRECTION;
-        static const glm::vec3 WORLD_FORWARD_DIRECTION;
-
-    private:
         SceneConfig config;
         entt::registry entityRegistry;
         bool useSceneCamera = false;

@@ -5,7 +5,7 @@
 #include "window/Mouse.h"
 
 #include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace Blink {
     struct SceneCameraConfig {

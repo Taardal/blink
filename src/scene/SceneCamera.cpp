@@ -1,6 +1,7 @@
 #include "pch.h"
+#include "SceneCamera.h"
+#include "scene/CoordinateSystem.h"
 #include "window/Mouse.h"
-#include "scene/SceneCamera.h"
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -74,15 +75,21 @@ namespace Blink {
     }
 
     void SceneCamera::calculateDirections() {
-        glm::quat yawRotation = glm::angleAxis(glm::radians(yaw), POSITIVE_Y_AXIS);
-        glm::quat pitchRotation = glm::angleAxis(glm::radians(pitch), POSITIVE_X_AXIS);
-        glm::quat rollRotation = glm::angleAxis(glm::radians(roll), POSITIVE_Z_AXIS);
+        float yawRadians = glm::radians(yaw);
+        float pitchRadians = glm::radians(pitch);
+        float rollRadians = glm::radians(roll);
 
-        orientation = yawRotation * pitchRotation * rollRotation;
+        glm::quat yawRotation = glm::normalize(glm::angleAxis(yawRadians, POSITIVE_Y_AXIS));
+        glm::quat pitchRotation = glm::normalize(glm::angleAxis(pitchRadians, POSITIVE_X_AXIS));
+        glm::quat rollRotation = glm::normalize(glm::angleAxis(rollRadians, POSITIVE_Z_AXIS));
 
-        forwardDirection = orientation * NEGATIVE_Z_AXIS;
-        rightDirection = orientation * POSITIVE_X_AXIS;
-        upDirection = orientation * POSITIVE_Y_AXIS;
+        // Multiplication order is crucial.
+        // Changing the order changes the final orientation, similar to the behavior of matrix multiplication.
+        orientation = glm::normalize(yawRotation * pitchRotation * rollRotation);
+
+        rightDirection = glm::normalize(orientation * WORLD_RIGHT_DIRECTION);
+        upDirection = glm::normalize(orientation * WORLD_UP_DIRECTION);
+        forwardDirection = glm::normalize(orientation * WORLD_FORWARD_DIRECTION);
     }
 
     void SceneCamera::calculateView() {

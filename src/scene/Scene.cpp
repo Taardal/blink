@@ -1,23 +1,12 @@
 #include "pch.h"
 #include "Scene.h"
 #include "Components.h"
+#include "CoordinateSystem.h"
 #include "window/KeyEvent.h"
 #include "graphics/Mesh.h"
 #include "graphics/ViewProjection.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/string_cast.hpp>
-
 namespace Blink {
-
-    // World space coordinate system (right-handed)
-    const glm::vec3 Scene::WORLD_RIGHT_DIRECTION = POSITIVE_X_AXIS;
-    const glm::vec3 Scene::WORLD_UP_DIRECTION = POSITIVE_Y_AXIS;
-    const glm::vec3 Scene::WORLD_FORWARD_DIRECTION = NEGATIVE_Z_AXIS;
-
     Scene::Scene(const SceneConfig& config) : config(config), useSceneCamera(true) {
         BL_ASSERT_THROW(!config.scene.empty());
         initializeScene();
@@ -73,16 +62,14 @@ namespace Blink {
     void Scene::update(double timestep) {
         config.luaEngine->updateEntities(this, timestep);
 
-        for (const entt::entity entity : entityRegistry.view<TransformComponent>()) {
-            auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
-            calculateTranslation(&transformComponent);
-            calculateRotation(&transformComponent);
-            calculateScale(&transformComponent);
-        }
-
         for (const entt::entity entity : entityRegistry.view<TransformComponent, MeshComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
+
+            calculateTranslation(&transformComponent);
+            calculateRotation(&transformComponent);
+            calculateScale(&transformComponent);
+
             meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
 
@@ -149,23 +136,21 @@ namespace Blink {
         // Core bindings used by Lua scripts
         config.luaEngine->initializeCoreBindings(this);
 
-        // Configure scene camera with default settings
-        configureSceneCameraWithDefaultSettings();
-
         // Run Lua-script to configure scene camera with scene-specific settings
-        // Requires core bindings and default scene camera configuration
+        // REQUIRES core bindings
+        configureSceneCameraWithDefaultSettings();
         config.luaEngine->configureSceneCamera(config.scene);
 
         // Run Lua-script to create the entities for the scene and initialize them with components
-        // Requires core bindings and scene camera configuration
+        // REQUIRES core bindings and scene camera configuration
         config.luaEngine->createEntities(config.scene);
 
-        // Bindings to entities' associated Lua-script to be invoked each game update
-        // Requires entities to have been created
+        // Configure bindings to entities' associated Lua-script to be invoked each game update
+        // REQUIRES entities to have been created
         config.luaEngine->initializeEntityBindings(this);
 
         // Calculate transforms for entities in the scene
-        // Requires entities to have been created
+        // REQUIRES entities to have been created
         for (const entt::entity entity : entityRegistry.view<TransformComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
             calculateTranslation(&transformComponent);
