@@ -48,7 +48,7 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata  EntityBinding
+    // - [-1] userdata  Binding
     int EntityLuaBinding::destroy(lua_State* L) {
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -1);
         binding->~EntityLuaBinding();
@@ -57,7 +57,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] string    Name of the index being accessed
-    // - [-2] userdata  Entity binding
+    // - [-2] userdata  Binding
     int EntityLuaBinding::index(lua_State* L) {
         std::string indexName = lua_tostring(L, -1);
         if (indexName == "create") {
@@ -109,18 +109,18 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata  Entity binding
+    // - [-1] userdata  Binding
     int EntityLuaBinding::createEntity(lua_State* L) {
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -1);
-        entt::entity entity = binding->scene->createEntity();
+        entt::entity entity = binding->scene->createEntityWithDefaultComponents();
         lua_pushnumber(L, (uint32_t) entity);
         return 1;
     }
 
     // Lua stack
     // - [-1] table     Mesh component
-    // - [-2] number    Entity ID
-    // - [-3] userdata  Entity binding
+    // - [-2] number    Entity
+    // - [-3] userdata  Binding
     int EntityLuaBinding::setMeshComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -2);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
@@ -161,8 +161,8 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table     Lua component
-    // - [-2] number    Entity ID
-    // - [-3] userdata  Entity binding
+    // - [-2] number    Entity
+    // - [-3] userdata  Binding
     int EntityLuaBinding::setLuaComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -2);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
@@ -180,8 +180,8 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] number    Entity ID
-    // - [-2] userdata  Entity binding
+    // - [-1] number    Entity
+    // - [-2] userdata  Binding
     int EntityLuaBinding::getTagComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -1);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
@@ -196,8 +196,8 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table     Tag component
-    // - [-2] number    Entity ID
-    // - [-3] userdata  Entity binding
+    // - [-2] number    Entity
+    // - [-3] userdata  Binding
     int EntityLuaBinding::setTagComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -2);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
@@ -211,8 +211,8 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] number    Entity ID
-    // - [-2] userdata  Entity binding
+    // - [-1] number    Entity
+    // - [-2] userdata  Binding
     int EntityLuaBinding::getTransformComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -1);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
@@ -304,25 +304,13 @@ namespace Blink {
         lua_pushnumber(L, roll);
         lua_setfield(L, -2, "roll");
 
-        const float yawOffset = transformComponent.yawOffset;
-        lua_pushnumber(L, yawOffset);
-        lua_setfield(L, -2, "yawOffset");
-
-        const float pitchOffset = transformComponent.pitchOffset;
-        lua_pushnumber(L, pitchOffset);
-        lua_setfield(L, -2, "pitchOffset");
-
-        const float rollOffset = transformComponent.rollOffset;
-        lua_pushnumber(L, rollOffset);
-        lua_setfield(L, -2, "rollOffset");
-
         return 1;
     }
 
     // Lua stack
     // - [-1] table    Transform component table
-    // - [-2] number   Entity ID
-    // - [-3] userdata EntityBinding
+    // - [-2] number   Entity
+    // - [-3] userdata Binding
     int EntityLuaBinding::setTransformComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -2);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
@@ -453,37 +441,13 @@ namespace Blink {
             }
             lua_pop(L, 1);
         }
-        {
-            lua_getfield(L, -1, "yawOffset");
-            bool missing = lua_isnil(L, -1);
-            if (!missing) {
-                transformComponent.yawOffset = (float) lua_tonumber(L, -1);
-            }
-            lua_pop(L, 1);
-        }
-        {
-            lua_getfield(L, -1, "pitchOffset");
-            bool missing = lua_isnil(L, -1);
-            if (!missing) {
-                transformComponent.pitchOffset = (float) lua_tonumber(L, -1);
-            }
-            lua_pop(L, 1);
-        }
-        {
-            lua_getfield(L, -1, "rollOffset");
-            bool missing = lua_isnil(L, -1);
-            if (!missing) {
-                transformComponent.rollOffset = (float) lua_tonumber(L, -1);
-            }
-            lua_pop(L, 1);
-        }
         return 0;
     }
 
     // Lua stack
     // - [-1] table    Camera component
-    // - [-2] number   Entity ID
-    // - [-3] userdata EntityBinding
+    // - [-2] number   Entity
+    // - [-3] userdata Binding
     int EntityLuaBinding::setCameraComponent(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -2);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
@@ -525,8 +489,8 @@ namespace Blink {
 
 
     // Lua stack
-    // - [-1] number    Entity ID
-    // - [-2] userdata  Entity binding
+    // - [-1] number    Entity
+    // - [-2] userdata  Binding
     int EntityLuaBinding::getPosition(lua_State* L) {
         entt::entity entity = (entt::entity) lua_tonumber(L, -1);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
@@ -546,8 +510,8 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table    Position vector
-    // - [-2] number   Entity ID
-    // - [-3] userdata EntityBinding
+    // - [-2] number   Entity
+    // - [-3] userdata Binding
     int EntityLuaBinding::setPosition(lua_State* L) {
         lua_getfield(L, -1, "x");
         auto x = (float) lua_tonumber(L, -1);
@@ -571,7 +535,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] string   Entity tag
-    // - [-2] userdata EntityBinding
+    // - [-2] userdata Binding
     int EntityLuaBinding::getIdByTag(lua_State* L) {
         const char* entityTag = lua_tostring(L, -1);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);

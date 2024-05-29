@@ -21,15 +21,10 @@ namespace Blink {
         glm::vec3 worldUpDirection = glm::vec3(0.0f, 0.0f, 0.0f);
 
         glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-        glm::quat orientationOffset = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
         float yaw = 0.0f;
         float pitch = 0.0f;
         float roll = 0.0f;
-
-        float yawOffset = 0.0f;
-        float pitchOffset = 0.0f;
-        float rollOffset = 0.0f;
     };
 
     struct TagComponent {

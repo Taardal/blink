@@ -53,16 +53,16 @@ namespace Blink {
             pitch -= rotationSpeed;
         }
         if (config.keyboard->isPressed(Key::Left)) {
-            yaw -= rotationSpeed;
-        }
-        if (config.keyboard->isPressed(Key::Right)) {
             yaw += rotationSpeed;
         }
+        if (config.keyboard->isPressed(Key::Right)) {
+            yaw -= rotationSpeed;
+        }
         if (config.keyboard->isPressed(Key::Q)) {
-            roll -= rotationSpeed;
+            roll += rotationSpeed;
         }
         if (config.keyboard->isPressed(Key::E)) {
-            roll += rotationSpeed;
+            roll -= rotationSpeed;
         }
         // Clamp pitch to prevent camera flipping
         if (pitch > 89.0f) {
@@ -74,21 +74,15 @@ namespace Blink {
     }
 
     void SceneCamera::calculateDirections() {
-        float yawRadians = glm::radians(yaw);
-        float pitchRadians = glm::radians(pitch);
-        float rollRadians = glm::radians(roll);
+        glm::quat yawRotation = glm::angleAxis(glm::radians(yaw), POSITIVE_Y_AXIS);
+        glm::quat pitchRotation = glm::angleAxis(glm::radians(pitch), POSITIVE_X_AXIS);
+        glm::quat rollRotation = glm::angleAxis(glm::radians(roll), POSITIVE_Z_AXIS);
 
-        forwardDirection.x = clampToZero(cos(yawRadians) * cos(pitchRadians));
-        forwardDirection.y = clampToZero(sin(pitchRadians));
-        forwardDirection.z = clampToZero(sin(yawRadians) * cos(pitchRadians));
-        forwardDirection = glm::normalize(forwardDirection);
+        orientation = yawRotation * pitchRotation * rollRotation;
 
-        rightDirection = glm::normalize(glm::cross(forwardDirection, worldUpDirection));
-        upDirection = glm::normalize(glm::cross(rightDirection, forwardDirection));
-
-        glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), rollRadians, forwardDirection);
-        upDirection = glm::vec3(rollMatrix * glm::vec4(upDirection, 0.0f));
-        rightDirection = glm::vec3(rollMatrix * glm::vec4(rightDirection, 0.0f));
+        forwardDirection = orientation * NEGATIVE_Z_AXIS;
+        rightDirection = orientation * POSITIVE_X_AXIS;
+        upDirection = orientation * POSITIVE_Y_AXIS;
     }
 
     void SceneCamera::calculateView() {

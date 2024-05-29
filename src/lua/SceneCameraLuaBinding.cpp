@@ -131,7 +131,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table    Position vector
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setPosition(lua_State* L) {
         lua_getfield(L, -1, "x");
         auto x = (float) lua_tonumber(L, -1);
@@ -152,7 +152,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table    Direction vector
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setWorldUpDirection(lua_State* L) {
         lua_getfield(L, -1, "x");
         auto x = (float) lua_tonumber(L, -1);
@@ -173,7 +173,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table    Direction vector
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setForwardDirection(lua_State* L) {
         lua_getfield(L, -1, "x");
         auto x = (float) lua_tonumber(L, -1);
@@ -194,7 +194,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table    Direction vector
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setRightDirection(lua_State* L) {
         lua_getfield(L, -1, "x");
         auto x = (float) lua_tonumber(L, -1);
@@ -215,7 +215,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table    Direction vector
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setUpDirection(lua_State* L) {
         lua_getfield(L, -1, "x");
         auto x = (float) lua_tonumber(L, -1);
@@ -236,7 +236,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] number   Yaw
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setYaw(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
         binding->sceneCamera->yaw = (float) lua_tonumber(L, -1);
@@ -245,7 +245,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] number   Pitch
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setPitch(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
         binding->sceneCamera->pitch = (float) lua_tonumber(L, -1);
@@ -254,7 +254,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] number   Roll
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setRoll(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
         binding->sceneCamera->roll = (float) lua_tonumber(L, -1);
@@ -263,7 +263,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] number   Move speed
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setMoveSpeed(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
         binding->sceneCamera->moveSpeed = (float) lua_tonumber(L, -1);
@@ -272,7 +272,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] number   Rotation speed
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setRotationSpeed(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
         binding->sceneCamera->rotationSpeed = (float) lua_tonumber(L, -1);
@@ -280,7 +280,7 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata Binding object
+    // - [-1] userdata Binding
     int SceneCameraLuaBinding::getFieldOfView(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -1);
         lua_pushnumber(L, binding->sceneCamera->fieldOfView);
@@ -289,7 +289,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] number   Field of view (radians)
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setFieldOfView(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
         binding->sceneCamera->fieldOfView = (float) lua_tonumber(L, -1);
@@ -297,7 +297,7 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata Binding object
+    // - [-1] userdata Binding
     int SceneCameraLuaBinding::getNearClip(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -1);
         lua_pushnumber(L, binding->sceneCamera->nearClip);
@@ -306,7 +306,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] number   Near clip
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setNearClip(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
         binding->sceneCamera->nearClip = (float) lua_tonumber(L, -1);
@@ -314,7 +314,7 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata Binding object
+    // - [-1] userdata Binding
     int SceneCameraLuaBinding::getFarClip(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -1);
         lua_pushnumber(L, binding->sceneCamera->farClip);
@@ -323,7 +323,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] number   Far clip
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setFarClip(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
         binding->sceneCamera->farClip = (float) lua_tonumber(L, -1);
@@ -332,7 +332,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table    Frustum object
-    // - [-2] userdata Binding object
+    // - [-2] userdata Binding
     int SceneCameraLuaBinding::setFrustum(lua_State* L) {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
 

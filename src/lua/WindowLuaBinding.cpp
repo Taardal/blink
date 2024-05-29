@@ -42,7 +42,7 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata  Binding object
+    // - [-1] userdata  Binding
     int WindowLuaBinding::destroy(lua_State* L) {
         auto* binding = (WindowLuaBinding*) lua_touserdata(L, -1);
         binding->~WindowLuaBinding();
@@ -51,7 +51,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] string    Name of the index being accessed
-    // - [-2] userdata  Binding object
+    // - [-2] userdata  Binding
     int WindowLuaBinding::index(lua_State* L) {
         std::string indexName = lua_tostring(L, -1);
         if (indexName == "getAspectRatio") {
@@ -63,7 +63,7 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata  Binding object
+    // - [-1] userdata  Binding
     int WindowLuaBinding::getAspectRatio(lua_State* L) {
         auto* binding = (WindowLuaBinding*) lua_touserdata(L, -1);
         lua_pushnumber(L, binding->window->getAspectRatio());

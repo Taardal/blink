@@ -1,5 +1,7 @@
 #include "utils/utils.h"
 
+#include <glm/gtx/quaternion.hpp>
+
 namespace Blink {
 
     // ChatGPT:

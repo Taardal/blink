@@ -58,11 +58,13 @@ namespace Blink {
             }
             statsLoggingLag += timestep;
 
-            while (updateLag >= secondsPerFrame) {
-                scene->update(timestep);
-                updateLag -= secondsPerFrame;
-                ups++;
-            }
+            // while (updateLag >= secondsPerFrame) {
+            //
+            // }
+
+            scene->update(timestep);
+            updateLag -= secondsPerFrame;
+            ups++;
 
             if (renderer->beginFrame()) {
                 scene->render();
@@ -71,7 +73,7 @@ namespace Blink {
             }
 
             if (statsLoggingLag >= oneSecond) {
-                BL_LOG_DEBUG("UPS [{}], FPS [{}]", ups, fps);
+                BL_LOG_INFO("UPS [{}], FPS [{}]", ups, fps);
                 ups = 0;
                 fps = 0;
                 statsLoggingLag = 0;

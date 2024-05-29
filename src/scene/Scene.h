@@ -24,6 +24,11 @@ namespace Blink {
         friend class EntityLuaBinding;
 
     private:
+        static const glm::vec3 WORLD_RIGHT_DIRECTION;
+        static const glm::vec3 WORLD_UP_DIRECTION;
+        static const glm::vec3 WORLD_FORWARD_DIRECTION;
+
+    private:
         SceneConfig config;
         entt::registry entityRegistry;
         bool useSceneCamera = false;
@@ -39,7 +44,7 @@ namespace Blink {
 
         void render();
 
-        entt::entity createEntity();
+        entt::entity createEntityWithDefaultComponents();
 
     private:
         void initializeScene();
@@ -48,14 +53,12 @@ namespace Blink {
 
         void resetSceneCamera() const;
 
-        void configureSceneCamera() const;
+        void configureSceneCameraWithDefaultSettings() const;
 
         void calculateTranslation(TransformComponent* transformComponent) const;
 
-        void calculateScale(TransformComponent* transformComponent) const;
-
         void calculateRotation(TransformComponent* transformComponent) const;
 
-        void calculateRotationOffsets(TransformComponent* transformComponent) const;
+        void calculateScale(TransformComponent* transformComponent) const;
     };
 }

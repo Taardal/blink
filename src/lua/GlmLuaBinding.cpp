@@ -71,7 +71,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] string    Name of the index being accessed
-    // - [-2] userdata  Binding object
+    // - [-2] userdata  Binding
     int GlmLuaBinding::index(lua_State* L) {
         std::string indexName = lua_tostring(L, -1);
         if (indexName == "vec3") {
@@ -574,7 +574,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table     Vector
-    // - [-2] userdata  Binding object
+    // - [-2] userdata  Binding
     int GlmLuaBinding::normalize(lua_State* L) {
         glm::vec3 vector{};
 

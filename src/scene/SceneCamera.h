@@ -5,6 +5,7 @@
 #include "window/Mouse.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Blink {
     struct SceneCameraConfig {
@@ -26,6 +27,7 @@ namespace Blink {
         glm::vec3 rightDirection = {0.0f, 0.0f, 0.0f};
         glm::vec3 upDirection = {0.0f, 0.0f, 0.0f};
         glm::vec3 worldUpDirection = {0.0f, 0.0f, 0.0f};
+        glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
         float yaw = 0.0f;
         float pitch = 0.0f;
         float roll = 0.0f;

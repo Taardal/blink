@@ -64,7 +64,7 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata  Binding object
+    // - [-1] userdata  Binding
     int MouseLuaBinding::destroy(lua_State* L) {
         auto* binding = (MouseLuaBinding*) lua_touserdata(L, -1);
         binding->~MouseLuaBinding();
@@ -73,7 +73,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] string    Name of the index being accessed
-    // - [-2] userdata  Binding object
+    // - [-2] userdata  Binding
     int MouseLuaBinding::index(lua_State* L) {
         std::string indexName = lua_tostring(L, -1);
         if (indexName == "isPressed") {
@@ -86,7 +86,7 @@ namespace Blink {
 
     // Lua stack
     // - [-1] number/string MouseButton to check, given by either value or name
-    // - [-2] userdata      Binding object
+    // - [-2] userdata      Binding
     int MouseLuaBinding::isPressed(lua_State* L) {
         auto* binding = (MouseLuaBinding*) lua_touserdata(L, -2);
         bool pressed;
