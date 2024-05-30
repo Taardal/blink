@@ -26,8 +26,8 @@ namespace Blink {
     }
 
     void LuaEngine::reloadLuaScripts(Scene* scene) const {
-        initializeCoreBindings(scene);
         compileLuaFiles();
+        initializeCoreBindings(scene);
         initializeEntityBindings(scene);
     }
 

@@ -54,11 +54,9 @@ namespace Blink {
         for (const entt::entity entity : entityRegistry.view<TransformComponent, MeshComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
-
             calculateTranslation(&transformComponent);
             calculateRotation(&transformComponent);
             calculateScale(&transformComponent);
-
             meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
 
@@ -100,6 +98,10 @@ namespace Blink {
 
         for (const entt::entity entity : entityRegistry.view<MeshComponent>()) {
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
+            auto* cameraComponent = entityRegistry.try_get<CameraComponent>(entity);
+            if (cameraComponent != nullptr && !useSceneCamera) {
+                continue; // Don't draw the mesh of the camera that's in use
+            }
             config.renderer->renderMesh(meshComponent.mesh);
         }
     }

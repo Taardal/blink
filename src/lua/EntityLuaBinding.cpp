@@ -100,8 +100,8 @@ namespace Blink {
             lua_pushcfunction(L, EntityLuaBinding::setPosition);
             return 1;
         }
-        if (indexName == "getIdByTag") {
-            lua_pushcfunction(L, EntityLuaBinding::getIdByTag);
+        if (indexName == "getEntityByTag") {
+            lua_pushcfunction(L, EntityLuaBinding::getEntityByTag);
             return 1;
         }
         BL_LOG_WARN("Could not resolve index [{}]", indexName);
@@ -536,7 +536,7 @@ namespace Blink {
     // Lua stack
     // - [-1] string   Entity tag
     // - [-2] userdata Binding
-    int EntityLuaBinding::getIdByTag(lua_State* L) {
+    int EntityLuaBinding::getEntityByTag(lua_State* L) {
         const char* entityTag = lua_tostring(L, -1);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
         for (entt::entity entity : binding->scene->entityRegistry.view<TagComponent>()) {

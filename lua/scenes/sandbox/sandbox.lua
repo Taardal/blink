@@ -25,123 +25,72 @@ function Scene.onCreateEntities()
     })
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- PLAYER
+    -- CHURCH
     -- --------------------------------------------------------------------------------------------------------------
 
-    local player = Entity:create()
+    local church = Entity:create()
 
-    Entity:setTagComponent(player, {
-        tag = "Player"
+    Entity:setTagComponent(church, {
+        tag = "Church"
     })
-    Entity:setLuaComponent(player, {
-        type = "Player",
-        path = "lua/scenes/sandbox/entities/player.out",
+    Entity:setMeshComponent(church, {
+        modelPath = "models/sibenik/sibenik.obj",
+        texturesDirectoryPath = "models/sibenik",
     })
-    Entity:setMeshComponent(player, {
+    Entity:setTransformComponent(church, {
+        position = glm.vec3(-410, -45, -570),
+        size = glm.vec3(5, 5, 5),
+        yaw = 75,
+    })
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- CHURCH SPINNER
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local churchSpinner = Entity:create()
+
+    Entity:setTagComponent(churchSpinner, {
+        tag = "Church spinner fighter jet"
+    })
+    Entity:setLuaComponent(churchSpinner, {
+        type = "ChurchSpinner",
+        path = "lua/scenes/sandbox/entities/church_spinner.out",
+    })
+    Entity:setMeshComponent(churchSpinner, {
         modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/krulspeld5.jpg",
+        textureAtlasPath = "models/fighter/uvmap.jpg",
     })
-    Entity:setTransformComponent(player, {
-        size = glm.vec3(100, 100, 100),
-    })
-    --
-    ---- --------------------------------------------------------------------------------------------------------------
-    ---- Player camera
-    ---- --------------------------------------------------------------------------------------------------------------
-    --
-    --local camera = Entity:create()
-    --
-    --Entity:setTagComponent(camera, {
-    --    tag = "Camera"
-    --})
-    --Entity:setLuaComponent(camera, {
-    --    type = "Camera",
-    --    path = "lua/entities/camera.out",
-    --})
-    --Entity:setMeshComponent(camera, {
-    --    modelPath = "models/camera/11673_camera_v1_L3.obj",
-    --    texturesDirectoryPath = "models/camera",
-    --})
-    --Entity:setTransformComponent(camera, {
-    --    position = glm.vec3(0, 0, 0),
-    --    size = glm.vec3(0.05, 0.05, 0.05),
-    --    yawOffset = 90.0,
-    --    pitchOffset = -90.0,
-    --})
-    --Entity:setCameraComponent(camera, {
-    --    aspectRatio = Window:getAspectRatio(),
-    --    fieldOfView = SceneCamera:getFieldOfView(),
-    --    nearClip = SceneCamera:getNearClip(),
-    --    farClip = SceneCamera:getFarClip(),
-    --})
-
-    -- --------------------------------------------------------------------------------------------------------------
-    -- Line patrol fighter jet squadron
-    -- --------------------------------------------------------------------------------------------------------------
-
-    local linePatrol1 = Entity:create()
-
-    Entity:setTagComponent(linePatrol1, {
-        tag = "Line patrol fighter jet 1"
-    })
-    Entity:setLuaComponent(linePatrol1, {
-        type = "LinePatrol",
-        path = "lua/scenes/sandbox/entities/line_patrol.out",
-    })
-    Entity:setMeshComponent(linePatrol1, {
-        modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/krulspeld4.jpg",
-    })
-    Entity:setTransformComponent(linePatrol1, {
-        position = glm.vec3(0, 50, 0),
-        yaw = 90,
-        size = glm.vec3(100, 100, 100)
-    })
-
-    local linePatrol2 = Entity:create()
-
-    Entity:setTagComponent(linePatrol2, {
-        tag = "Line patrol fighter jet 2"
-    })
-    Entity:setLuaComponent(linePatrol2, {
-        type = "LinePatrol",
-        path = "lua/scenes/sandbox/entities/line_patrol.out",
-    })
-    Entity:setMeshComponent(linePatrol2, {
-        modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/krulspeld5.jpg",
-    })
-    Entity:setTransformComponent(linePatrol2, {
-        position = glm.vec3(0, 50, -100),
-        size = glm.vec3(100, 100, 100),
-        yaw = 90,
+    Entity:setTransformComponent(churchSpinner, {
+        position = glm.vec3(-410, 150, -570),
+        pitch = -90,
+        size = glm.vec3(200, 200, 200)
     })
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- Mothership
+    -- MOTHERSHIP
     -- --------------------------------------------------------------------------------------------------------------
 
-    local oxarFreighter = Entity:create()
+    local mothership = Entity:create()
 
-    Entity:setTagComponent(oxarFreighter, {
+    Entity:setTagComponent(mothership, {
         tag = "Mothership"
     })
-    Entity:setLuaComponent(oxarFreighter, {
+    Entity:setLuaComponent(mothership, {
         type = "Mothership",
         path = "lua/scenes/sandbox/entities/mothership.out",
     })
-    Entity:setMeshComponent(oxarFreighter, {
+    Entity:setMeshComponent(mothership, {
         modelPath = "models/oxar_freighter/Meshes/oxar_freighter.obj",
         textureAtlasPath = "models/oxar_freighter/Textures/Oxar_Diffuse.png",
     })
-    Entity:setTransformComponent(oxarFreighter, {
+    Entity:setTransformComponent(mothership, {
         position = glm.vec3(-410, 260, -570),
         size = glm.vec3(1000, 1000, 1000),
         yaw = 255,
     })
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- Roll patrol, fighter jet squadron 1
+    -- ROLL PATROL 1
     -- --------------------------------------------------------------------------------------------------------------
 
     local rollPatrol1 = Entity:create()
@@ -202,7 +151,7 @@ function Scene.onCreateEntities()
     })
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- Roll patrol, fighter jet squadron 2
+    -- ROLL PATROL 2
     -- --------------------------------------------------------------------------------------------------------------
 
     local rollPatrol4 = Entity:create()
@@ -263,44 +212,93 @@ function Scene.onCreateEntities()
     })
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- Church spinner fighter jet
+    -- LINE PATROL
     -- --------------------------------------------------------------------------------------------------------------
 
-    local churchSpinner = Entity:create()
+    local linePatrol1 = Entity:create()
 
-    Entity:setTagComponent(churchSpinner, {
-        tag = "Church spinner fighter jet"
+    Entity:setTagComponent(linePatrol1, {
+        tag = "Line patrol fighter jet 1"
     })
-    Entity:setLuaComponent(churchSpinner, {
-        type = "ChurchSpinner",
-        path = "lua/scenes/sandbox/entities/church_spinner.out",
+    Entity:setLuaComponent(linePatrol1, {
+        type = "LinePatrol",
+        path = "lua/scenes/sandbox/entities/line_patrol.out",
     })
-    Entity:setMeshComponent(churchSpinner, {
+    Entity:setMeshComponent(linePatrol1, {
         modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/uvmap.jpg",
+        textureAtlasPath = "models/fighter/krulspeld4.jpg",
     })
-    Entity:setTransformComponent(churchSpinner, {
-        position = glm.vec3(-410, 150, -570),
-        pitch = -90,
-        size = glm.vec3(200, 200, 200)
+    Entity:setTransformComponent(linePatrol1, {
+        position = glm.vec3(0, 50, 0),
+        yaw = 90,
+        size = glm.vec3(100, 100, 100)
+    })
+
+    local linePatrol2 = Entity:create()
+
+    Entity:setTagComponent(linePatrol2, {
+        tag = "Line patrol fighter jet 2"
+    })
+    Entity:setLuaComponent(linePatrol2, {
+        type = "LinePatrol",
+        path = "lua/scenes/sandbox/entities/line_patrol.out",
+    })
+    Entity:setMeshComponent(linePatrol2, {
+        modelPath = "models/fighter/fighter.obj",
+        textureAtlasPath = "models/fighter/krulspeld5.jpg",
+    })
+    Entity:setTransformComponent(linePatrol2, {
+        position = glm.vec3(0, 50, -100),
+        size = glm.vec3(100, 100, 100),
+        yaw = 90,
     })
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- Sibenik cathedral
+    -- PLAYER CAMERA
     -- --------------------------------------------------------------------------------------------------------------
 
-    local sibenik = Entity:create()
+    local camera = Entity:create()
 
-    Entity:setTagComponent(sibenik, {
-        tag = "Sibenik cathedral"
+    Entity:setTagComponent(camera, {
+        tag = "Camera"
     })
-    Entity:setMeshComponent(sibenik, {
-        modelPath = "models/sibenik/sibenik.obj",
-        texturesDirectoryPath = "models/sibenik",
+    Entity:setLuaComponent(camera, {
+        type = "Camera",
+        path = "lua/scenes/sandbox/entities/camera.out",
     })
-    Entity:setTransformComponent(sibenik, {
-        position = glm.vec3(-410, -45, -570),
-        size = glm.vec3(5, 5, 5),
-        yaw = 75,
+    Entity:setMeshComponent(camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(camera, {
+        position = glm.vec3(0, 0, 0),
+        size = glm.vec3(25, 25, 25),
+    })
+    Entity:setCameraComponent(camera, {
+        aspectRatio = Window:getAspectRatio(),
+        fieldOfView = SceneCamera:getFieldOfView(),
+        nearClip = SceneCamera:getNearClip(),
+        farClip = SceneCamera:getFarClip(),
+    })
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- PLAYER
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local player = Entity:create()
+
+    Entity:setTagComponent(player, {
+        tag = "Player"
+    })
+    Entity:setLuaComponent(player, {
+        type = "Player",
+        path = "lua/scenes/sandbox/entities/player.out",
+    })
+    Entity:setMeshComponent(player, {
+        modelPath = "models/fighter/fighter.obj",
+        textureAtlasPath = "models/fighter/krulspeld5.jpg",
+    })
+    Entity:setTransformComponent(player, {
+        size = glm.vec3(25, 25, 25),
     })
 end

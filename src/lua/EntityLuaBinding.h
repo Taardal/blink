@@ -45,6 +45,6 @@ namespace Blink {
 
         static int setPosition(lua_State* L);
 
-        static int getIdByTag(lua_State* L);
+        static int getEntityByTag(lua_State* L);
     };
 }

@@ -1,16 +1,20 @@
-local heightAbovePlayer = 1
-local distanceBehindPlayer = 10
+local heightAbovePlayer = 8
+local distanceBehindPlayer = 30
 local loggingEnabled = false
 
-function Camera.onUpdate(cameraId, timestep)
-    local cameraTransformComponent = Entity:getTransformComponent(cameraId)
+function Camera.onUpdate(entity, timestep)
 
-    local playerId = Entity:getIdByTag("Player")
-    local playerTransformComponent = Entity:getTransformComponent(playerId)
+    local cameraTransformComponent = Entity:getTransformComponent(entity)
+
+    local playerEntity = Entity:getEntityByTag("Player")
+    local playerTransformComponent = Entity:getTransformComponent(playerEntity)
 
     cameraTransformComponent.position.x = playerTransformComponent.position.x
-    cameraTransformComponent.position.y = playerTransformComponent.position.y --+ heightAbovePlayer
+    cameraTransformComponent.position.y = playerTransformComponent.position.y + heightAbovePlayer
     cameraTransformComponent.position.z = playerTransformComponent.position.z + distanceBehindPlayer
+
+    cameraTransformComponent.pitch = -10
+    --cameraTransformComponent.forwardDirection = playerTransformComponent.forwardDirection
 
     if Keyboard:isPressed(Key.B) then
         loggingEnabled = true
@@ -19,9 +23,9 @@ function Camera.onUpdate(cameraId, timestep)
         loggingEnabled = false
     end
     if loggingEnabled then
-        printt(cameraId)
-        printt(playerId)
+        printt(entity)
+        printt(playerEntity)
     end
 
-    Entity:setTransformComponent(cameraId, cameraTransformComponent)
+    Entity:setTransformComponent(entity, cameraTransformComponent)
 end
