@@ -34,7 +34,7 @@ namespace Blink {
 
     class Log {
     public:
-        static void setLevel(LogLevel level);
+        static void initialize(LogLevel level);
 
         static std::string tag(const char* filename, const char* functionName, uint32_t lineNumber);
 

@@ -27,7 +27,7 @@ namespace Blink {
     }
 
     void Renderer::onEvent(Event& event) {
-        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::F2) {
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::F12) {
             reloadShaders();
             return;
         }

@@ -11,6 +11,10 @@ local plainSize = glm.vec3(200, 1, 200)
 local fighterJetSize = glm.vec3(100, 100, 100)
 
 function Scene.onCreateEntities()
+    -- --------------------------------------------------------------------------------------------------------------
+    -- FLAT PLAIN / GROUND
+    -- --------------------------------------------------------------------------------------------------------------
+
     local ground = Entity:create()
     Entity:setTagComponent(ground, {
         tag = "Flat plain"
@@ -24,7 +28,9 @@ function Scene.onCreateEntities()
         size = plainSize,
     })
 
-    local fighterJets = {}
+    -- --------------------------------------------------------------------------------------------------------------
+    -- YAW
+    -- --------------------------------------------------------------------------------------------------------------
 
     local fighterJetYaw = Entity:create()
 
@@ -44,6 +50,10 @@ function Scene.onCreateEntities()
         size = fighterJetSize,
     })
 
+    -- --------------------------------------------------------------------------------------------------------------
+    -- PITCH
+    -- --------------------------------------------------------------------------------------------------------------
+
     local fighterJetPitch = Entity:create()
 
     Entity:setTagComponent(fighterJetPitch, {
@@ -61,6 +71,10 @@ function Scene.onCreateEntities()
         position = glm.vec3(-100, 50, -100),
         size = fighterJetSize,
     })
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- ROLL
+    -- --------------------------------------------------------------------------------------------------------------
 
     local fighterJetRoll = Entity:create()
 
@@ -80,6 +94,10 @@ function Scene.onCreateEntities()
         size = fighterJetSize,
     })
 
+    -- --------------------------------------------------------------------------------------------------------------
+    -- YAW AND PITCH
+    -- --------------------------------------------------------------------------------------------------------------
+
     local fighterJetYawAndPitch = Entity:create()
 
     Entity:setTagComponent(fighterJetYawAndPitch, {
@@ -97,6 +115,10 @@ function Scene.onCreateEntities()
         position = glm.vec3(100, 50, -100),
         size = fighterJetSize,
     })
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- YAW AND ROLL
+    -- --------------------------------------------------------------------------------------------------------------
 
     local fighterJetYawAndRoll = Entity:create()
 
@@ -116,6 +138,10 @@ function Scene.onCreateEntities()
         size = fighterJetSize,
     })
 
+    -- --------------------------------------------------------------------------------------------------------------
+    -- PITCH AND ROLL
+    -- --------------------------------------------------------------------------------------------------------------
+
     local fighterJetPitchAndRoll = Entity:create()
 
     Entity:setTagComponent(fighterJetPitchAndRoll, {
@@ -134,6 +160,10 @@ function Scene.onCreateEntities()
         size = fighterJetSize,
     })
 
+    -- --------------------------------------------------------------------------------------------------------------
+    -- YAW, PITCH AND ROLL
+    -- --------------------------------------------------------------------------------------------------------------
+
     local fighterJetYawPitchAndRoll = Entity:create()
 
     Entity:setTagComponent(fighterJetYawPitchAndRoll, {
@@ -151,12 +181,4 @@ function Scene.onCreateEntities()
         position = glm.vec3(0, 50, 0),
         size = fighterJetSize,
     })
-
-    --for x = 1, #fighterJets, 1 do
-    --    for y = 1, 3, 1 do
-    --        Entity:setTransformComponent(fighterJets[x * y], {
-    --            position = glm.vec3((y - 1) * 100, 50, (x - 1) * 100),
-    --        })
-    --    end
-    --end
 end

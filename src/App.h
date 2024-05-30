@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AppConfig.h"
 #include "system/FileSystem.h"
 #include "window/Window.h"
 #include "window/Keyboard.h"
@@ -22,6 +21,17 @@ namespace Blink {
         Initialized = 1,
         Running = 2,
         Paused = 3,
+    };
+
+    struct AppConfig {
+        std::string name = "App";
+        std::string scene = "lua/scenes/sandbox.out";
+        std::vector<std::string> scenes;
+        int32_t windowWidth = 800;
+        int32_t windowHeight = 600;
+        bool windowMaximized = false;
+        bool windowResizable = false;
+        uint32_t fps = 60;
     };
 
     class App {
@@ -53,6 +63,8 @@ namespace Blink {
         void gameLoop() const;
 
         void onEvent(Event& event);
+
+        void setScene(const std::string& scenePath);
 
         void initialize();
 

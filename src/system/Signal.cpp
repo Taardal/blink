@@ -1,20 +1,24 @@
 #include "Signal.h"
 
 namespace Blink {
-    void addErrorSignalHandlers() {
+    void addErrorSignalStacktracePrinters() {
         // (Segmentation fault): Invalid memory access.
-        signal(SIGSEGV, onErrorSignal);
+        signal(SIGSEGV, printStacktrace);
+
         // (Abort): Abnormal termination initiated by the program itself.
-        signal(SIGABRT, onErrorSignal);
+        signal(SIGABRT, printStacktrace);
+
         // (Illegal instruction): Attempt to execute an illegal instruction.
-        signal(SIGILL, onErrorSignal);
+        signal(SIGILL, printStacktrace);
+
         // (Floating-point exception): Arithmetic exceptions like division by zero or floating-point overflow.
-        signal(SIGFPE, onErrorSignal);
+        signal(SIGFPE, printStacktrace);
+
         // (Bus error): Attempt to access memory that the CPU cannot physically address.
-        signal(SIGBUS, onErrorSignal);
+        signal(SIGBUS, printStacktrace);
     }
 
-    void onErrorSignal(int signal) {
+    void printStacktrace(int signal) {
         std::string signalName = getSignalName(signal);
         fprintf(stderr, "Signal [%s]:\n", signalName.c_str());
         fprintf(stderr, "Stacktrace:\n");

@@ -23,7 +23,7 @@ namespace Blink {
     }
 
     void App::run() {
-        if (state == AppState::None) {
+        if (state != AppState::Initialized) {
             return;
         }
         try {
@@ -94,8 +94,38 @@ namespace Blink {
             state = AppState::Running;
             return;
         }
+        if (event.type == EventType::KeyPressed) {
+            auto key = event.as<KeyPressedEvent>().keyCode;
+            auto f1Key = (uint32_t) Key::F1;
+            if (key >= f1Key) {
+                int32_t sceneIndex = key - f1Key;
+                if (sceneIndex > -1 && sceneIndex < config.scenes.size()) {
+                    setScene(config.scenes[sceneIndex]);
+                    return;
+                }
+            }
+        }
         renderer->onEvent(event);
         scene->onEvent(event);
+    }
+
+    void App::setScene(const std::string& scenePath) {
+        BL_LOG_INFO("Setting scene [{}]", scenePath);
+
+        if (scene != nullptr) {
+            renderer->waitUntilIdle();
+            delete scene;
+        }
+
+        SceneConfig sceneConfig{};
+        sceneConfig.scene = scenePath;
+        sceneConfig.keyboard = keyboard;
+        sceneConfig.meshManager = meshManager;
+        sceneConfig.renderer = renderer;
+        sceneConfig.luaEngine = luaEngine;
+        sceneConfig.sceneCamera = sceneCamera;
+
+        BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
     }
 
     void App::initialize() {
@@ -168,14 +198,8 @@ namespace Blink {
         luaEngineConfig.window = window;
         BL_EXECUTE_THROW(luaEngine = new LuaEngine(luaEngineConfig));
 
-        SceneConfig sceneConfig{};
-        sceneConfig.scene = config.scene;
-        sceneConfig.keyboard = keyboard;
-        sceneConfig.meshManager = meshManager;
-        sceneConfig.renderer = renderer;
-        sceneConfig.luaEngine = luaEngine;
-        sceneConfig.sceneCamera = sceneCamera;
-        BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
+        BL_ASSERT_THROW(!config.scenes.empty());
+        setScene(config.scenes[0]);
     }
 
     void App::terminate() const {

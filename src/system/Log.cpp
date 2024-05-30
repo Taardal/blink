@@ -1,8 +1,11 @@
 #include "Log.h"
+#include "system/Signal.h"
+
 #include <sstream>
 
 namespace Blink {
-    void Log::setLevel(LogLevel level) {
+    void Log::initialize(LogLevel level) {
+        addErrorSignalStacktracePrinters();
         spdlog::set_level(getSpdLogLevel(level));
     }
 

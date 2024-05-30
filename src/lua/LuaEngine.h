@@ -28,6 +28,8 @@ namespace Blink {
 
         void resetState();
 
+        void reloadLuaScripts(Scene* scene) const;
+
         void initializeCoreBindings(Scene* scene) const;
 
         void initializeEntityBindings(Scene* scene) const;
@@ -38,12 +40,12 @@ namespace Blink {
 
         void updateEntities(Scene* scene, double timestep) const;
 
-        void compileLuaFiles() const;
-
     private:
         void initialize();
 
         void terminate() const;
+
+        void compileLuaFiles() const;
 
         static int luaPrint(lua_State* L);
     };

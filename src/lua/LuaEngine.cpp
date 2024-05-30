@@ -25,6 +25,12 @@ namespace Blink {
         initialize();
     }
 
+    void LuaEngine::reloadLuaScripts(Scene* scene) const {
+        initializeCoreBindings(scene);
+        compileLuaFiles();
+        initializeEntityBindings(scene);
+    }
+
     void LuaEngine::initializeCoreBindings(Scene* scene) const {
         EntityLuaBinding::initialize(L, scene);
         GlmLuaBinding::initialize(L);
@@ -182,16 +188,6 @@ namespace Blink {
         }
     }
 
-    void LuaEngine::compileLuaFiles() const {
-        std::stringstream ss;
-        ss << "cmake";
-        ss << " -D LUA_SOURCE_DIR=" << CMAKE_LUA_SOURCE_DIR;
-        ss << " -D LUA_OUTPUT_DIR=" << CMAKE_LUA_OUTPUT_DIR;
-        ss << " -P " << CMAKE_SCRIPTS_DIR << "/compile_lua.cmake";
-        std::string command = ss.str();
-        std::system(command.c_str());
-    }
-
     void LuaEngine::initialize() {
         L = luaL_newstate();
 
@@ -208,6 +204,16 @@ namespace Blink {
 
     void LuaEngine::terminate() const {
         lua_close(L);
+    }
+
+    void LuaEngine::compileLuaFiles() const {
+        std::stringstream ss;
+        ss << "cmake";
+        ss << " -D LUA_SOURCE_DIR=" << CMAKE_LUA_SOURCE_DIR;
+        ss << " -D LUA_OUTPUT_DIR=" << CMAKE_LUA_OUTPUT_DIR;
+        ss << " -P " << CMAKE_SCRIPTS_DIR << "/compile_lua.cmake";
+        std::string command = ss.str();
+        std::system(command.c_str());
     }
 
     int LuaEngine::luaPrint(lua_State* L) {

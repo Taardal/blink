@@ -11,9 +11,9 @@
 
 namespace Blink {
 
-    void addErrorSignalHandlers();
+    void addErrorSignalStacktracePrinters();
 
-    void onErrorSignal(int signal);
+    void printStacktrace(int signal);
 
     std::string getSignalName(int signal);
 

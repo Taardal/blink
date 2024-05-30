@@ -29,31 +29,20 @@ namespace Blink {
             resetSceneCamera();
             return;
         }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Y) {
+            config.sceneCamera->loggingEnabled = !config.sceneCamera->loggingEnabled;
+            return;
+        }
         // Recompile Lua scripts while the scene is running (hot reload)
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::R) {
-            config.luaEngine->compileLuaFiles();
-            config.luaEngine->initializeEntityBindings(this);
+            config.luaEngine->reloadLuaScripts(this);
             return;
         }
         // Unload, recompile and load entire scene again (cold reload)
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::T) {
-            // Wait until it's safe to destroy the resources (descriptors) used by the meshes in the current scene
-            config.renderer->waitUntilIdle();
-
-            // Unload scene
             terminateScene();
-            config.luaEngine->resetState();
-            config.meshManager->resetDescriptors();
-
-            // Recompile scene & entity scripts
-            config.luaEngine->compileLuaFiles();
-
-            // Load scene
+            config.luaEngine->reloadLuaScripts(this);
             initializeScene();
-            return;
-        }
-        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Y) {
-            config.sceneCamera->loggingEnabled = !config.sceneCamera->loggingEnabled;
             return;
         }
         config.sceneCamera->onEvent(event);
@@ -167,7 +156,13 @@ namespace Blink {
     }
 
     void Scene::terminateScene() {
+        // Wait until it's safe to destroy the resources (descriptors) used by the meshes in the current scene
+        config.renderer->waitUntilIdle();
+
+        // Unload scene
         entityRegistry.clear();
+        config.luaEngine->resetState();
+        config.meshManager->resetDescriptors();
     }
 
     void Scene::resetSceneCamera() const {

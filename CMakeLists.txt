@@ -34,7 +34,6 @@ add_executable(
         ${SRC_DIR}/pch.h
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
-        ${SRC_DIR}/AppConfig.h
         ${SRC_DIR}/graphics/Mesh.h
         ${SRC_DIR}/graphics/MeshManager.cpp
         ${SRC_DIR}/graphics/MeshManager.h
