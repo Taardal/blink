@@ -253,7 +253,7 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createSampler(&textureSamplerCreateInfo, &textureSampler));
     }
 
-    void MeshManager::destroyTextureSampler() {
+    void MeshManager::destroyTextureSampler() const {
         config.device->destroySampler(textureSampler);
     }
 

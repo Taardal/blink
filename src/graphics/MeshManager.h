@@ -71,7 +71,7 @@ namespace Blink {
 
         void createTextureSampler();
 
-        void destroyTextureSampler();
+        void destroyTextureSampler() const;
 
         void createPlaceholderTexture();
     };

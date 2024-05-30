@@ -15,8 +15,10 @@ int main() {
     config.windowResizable = true;
     config.windowMaximized = false;
     config.fps = 120;
-    config.scene = "lua/scenes/sandbox.out";
-    //config.scene = "lua/scenes/viking_room.out";
+
+    config.scene = "lua/scenes/rotation_test/rotation_test.out";
+    config.scene = "lua/scenes/viking_room/viking_room.out";
+    config.scene = "lua/scenes/sandbox/sandbox.out";
 
     App app(config);
     app.run();

@@ -130,23 +130,47 @@ namespace Blink {
     }
 
     // Lua stack
+    //
+    // SceneCamera:setPosition({ x, y, z }) / SceneCamera:setPosition(glm.vec3(x, y, z))
     // - [-1] table    Position vector
     // - [-2] userdata Binding
+    //
+    // SceneCamera:setPosition(x, y, z)
+    // - [-1] number    Z
+    // - [-2] number    Y
+    // - [-3] number    X
+    // - [-4] userdata Binding
     int SceneCameraLuaBinding::setPosition(lua_State* L) {
-        lua_getfield(L, -1, "x");
-        auto x = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        uint32_t argumentCount = lua_gettop(L) - 1;
 
-        lua_getfield(L, -1, "y");
-        auto y = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        bool argumentIsVector = argumentCount == 1;
+        bool argumentIsScalars = argumentCount == 3;
+        BL_ASSERT_THROW(argumentIsVector || argumentIsScalars);
 
-        lua_getfield(L, -1, "z");
-        auto z = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        int bindingIndex = -lua_gettop(L); // Bottom of the stack
+        auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, bindingIndex);
 
-        auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
-        binding->sceneCamera->position = { x, y, z };
+        glm::vec3& position = binding->sceneCamera->position;
+
+        if (argumentIsVector) {
+            lua_getfield(L, -1, "x");
+            position.x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            position.y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            position.z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+        }
+        if (argumentIsScalars) {
+            position.x = (float) lua_tonumber(L, -3);
+            position.y = (float) lua_tonumber(L, -2);
+            position.z = (float) lua_tonumber(L, -1);
+        }
+
         return 0;
     }
 
