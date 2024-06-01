@@ -88,6 +88,10 @@ namespace Blink {
             lua_pushcfunction(L, EntityLuaBinding::setTransformComponent);
             return 1;
         }
+        if (indexName == "getCameraComponent") {
+            lua_pushcfunction(L, EntityLuaBinding::getCameraComponent);
+            return 1;
+        }
         if (indexName == "setCameraComponent") {
             lua_pushcfunction(L, EntityLuaBinding::setCameraComponent);
             return 1;
@@ -292,6 +296,18 @@ namespace Blink {
         lua_setmetatable(L, -2);
         lua_setfield(L, -2, "worldUpDirection");
 
+        const glm::quat& orientation = transformComponent.orientation;
+        lua_newtable(L);
+        lua_pushnumber(L, orientation.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, orientation.y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, orientation.z);
+        lua_setfield(L, -2, "z");
+        lua_pushnumber(L, orientation.w);
+        lua_setfield(L, -2, "w");
+        lua_setfield(L, -2, "orientation");
+
         const float yaw = transformComponent.yaw;
         lua_pushnumber(L, yaw);
         lua_setfield(L, -2, "yaw");
@@ -320,15 +336,14 @@ namespace Blink {
             bool missing = lua_isnil(L, -1);
             if (!missing) {
                 lua_getfield(L, -1, "x");
-                auto x = (float) lua_tonumber(L, -1);
+                transformComponent.position.x = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "y");
-                auto y = (float) lua_tonumber(L, -1);
+                transformComponent.position.y = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "z");
-                auto z = (float) lua_tonumber(L, -1);
+                transformComponent.position.z = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
-                transformComponent.position = { x, y, z };
             }
             lua_pop(L, 1);
         }
@@ -337,15 +352,14 @@ namespace Blink {
             bool missing = lua_isnil(L, -1);
             if (!missing) {
                 lua_getfield(L, -1, "x");
-                auto x = (float) lua_tonumber(L, -1);
+                transformComponent.size.x = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "y");
-                auto y = (float) lua_tonumber(L, -1);
+                transformComponent.size.y = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "z");
-                auto z = (float) lua_tonumber(L, -1);
+                transformComponent.size.z = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
-                transformComponent.size = { x, y, z };
             }
             lua_pop(L, 1);
         }
@@ -354,15 +368,14 @@ namespace Blink {
             bool missing = lua_isnil(L, -1);
             if (!missing) {
                 lua_getfield(L, -1, "x");
-                auto x = (float) lua_tonumber(L, -1);
+                transformComponent.forwardDirection.x = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "y");
-                auto y = (float) lua_tonumber(L, -1);
+                transformComponent.forwardDirection.y = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "z");
-                auto z = (float) lua_tonumber(L, -1);
+                transformComponent.forwardDirection.z = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
-                transformComponent.forwardDirection = { x, y, z };
             }
             lua_pop(L, 1);
         }
@@ -371,15 +384,14 @@ namespace Blink {
             bool missing = lua_isnil(L, -1);
             if (!missing) {
                 lua_getfield(L, -1, "x");
-                auto x = (float) lua_tonumber(L, -1);
+                transformComponent.rightDirection.x = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "y");
-                auto y = (float) lua_tonumber(L, -1);
+                transformComponent.rightDirection.y = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "z");
-                auto z = (float) lua_tonumber(L, -1);
+                transformComponent.rightDirection.z = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
-                transformComponent.rightDirection = {x, y, z};
             }
             lua_pop(L, 1);
         }
@@ -388,15 +400,14 @@ namespace Blink {
             bool missing = lua_isnil(L, -1);
             if (!missing) {
                 lua_getfield(L, -1, "x");
-                auto x = (float) lua_tonumber(L, -1);
+                transformComponent.upDirection.x = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "y");
-                auto y = (float) lua_tonumber(L, -1);
+                transformComponent.upDirection.y = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "z");
-                auto z = (float) lua_tonumber(L, -1);
+                transformComponent.upDirection.z = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
-                transformComponent.upDirection = { x, y, z };
             }
             lua_pop(L, 1);
         }
@@ -405,15 +416,33 @@ namespace Blink {
             bool missing = lua_isnil(L, -1);
             if (!missing) {
                 lua_getfield(L, -1, "x");
-                auto x = (float) lua_tonumber(L, -1);
+                transformComponent.worldUpDirection.x = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "y");
-                auto y = (float) lua_tonumber(L, -1);
+                transformComponent.worldUpDirection.y = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
                 lua_getfield(L, -1, "z");
-                auto z = (float) lua_tonumber(L, -1);
+                transformComponent.worldUpDirection.z = (float) lua_tonumber(L, -1);
                 lua_pop(L, 1);
-                transformComponent.worldUpDirection = { x, y, z };
+            }
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "orientation");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                lua_getfield(L, -1, "x");
+                transformComponent.orientation.x = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "y");
+                transformComponent.orientation.y = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "z");
+                transformComponent.orientation.z = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
+                lua_getfield(L, -1, "w");
+                transformComponent.orientation.w = (float) lua_tonumber(L, -1);
+                lua_pop(L, 1);
             }
             lua_pop(L, 1);
         }
@@ -442,6 +471,48 @@ namespace Blink {
             lua_pop(L, 1);
         }
         return 0;
+    }
+
+    // Lua stack
+    // - [-1] number    Entity
+    // - [-2] userdata  Binding
+    int EntityLuaBinding::getCameraComponent(lua_State* L) {
+        entt::entity entity = (entt::entity) lua_tonumber(L, -1);
+        auto* binding = (EntityLuaBinding*) lua_touserdata(L, -2);
+        auto& cameraComponent = binding->scene->entityRegistry.get<CameraComponent>(entity);
+
+        lua_newtable(L);
+
+        lua_pushnumber(L, cameraComponent.aspectRatio);
+        lua_setfield(L, -2, "aspectRatio");
+
+        lua_pushnumber(L, cameraComponent.fieldOfView);
+        lua_setfield(L, -2, "fieldOfView");
+
+        lua_pushnumber(L, cameraComponent.farClip);
+        lua_setfield(L, -2, "farClip");
+
+        lua_pushnumber(L, cameraComponent.nearClip);
+        lua_setfield(L, -2, "nearClip");
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, cameraComponent.view[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, cameraComponent.view[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, cameraComponent.view[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, cameraComponent.view[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, GlmLuaBinding::VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        lua_pop(L, 1);
+
+        return 1;
     }
 
     // Lua stack
@@ -483,6 +554,33 @@ namespace Blink {
                 cameraComponent.farClip = (float) lua_tonumber(L, -1);
             }
             lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "view");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                for (int i = 0; i < 4; ++i) {
+                    lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+                    lua_getfield(L, -1, "x");
+                    cameraComponent.view[i].x = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "y");
+                    cameraComponent.view[i].y = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "z");
+                    cameraComponent.view[i].z = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "w");
+                    cameraComponent.view[i].w = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_pop(L, 1);
+                }
+            }
         }
         return 0;
     }

@@ -39,12 +39,14 @@ namespace Blink {
 
         static int setTransformComponent(lua_State* L);
 
+        static int getCameraComponent(lua_State* L);
+
         static int setCameraComponent(lua_State* L);
+
+        static int getEntityByTag(lua_State* L);
 
         static int getPosition(lua_State* L);
 
         static int setPosition(lua_State* L);
-
-        static int getEntityByTag(lua_State* L);
     };
 }

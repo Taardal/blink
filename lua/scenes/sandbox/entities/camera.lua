@@ -3,18 +3,10 @@ local distanceBehindPlayer = 30
 local loggingEnabled = false
 
 function Camera.onUpdate(entity, timestep)
-
     local cameraTransformComponent = Entity:getTransformComponent(entity)
 
     local playerEntity = Entity:getEntityByTag("Player")
     local playerTransformComponent = Entity:getTransformComponent(playerEntity)
-
-    cameraTransformComponent.position.x = playerTransformComponent.position.x
-    cameraTransformComponent.position.y = playerTransformComponent.position.y + heightAbovePlayer
-    cameraTransformComponent.position.z = playerTransformComponent.position.z + distanceBehindPlayer
-
-    cameraTransformComponent.pitch = -10
-    --cameraTransformComponent.forwardDirection = playerTransformComponent.forwardDirection
 
     if Keyboard:isPressed(Key.B) then
         loggingEnabled = true
@@ -27,5 +19,23 @@ function Camera.onUpdate(entity, timestep)
         printt(playerEntity)
     end
 
+    local playerPosition = playerTransformComponent.position
+    local playerOrientation = playerTransformComponent.orientation
+
+    local playerToCameraOffset = glm.vec3(0, heightAbovePlayer, distanceBehindPlayer)
+    local playerToCameraWorldOffset = glm.rotate(playerOrientation, playerToCameraOffset)
+
+    local cameraPosition = playerPosition + playerToCameraWorldOffset
+
+    local cameraView = glm.lookAt(cameraPosition, playerPosition, WORLD_UP_DIRECTION)
+    local cameraOrientation = glm.toQuat(cameraView)
+
+    cameraTransformComponent.position = cameraPosition
+    cameraTransformComponent.orientation = cameraOrientation
+
     Entity:setTransformComponent(entity, cameraTransformComponent)
+
+    Entity:setCameraComponent(entity, {
+        view = cameraView
+    })
 end

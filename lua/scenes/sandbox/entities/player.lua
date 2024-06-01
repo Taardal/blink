@@ -66,11 +66,11 @@ function Player.onUpdate(entity, timestep)
             pitch = 0
         end
     end
-    if not Keyboard:isPressed(Key.Numpad_8) and not Keyboard:isPressed(Key.Numpad_5) then
-        if pitch > 0 then
-            pitch = pitch - pitchSpeed
-        end
-    end
+    --if not Keyboard:isPressed(Key.Numpad_8) and not Keyboard:isPressed(Key.Numpad_5) then
+    --    if pitch > 0 then
+    --        pitch = pitch - pitchSpeed
+    --    end
+    --end
 
     if Keyboard:isPressed(Key.Numpad_4) then
         roll = roll + rollSpeed

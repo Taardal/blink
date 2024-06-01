@@ -71,6 +71,8 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanUniformBuffer.h
         ${SRC_DIR}/graphics/VulkanVertexBuffer.cpp
         ${SRC_DIR}/graphics/VulkanVertexBuffer.h
+        ${SRC_DIR}/lua/CoordinateSystemLuaBinding.cpp
+        ${SRC_DIR}/lua/CoordinateSystemLuaBinding.h
         ${SRC_DIR}/lua/EntityLuaBinding.cpp
         ${SRC_DIR}/lua/EntityLuaBinding.h
         ${SRC_DIR}/lua/GlmLuaBinding.cpp

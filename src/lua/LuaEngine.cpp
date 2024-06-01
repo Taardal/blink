@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "lua/LuaEngine.h"
 #include "lua/luaUtils.h"
+#include "lua/CoordinateSystemLuaBinding.h"
 #include "lua/EntityLuaBinding.h"
 #include "lua/GlmLuaBinding.h"
 #include "lua/KeyboardLuaBinding.h"
@@ -32,6 +33,7 @@ namespace Blink {
     }
 
     void LuaEngine::initializeCoreBindings(Scene* scene) const {
+        CoordinateSystemLuaBinding::initialize(L);
         EntityLuaBinding::initialize(L, scene);
         GlmLuaBinding::initialize(L);
         KeyboardLuaBinding::initialize(L, config.keyboard);
