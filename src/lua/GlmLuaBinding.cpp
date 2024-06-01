@@ -1332,13 +1332,13 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] number    timestep
-    // - [-2] table     End position vec3
-    // - [-3] table     Start position vec3
+    // - [-1] number    Timestep
+    // - [-2] table     End quaternion
+    // - [-3] table     Start quaternion
     int GlmLuaBinding::slerp(lua_State* L) {
-        float t = (float) lua_tonumber(L, -1);
+        float timestep = (float) lua_tonumber(L, -1);
 
-        glm::vec3 end{};
+        glm::quat end{};
         {
             lua_getfield(L, -2, "x");
             end.x = (float) lua_tonumber(L, -1);
@@ -1351,9 +1351,13 @@ namespace Blink {
             lua_getfield(L, -2, "z");
             end.z = (float) lua_tonumber(L, -1);
             lua_pop(L, 1);
+
+            lua_getfield(L, -2, "w");
+            end.w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
         }
 
-        glm::vec3 start{};
+        glm::quat start{};
         {
             lua_getfield(L, -3, "x");
             start.x = (float) lua_tonumber(L, -1);
@@ -1366,9 +1370,13 @@ namespace Blink {
             lua_getfield(L, -3, "z");
             start.z = (float) lua_tonumber(L, -1);
             lua_pop(L, 1);
+
+            lua_getfield(L, -3, "w");
+            start.w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
         }
 
-        glm::quat result = glm::slerp(start, end, t);
+        glm::quat result = glm::slerp(start, end, timestep);
 
         lua_newtable(L);
         lua_pushnumber(L, result.x);

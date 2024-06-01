@@ -19,23 +19,32 @@ function Camera.onUpdate(entity, timestep)
         printt(playerEntity)
     end
 
+    local cameraPosition = cameraTransformComponent.position
+    local cameraOrientation = cameraTransformComponent.orientation
+
     local playerPosition = playerTransformComponent.position
     local playerOrientation = playerTransformComponent.orientation
 
-    local playerToCameraOffset = glm.vec3(0, heightAbovePlayer, distanceBehindPlayer)
-    local playerToCameraWorldOffset = glm.rotate(playerOrientation, playerToCameraOffset)
+    local targetPlayerToCameraOffset = glm.vec3(0, heightAbovePlayer, distanceBehindPlayer)
+    local targetPlayerToCameraWorldOffset = glm.rotate(playerOrientation, targetPlayerToCameraOffset)
+    local targetCameraPosition = playerPosition + targetPlayerToCameraWorldOffset
 
-    local cameraPosition = playerPosition + playerToCameraWorldOffset
+    local positionLerpFactor = 5
+    local newCameraPosition = glm.lerp(cameraPosition, targetCameraPosition, positionLerpFactor * timestep);
 
-    local cameraView = glm.lookAt(cameraPosition, playerPosition, WORLD_UP_DIRECTION)
-    local cameraOrientation = glm.toQuat(cameraView)
+    local cameraView = glm.lookAt(newCameraPosition, playerPosition, WORLD_UP_DIRECTION)
+    local targetCameraOrientation = glm.toQuat(cameraView)
 
-    cameraTransformComponent.position = cameraPosition
-    cameraTransformComponent.orientation = cameraOrientation
+    local orientationSlerpFactor = 5
+    local newCameraOrientation = glm.slerp(cameraOrientation, targetCameraOrientation, orientationSlerpFactor * timestep)
+    --print("newCameraOrientation: " .. "x " .. newCameraOrientation.x .. ", y " .. newCameraOrientation.y .. ", z " .. newCameraOrientation.z .. ", w " .. newCameraOrientation.w);
+
+    cameraTransformComponent.position = newCameraPosition
+    cameraTransformComponent.orientation = newCameraOrientation
 
     Entity:setTransformComponent(entity, cameraTransformComponent)
 
-    Entity:setCameraComponent(entity, {
-        view = cameraView
-    })
+    --Entity:setCameraComponent(entity, {
+    --    view = cameraView
+    --})
 end

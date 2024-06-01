@@ -510,7 +510,7 @@ namespace Blink {
             lua_setmetatable(L, -2);
             lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
         }
-        lua_pop(L, 1);
+        lua_setfield(L, -2, "view");
 
         return 1;
     }
