@@ -1,4 +1,4 @@
-local heightAbovePlayer = 8
+local heightAbovePlayer = 20
 local distanceBehindPlayer = 30
 local loggingEnabled = false
 
@@ -25,26 +25,47 @@ function Camera.onUpdate(entity, timestep)
     local playerPosition = playerTransformComponent.position
     local playerOrientation = playerTransformComponent.orientation
 
-    local targetPlayerToCameraOffset = glm.vec3(0, heightAbovePlayer, distanceBehindPlayer)
-    local targetPlayerToCameraWorldOffset = glm.rotate(playerOrientation, targetPlayerToCameraOffset)
-    local targetCameraPosition = playerPosition + targetPlayerToCameraWorldOffset
+    local offset = glm.vec3(0, heightAbovePlayer, distanceBehindPlayer)
+    local worldOffset = glm.rotate(playerOrientation, offset)
+    local targetCameraPosition = playerPosition + worldOffset
 
     local positionLerpFactor = 5
     local newCameraPosition = glm.lerp(cameraPosition, targetCameraPosition, positionLerpFactor * timestep);
 
-    local cameraView = glm.lookAt(newCameraPosition, playerPosition, WORLD_UP_DIRECTION)
-    local targetCameraOrientation = glm.toQuat(cameraView)
+    local worldUp = WORLD_UP_DIRECTION
+
+    local forward = glm.normalize(playerPosition - newCameraPosition)
+    local right = glm.normalize(glm.cross(worldUp, forward))
+    local up = glm.normalize(glm.cross(forward, right))
+
+    -- Gimbal lock
+    local cameraView = glm.lookAt(newCameraPosition, playerPosition, up)
+    local targetCameraOrientation = glm.mat4ToQuat(cameraView)
+
+    -- Gimbal lock
+    local invForward = glm.vec3(-forward.x, -forward.y, -forward.z)
+    cameraView = {
+        right,
+        up,
+        invForward,
+    }
+    --targetCameraOrientation = glm.mat3ToQuat(cameraView)
+
+    -- No problems, but does not aim at player
+    --targetCameraOrientation = playerTransformComponent.orientation
 
     local orientationSlerpFactor = 5
     local newCameraOrientation = glm.slerp(cameraOrientation, targetCameraOrientation, orientationSlerpFactor * timestep)
-    --print("newCameraOrientation: " .. "x " .. newCameraOrientation.x .. ", y " .. newCameraOrientation.y .. ", z " .. newCameraOrientation.z .. ", w " .. newCameraOrientation.w);
 
     cameraTransformComponent.position = newCameraPosition
     cameraTransformComponent.orientation = newCameraOrientation
 
-    Entity:setTransformComponent(entity, cameraTransformComponent)
+    local rotation = glm.quatToMat4(newCameraOrientation)
+    --rotation = glm.quatToMat4(glm.inverseQuat(newCameraOrientation))
 
-    --Entity:setCameraComponent(entity, {
-    --    view = cameraView
-    --})
+    local translation = glm.translate(glm.mat4(1.0), glm.vec3(-newCameraPosition.x, -newCameraPosition.y, -newCameraPosition.z))
+    local cameraView = rotation * translation
+
+    Entity:setTransformComponent(entity, cameraTransformComponent)
+    Entity:setCameraComponent(entity, { view = cameraView })
 end

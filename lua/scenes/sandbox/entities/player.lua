@@ -4,8 +4,8 @@ local thrust = 0.5
 local moveSpeed = 0
 local maxMoveSpeed = 100
 
-local yawSpeed = 1
-local pitchSpeed = 1
+local yawSpeed = 0.5
+local pitchSpeed = 0.5
 local rollSpeed = yawSpeed * 2
 
 local maxRollWhenTurning = 45

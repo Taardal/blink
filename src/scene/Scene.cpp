@@ -64,16 +64,16 @@ namespace Blink {
                 auto eulerAnglesRadians = glm::eulerAngles(quaternion);
 
                 glm::vec3 eulerAngles = glm::degrees(eulerAnglesRadians);
-                transformComponent.pitch = eulerAngles.x;
-                transformComponent.yaw = eulerAngles.y;
-                transformComponent.roll = eulerAngles.z;
+                // transformComponent.pitch = eulerAngles.x;
+                // transformComponent.yaw = eulerAngles.y;
+                // transformComponent.roll = eulerAngles.z;
 
-                if (transformComponent.pitch > 89.0f) {
-                    transformComponent.pitch = 89.0f;
-                }
-                if (transformComponent.pitch < -89.0f) {
-                    transformComponent.pitch = -89.0f;
-                }
+                // if (transformComponent.pitch > 89.0f) {
+                //     transformComponent.pitch = 89.0f;
+                // }
+                // if (transformComponent.pitch < -89.0f) {
+                //     transformComponent.pitch = -89.0f;
+                // }
 
                 // BL_LOG_DEBUG("transformComponent.orientation [{}, {}, {}, {}]", transformComponent.orientation.x, transformComponent.orientation.y, transformComponent.orientation.z, transformComponent.orientation.w);
                 // BL_LOG_DEBUG("transformComponent.pitch: {} ({}, {})", transformComponent.pitch, eulerAngles.x, eulerAnglesRadians.x);
@@ -81,11 +81,11 @@ namespace Blink {
                 // BL_LOG_DEBUG("transformComponent.roll: {} ({}, {})", transformComponent.roll, eulerAngles.z, eulerAnglesRadians.z);
                 // BL_LOG_DEBUG("--");
 
-                transformComponent.rightDirection = glm::normalize(transformComponent.orientation * WORLD_RIGHT_DIRECTION);
-                transformComponent.upDirection = glm::normalize(transformComponent.orientation * WORLD_UP_DIRECTION);
-                transformComponent.forwardDirection = glm::normalize(transformComponent.orientation * WORLD_FORWARD_DIRECTION);
+                // transformComponent.rightDirection = glm::normalize(transformComponent.orientation * WORLD_RIGHT_DIRECTION);
+                // transformComponent.upDirection = glm::normalize(transformComponent.orientation * WORLD_UP_DIRECTION);
+                // transformComponent.forwardDirection = glm::normalize(transformComponent.orientation * WORLD_FORWARD_DIRECTION);
 
-                transformComponent.rotation = glm::inverse(glm::toMat4(transformComponent.orientation));
+                transformComponent.rotation = glm::toMat4(transformComponent.orientation);
 
             } else {
                 calculateRotation(&transformComponent);
@@ -112,9 +112,9 @@ namespace Blink {
 
                 //cameraComponent.view = glm::inverse(cameraComponent.view);
 
-                auto rotation = glm::toMat4(transformComponent.orientation);
-                auto translation = glm::translate(glm::mat4(1.0f), -transformComponent.position);
-                cameraComponent.view = rotation * translation;
+                // auto rotation = glm::toMat4(transformComponent.orientation);
+                // auto translation = glm::translate(glm::mat4(1.0f), -transformComponent.position);
+                // cameraComponent.view = rotation * translation;
 
                 cameraComponent.projection = glm::perspective(
                     cameraComponent.fieldOfView,

@@ -224,6 +224,66 @@ namespace Blink {
 
         lua_newtable(L);
 
+        const glm::mat4& translation = transformComponent.translation;
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, translation[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, translation[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, translation[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, translation[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, GlmLuaBinding::VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, GlmLuaBinding::MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+        lua_setfield(L, -2, "translation");
+
+        const glm::mat4& rotation = transformComponent.rotation;
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, rotation[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, rotation[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, rotation[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, rotation[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, GlmLuaBinding::VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, GlmLuaBinding::MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+        lua_setfield(L, -2, "rotation");
+
+        const glm::mat4& scale = transformComponent.scale;
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, scale[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, scale[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, scale[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, scale[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, GlmLuaBinding::VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, GlmLuaBinding::MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+        lua_setfield(L, -2, "scale");
+
         const glm::vec3& position = transformComponent.position;
         lua_newtable(L);
         lua_pushnumber(L, position.x);
@@ -331,6 +391,90 @@ namespace Blink {
         entt::entity entity = (entt::entity) lua_tonumber(L, -2);
         auto* binding = (EntityLuaBinding*) lua_touserdata(L, -3);
         auto& transformComponent = binding->scene->entityRegistry.get_or_emplace<TransformComponent>(entity);
+        {
+            lua_getfield(L, -1, "translation");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                for (int i = 0; i < 4; ++i) {
+                    lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+                    lua_getfield(L, -1, "x");
+                    transformComponent.translation[i].x = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "y");
+                    transformComponent.translation[i].y = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "z");
+                    transformComponent.translation[i].z = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "w");
+                    transformComponent.translation[i].w = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_pop(L, 1);
+                }
+            }
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "rotation");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                for (int i = 0; i < 4; ++i) {
+                    lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+                    lua_getfield(L, -1, "x");
+                    transformComponent.rotation[i].x = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "y");
+                    transformComponent.rotation[i].y = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "z");
+                    transformComponent.rotation[i].z = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "w");
+                    transformComponent.rotation[i].w = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_pop(L, 1);
+                }
+            }
+            lua_pop(L, 1);
+        }
+        {
+            lua_getfield(L, -1, "scale");
+            bool missing = lua_isnil(L, -1);
+            if (!missing) {
+                for (int i = 0; i < 4; ++i) {
+                    lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+                    lua_getfield(L, -1, "x");
+                    transformComponent.scale[i].x = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "y");
+                    transformComponent.scale[i].y = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "z");
+                    transformComponent.scale[i].z = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_getfield(L, -1, "w");
+                    transformComponent.scale[i].w = (float) lua_tonumber(L, -1);
+                    lua_pop(L, 1);
+
+                    lua_pop(L, 1);
+                }
+            }
+            lua_pop(L, 1);
+        }
         {
             lua_getfield(L, -1, "position");
             bool missing = lua_isnil(L, -1);

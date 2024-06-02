@@ -9,6 +9,8 @@ namespace Blink {
     const std::string GlmLuaBinding::VEC2_METATABLE_NAME = TYPE_NAME + ".vec2__meta";
     const std::string GlmLuaBinding::VEC3_METATABLE_NAME = TYPE_NAME + ".vec3__meta";
     const std::string GlmLuaBinding::VEC4_METATABLE_NAME = TYPE_NAME + ".vec4__meta";
+    const std::string GlmLuaBinding::MAT3_METATABLE_NAME = TYPE_NAME + ".mat3__meta";
+    const std::string GlmLuaBinding::MAT4_METATABLE_NAME = TYPE_NAME + ".mat4__meta";
 
     void GlmLuaBinding::initialize(lua_State* L) {
         // --------------------------------------------------------------------------------------------------------------
@@ -36,13 +38,14 @@ namespace Blink {
         // Create a global Lua variable and assign the userdata to it (C++ object)
         lua_setglobal(L, TYPE_NAME.c_str());
 
-        // --------------------------------------------------------------------------------------------------------------
-        // Vector metatables
-        // --------------------------------------------------------------------------------------------------------------
-        // Create an extra metatable to be added to vector tables. This should not be used on the binding itself, but
-        // rather to the tables that represents glm::vecX objects. This metatable facilitates doing arithmetic
-        // operations on the tables like `vecA + vecB`, instead of having to do `glm.add(vecA, vecB)`
-        // --------------------------------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------
+        // Metatables
+        // -------------------------------------------------------------------------------------------------------------
+        // Create extra metatables to be added to vector, matrix and similar tables. This should not be used on the
+        // binding itself, but rather on the tables that represents glm::vecX, glm::matX objects, or similar.
+        // The metatables facilitates doing arithmetic operations on the tables like `vecA + vecB`, instead of having
+        // to do `glm.add(vecA, vecB)`
+        // -------------------------------------------------------------------------------------------------------------
 
         luaL_newmetatable(L, VEC2_METATABLE_NAME.c_str());
         {
@@ -121,6 +124,58 @@ namespace Blink {
             lua_pushcclosure(L, GlmLuaBinding::divideVec4, upvalueCount);
             lua_settable(L, -3);
         }
+
+        luaL_newmetatable(L, MAT3_METATABLE_NAME.c_str());
+        {
+            lua_pushstring(L, "__add");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::addMat3, upvalueCount);
+            lua_settable(L, -3);
+        }
+        {
+            lua_pushstring(L, "__sub");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::subtractMat3, upvalueCount);
+            lua_settable(L, -3);
+        }
+        {
+            lua_pushstring(L, "__mul");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::multiplyMat3, upvalueCount);
+            lua_settable(L, -3);
+        }
+        {
+            lua_pushstring(L, "__div");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::divideMat3, upvalueCount);
+            lua_settable(L, -3);
+        }
+
+        luaL_newmetatable(L, MAT4_METATABLE_NAME.c_str());
+        {
+            lua_pushstring(L, "__add");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::addMat4, upvalueCount);
+            lua_settable(L, -3);
+        }
+        {
+            lua_pushstring(L, "__sub");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::subtractMat4, upvalueCount);
+            lua_settable(L, -3);
+        }
+        {
+            lua_pushstring(L, "__mul");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::multiplyMat4, upvalueCount);
+            lua_settable(L, -3);
+        }
+        {
+            lua_pushstring(L, "__div");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::divideMat4, upvalueCount);
+            lua_settable(L, -3);
+        }
     }
 
     // Lua stack
@@ -140,6 +195,10 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::addVec4);
             return 1;
         }
+        if (indexName == "addMat4") {
+            lua_pushcfunction(L, GlmLuaBinding::addMat4);
+            return 1;
+        }
         if (indexName == "cross") {
             lua_pushcfunction(L, GlmLuaBinding::cross);
             return 1;
@@ -156,12 +215,36 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::divideVec4);
             return 1;
         }
+        if (indexName == "divideMat4") {
+            lua_pushcfunction(L, GlmLuaBinding::divideMat4);
+            return 1;
+        }
+        if (indexName == "inverseQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::inverseQuat);
+            return 1;
+        }
+        if (indexName == "inverseMat4") {
+            lua_pushcfunction(L, GlmLuaBinding::inverseMat4);
+            return 1;
+        }
         if (indexName == "lerp") {
             lua_pushcfunction(L, GlmLuaBinding::lerp);
             return 1;
         }
         if (indexName == "lookAt") {
             lua_pushcfunction(L, GlmLuaBinding::lookAt);
+            return 1;
+        }
+        if (indexName == "mat4") {
+            lua_pushcfunction(L, GlmLuaBinding::mat4);
+            return 1;
+        }
+        if (indexName == "mat3ToQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::mat3ToQuat);
+            return 1;
+        }
+        if (indexName == "mat4ToQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::mat4ToQuat);
             return 1;
         }
         if (indexName == "multiplyVec2") {
@@ -176,8 +259,16 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::multiplyVec4);
             return 1;
         }
+        if (indexName == "multiplyMat4") {
+            lua_pushcfunction(L, GlmLuaBinding::multiplyMat4);
+            return 1;
+        }
         if (indexName == "normalize") {
             lua_pushcfunction(L, GlmLuaBinding::normalize);
+            return 1;
+        }
+        if (indexName == "quatToMat4") {
+            lua_pushcfunction(L, GlmLuaBinding::quatToMat4);
             return 1;
         }
         if (indexName == "rotate") {
@@ -212,8 +303,12 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::subtractVec4);
             return 1;
         }
-        if (indexName == "toQuat") {
-            lua_pushcfunction(L, GlmLuaBinding::toQuat);
+        if (indexName == "subtractMat4") {
+            lua_pushcfunction(L, GlmLuaBinding::subtractMat4);
+            return 1;
+        }
+        if (indexName == "translate") {
+            lua_pushcfunction(L, GlmLuaBinding::translate);
             return 1;
         }
         if (indexName == "vec3") {
@@ -459,6 +554,142 @@ namespace Blink {
         lua_setfield(L, -2, "w");
 
         luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Mat3 B
+    // - [-2] table     Mat3 A
+    int GlmLuaBinding::addMat3(lua_State* L) {
+        glm::mat3 matrixB{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixB[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixB[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixB[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat3 matrixA{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -2, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixA[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixA[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixA[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat3 result = matrixA + matrixB;
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 3; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, result[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, result[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, result[i].z);
+            lua_setfield(L, -2, "z");
+            luaL_getmetatable(L, VEC3_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Mat4 B
+    // - [-2] table     Mat4 A
+    int GlmLuaBinding::addMat4(lua_State* L) {
+        glm::mat4 matrixB{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixB[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixB[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixB[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrixB[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 matrixA{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -2, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixA[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixA[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixA[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrixA[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 result = matrixA + matrixB;
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, result[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, result[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, result[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, result[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
         lua_setmetatable(L, -2);
 
         return 1;
@@ -760,11 +991,234 @@ namespace Blink {
     }
 
     // Lua stack
+    // - [-1] table     Mat3 B
+    // - [-2] table     Mat3 A
+    int GlmLuaBinding::divideMat3(lua_State* L) {
+        glm::mat3 matrixB{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixB[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixB[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixB[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat3 matrixA{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -2, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixA[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixA[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixA[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat3 result = matrixA / matrixB;
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 3; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, result[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, result[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, result[i].z);
+            lua_setfield(L, -2, "z");
+            luaL_getmetatable(L, VEC3_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Mat4 B
+    // - [-2] table     Mat4 A
+    int GlmLuaBinding::divideMat4(lua_State* L) {
+        glm::mat4 matrixB{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixB[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixB[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixB[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrixB[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 matrixA{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -2, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixA[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixA[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixA[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrixA[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 result = matrixA / matrixB;
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, result[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, result[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, result[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, result[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table    Quaternion
+    int GlmLuaBinding::inverseQuat(lua_State* L) {
+        glm::quat quaternion{};
+        {
+            lua_getfield(L, -1, "x");
+            quaternion.x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            quaternion.y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            quaternion.z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            quaternion.w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+        }
+
+        glm::quat result = glm::inverse(quaternion);
+
+        lua_newtable(L);
+        lua_pushnumber(L, result.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, result.y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, result.z);
+        lua_setfield(L, -2, "z");
+        lua_pushnumber(L, result.w);
+        lua_setfield(L, -2, "w");
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table    Mat4
+    int GlmLuaBinding::inverseMat4(lua_State* L) {
+        glm::mat4 matrix{};
+
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrix[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrix[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrix[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrix[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 result = glm::inverse(matrix);
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, result[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, result[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, result[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, result[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
     // - [-1] number    timestep
     // - [-2] table     End position vec3
     // - [-3] table     Start position vec3
     int GlmLuaBinding::lerp(lua_State* L) {
-        float t = (float) lua_tonumber(L, -1);
+        float timestep = (float) lua_tonumber(L, -1);
 
         glm::vec3 end{};
         {
@@ -796,7 +1250,8 @@ namespace Blink {
             lua_pop(L, 1);
         }
 
-        glm::vec3 result = start + t * (end - start);
+        //glm::vec3 result = start + t * (end - start);
+        glm::vec3 result = glm::mix(start, end, timestep);
 
         lua_newtable(L);
         lua_pushnumber(L, result.x);
@@ -877,13 +1332,161 @@ namespace Blink {
             lua_setmetatable(L, -2);
             lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
         }
+        luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
 
         return 1;
     }
 
-        // Lua stack
-    // - [-1] table or number    Vector2 B or scalar B
-    // - [-2] table or number    Vector2 A or scalar A
+    // Lua stack
+    // - [-1] number   Scalar
+    int GlmLuaBinding::mat3(lua_State* L) {
+        float scalar = 0.0f;
+
+        bool missing = lua_isnil(L, -1);
+        if (!missing) {
+            scalar = (float) lua_tonumber(L, -1);
+        }
+
+        glm::mat4 matrix(scalar);
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, matrix[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, matrix[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, matrix[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, matrix[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] number   Scalar
+    int GlmLuaBinding::mat4(lua_State* L) {
+        float scalar = 0.0f;
+
+        bool missing = lua_isnil(L, -1);
+        if (!missing) {
+            scalar = (float) lua_tonumber(L, -1);
+        }
+
+        glm::mat4 matrix(scalar);
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, matrix[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, matrix[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, matrix[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, matrix[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table    Matrix 4x4
+    int GlmLuaBinding::mat3ToQuat(lua_State* L) {
+        glm::mat3 matrix{};
+
+        for (int i = 0; i < 3; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrix[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrix[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrix[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::quat quaternion = glm::toQuat(matrix);
+
+        lua_newtable(L);
+        lua_pushnumber(L, quaternion.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, quaternion.y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, quaternion.z);
+        lua_setfield(L, -2, "z");
+        lua_pushnumber(L, quaternion.w);
+        lua_setfield(L, -2, "w");
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table    Matrix 4x4
+    int GlmLuaBinding::mat4ToQuat(lua_State* L) {
+        glm::mat4 matrix{};
+
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrix[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrix[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrix[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrix[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::quat quaternion = glm::toQuat(matrix);
+
+        lua_newtable(L);
+        lua_pushnumber(L, quaternion.x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, quaternion.y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, quaternion.z);
+        lua_setfield(L, -2, "z");
+        lua_pushnumber(L, quaternion.w);
+        lua_setfield(L, -2, "w");
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table or number   Vector2 B or scalar B
+    // - [-2] table or number   Vector2 A or scalar A
     int GlmLuaBinding::multiplyVec2(lua_State* L) {
         bool bIsVector = lua_istable(L, -1);
         bool bIsScalar = lua_isnumber(L, -1);
@@ -1122,6 +1725,142 @@ namespace Blink {
     }
 
     // Lua stack
+    // - [-1] table     Mat3 B
+    // - [-2] table     Mat3 A
+    int GlmLuaBinding::multiplyMat3(lua_State* L) {
+        glm::mat3 matrixB{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixB[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixB[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixB[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat3 matrixA{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -2, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixA[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixA[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixA[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat3 result = matrixA * matrixB;
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 3; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, result[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, result[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, result[i].z);
+            lua_setfield(L, -2, "z");
+            luaL_getmetatable(L, VEC3_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Mat4 B
+    // - [-2] table     Mat4 A
+    int GlmLuaBinding::multiplyMat4(lua_State* L) {
+        glm::mat4 matrixB{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixB[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixB[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixB[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrixB[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 matrixA{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -2, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixA[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixA[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixA[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrixA[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 result = matrixA * matrixB;
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, result[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, result[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, result[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, result[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
     // - [-1] table     Vector
     // - [-2] userdata  Binding
     int GlmLuaBinding::normalize(lua_State* L) {
@@ -1153,6 +1892,51 @@ namespace Blink {
         lua_setfield(L, -2, "z");
 
         luaL_getmetatable(L, VEC3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table    Quaternion
+    int GlmLuaBinding::quatToMat4(lua_State* L) {
+        glm::quat quaternion{};
+        {
+            lua_getfield(L, -1, "x");
+            quaternion.x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            quaternion.y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            quaternion.z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            quaternion.w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 matrix = glm::toMat4(quaternion);
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, matrix[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, matrix[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, matrix[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, matrix[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
         lua_setmetatable(L, -2);
 
         return 1;
@@ -1632,43 +2416,206 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] table    Matrix 4x4
-    int GlmLuaBinding::toQuat(lua_State* L) {
-        glm::mat4 matrix{};
-
+    // - [-1] table     Mat3 B
+    // - [-2] table     Mat3 A
+    int GlmLuaBinding::subtractMat3(lua_State* L) {
+        glm::mat3 matrixB{};
         for (int i = 0; i < 4; ++i) {
             lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
 
             lua_getfield(L, -1, "x");
-            matrix[i].x = (float) lua_tonumber(L, -1);
+            matrixB[i].x = (float) lua_tonumber(L, -1);
             lua_pop(L, 1);
 
             lua_getfield(L, -1, "y");
-            matrix[i].y = (float) lua_tonumber(L, -1);
+            matrixB[i].y = (float) lua_tonumber(L, -1);
             lua_pop(L, 1);
 
             lua_getfield(L, -1, "z");
-            matrix[i].z = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-
-            lua_getfield(L, -1, "w");
-            matrix[i].w = (float) lua_tonumber(L, -1);
+            matrixB[i].z = (float) lua_tonumber(L, -1);
             lua_pop(L, 1);
 
             lua_pop(L, 1);
         }
 
-        glm::quat quaternion = glm::toQuat(matrix);
+        glm::mat3 matrixA{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -2, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixA[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixA[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixA[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat3 result = matrixA - matrixB;
 
         lua_newtable(L);
-        lua_pushnumber(L, quaternion.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, quaternion.y);
-        lua_setfield(L, -2, "y");
-        lua_pushnumber(L, quaternion.z);
-        lua_setfield(L, -2, "z");
-        lua_pushnumber(L, quaternion.w);
-        lua_setfield(L, -2, "w");
+        for (uint8_t i = 0; i < 3; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, result[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, result[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, result[i].z);
+            lua_setfield(L, -2, "z");
+            luaL_getmetatable(L, VEC3_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT3_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Mat4 B
+    // - [-2] table     Mat4 A
+    int GlmLuaBinding::subtractMat4(lua_State* L) {
+        glm::mat4 matrixB{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -1, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixB[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixB[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixB[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrixB[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 matrixA{};
+        for (int i = 0; i < 4; ++i) {
+            lua_geti(L, -2, i + 1); // Lua uses 1-based indexing
+
+            lua_getfield(L, -1, "x");
+            matrixA[i].x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            matrixA[i].y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            matrixA[i].z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "w");
+            matrixA[i].w = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_pop(L, 1);
+        }
+
+        glm::mat4 result = matrixA - matrixB;
+
+        lua_newtable(L);
+        for (uint8_t i = 0; i < 4; ++i) {
+            lua_newtable(L);
+            lua_pushnumber(L, result[i].x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, result[i].y);
+            lua_setfield(L, -2, "y");
+            lua_pushnumber(L, result[i].z);
+            lua_setfield(L, -2, "z");
+            lua_pushnumber(L, result[i].w);
+            lua_setfield(L, -2, "w");
+            luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+            lua_setmetatable(L, -2);
+            lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        }
+        luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table    Vec3
+    // - [-2] table    Mat4
+    int GlmLuaBinding::translate(lua_State* L) {
+        glm::vec3 vector{};
+        {
+            lua_getfield(L, -1, "x");
+            vector.x = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "y");
+            vector.y = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+
+            lua_getfield(L, -1, "z");
+            vector.z = (float) lua_tonumber(L, -1);
+            lua_pop(L, 1);
+        }
+
+        // glm::mat4 matrix{};
+        // for (int i = 0; i < 4; ++i) {
+        //     lua_geti(L, -2, i + 1); // Lua uses 1-based indexing
+        //
+        //     lua_getfield(L, -1, "x");
+        //     matrix[i].x = (float) lua_tonumber(L, -1);
+        //     lua_pop(L, 1);
+        //
+        //     lua_getfield(L, -1, "y");
+        //     matrix[i].y = (float) lua_tonumber(L, -1);
+        //     lua_pop(L, 1);
+        //
+        //     lua_getfield(L, -1, "z");
+        //     matrix[i].z = (float) lua_tonumber(L, -1);
+        //     lua_pop(L, 1);
+        //
+        //     lua_getfield(L, -1, "w");
+        //     matrix[i].w = (float) lua_tonumber(L, -1);
+        //     lua_pop(L, 1);
+        //
+        //     lua_pop(L, 1);
+        // }
+
+        glm::mat4 matrix = lua_tomat4(L, -2);
+
+        glm::mat4 result = glm::translate(matrix, vector);
+
+        // lua_newtable(L);
+        // for (uint8_t i = 0; i < 4; ++i) {
+        //     lua_newtable(L);
+        //     lua_pushnumber(L, result[i].x);
+        //     lua_setfield(L, -2, "x");
+        //     lua_pushnumber(L, result[i].y);
+        //     lua_setfield(L, -2, "y");
+        //     lua_pushnumber(L, result[i].z);
+        //     lua_setfield(L, -2, "z");
+        //     lua_pushnumber(L, result[i].w);
+        //     lua_setfield(L, -2, "w");
+        //     luaL_getmetatable(L, VEC4_METATABLE_NAME.c_str());
+        //     lua_setmetatable(L, -2);
+        //     lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+        // }
+        // luaL_getmetatable(L, MAT4_METATABLE_NAME.c_str());
+        // lua_setmetatable(L, -2);
+
+        lua_pushmat4(L, result);
 
         return 1;
     }
@@ -1727,4 +2674,50 @@ namespace Blink {
 
         return 1;
     }
+}
+
+glm::mat4 lua_tomat4(lua_State* L, int index) {
+    glm::mat4 matrix{};
+    for (int i = 0; i < 4; ++i) {
+        lua_geti(L, index, i + 1); // Lua uses 1-based indexing
+
+        lua_getfield(L, -1, "x");
+        matrix[i].x = (float) lua_tonumber(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "y");
+        matrix[i].y = (float) lua_tonumber(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "z");
+        matrix[i].z = (float) lua_tonumber(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, -1, "w");
+        matrix[i].w = (float) lua_tonumber(L, -1);
+        lua_pop(L, 1);
+
+        lua_pop(L, 1);
+    }
+    return matrix;
+}
+
+void lua_pushmat4(lua_State* L, const glm::mat4& matrix) {
+    lua_newtable(L);
+    for (uint8_t i = 0; i < 4; ++i) {
+        lua_newtable(L);
+        lua_pushnumber(L, matrix[i].x);
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, matrix[i].y);
+        lua_setfield(L, -2, "y");
+        lua_pushnumber(L, matrix[i].z);
+        lua_setfield(L, -2, "z");
+        lua_pushnumber(L, matrix[i].w);
+        lua_setfield(L, -2, "w");
+        luaL_getmetatable(L, Blink::GlmLuaBinding::VEC4_METATABLE_NAME.c_str());
+        lua_setmetatable(L, -2);
+        lua_seti(L, -2, i + 1); // Lua uses 1-based indexing
+    }
+    luaL_getmetatable(L, Blink::GlmLuaBinding::MAT4_METATABLE_NAME.c_str());
+    lua_setmetatable(L, -2);
 }
