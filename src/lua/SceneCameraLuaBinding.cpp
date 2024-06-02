@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "SceneCameraLuaBinding.h"
-#include "luaUtils.h"
+#include "lua/GlmLuaBinding.h"
+#include "lua/luaUtils.h"
 #include "scene/Components.h"
 
 namespace Blink {
@@ -151,19 +152,8 @@ namespace Blink {
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, bindingIndex);
 
         glm::vec3& position = binding->sceneCamera->position;
-
         if (argumentIsVector) {
-            lua_getfield(L, -1, "x");
-            position.x = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-
-            lua_getfield(L, -1, "y");
-            position.y = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
-
-            lua_getfield(L, -1, "z");
-            position.z = (float) lua_tonumber(L, -1);
-            lua_pop(L, 1);
+            position = lua_tovec3(L, -1);
         }
         if (argumentIsScalars) {
             position.x = (float) lua_tonumber(L, -3);
@@ -178,20 +168,8 @@ namespace Blink {
     // - [-1] table    Direction vector
     // - [-2] userdata Binding
     int SceneCameraLuaBinding::setWorldUpDirection(lua_State* L) {
-        lua_getfield(L, -1, "x");
-        auto x = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "y");
-        auto y = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "z");
-        auto z = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
-        binding->sceneCamera->worldUpDirection = { x, y, z };
+        binding->sceneCamera->worldUpDirection = lua_tovec3(L, -1);
         return 0;
     }
 
@@ -199,20 +177,8 @@ namespace Blink {
     // - [-1] table    Direction vector
     // - [-2] userdata Binding
     int SceneCameraLuaBinding::setForwardDirection(lua_State* L) {
-        lua_getfield(L, -1, "x");
-        auto x = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "y");
-        auto y = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "z");
-        auto z = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
-        binding->sceneCamera->forwardDirection = { x, y, z };
+        binding->sceneCamera->forwardDirection = lua_tovec3(L, -1);
         return 0;
     }
 
@@ -220,20 +186,8 @@ namespace Blink {
     // - [-1] table    Direction vector
     // - [-2] userdata Binding
     int SceneCameraLuaBinding::setRightDirection(lua_State* L) {
-        lua_getfield(L, -1, "x");
-        auto x = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "y");
-        auto y = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "z");
-        auto z = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
-        binding->sceneCamera->rightDirection = { x, y, z };
+        binding->sceneCamera->rightDirection = lua_tovec3(L, -1);
         return 0;
     }
 
@@ -241,20 +195,8 @@ namespace Blink {
     // - [-1] table    Direction vector
     // - [-2] userdata Binding
     int SceneCameraLuaBinding::setUpDirection(lua_State* L) {
-        lua_getfield(L, -1, "x");
-        auto x = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "y");
-        auto y = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
-        lua_getfield(L, -1, "z");
-        auto z = (float) lua_tonumber(L, -1);
-        lua_pop(L, 1);
-
         auto* binding = (SceneCameraLuaBinding*) lua_touserdata(L, -2);
-        binding->sceneCamera->upDirection = { x, y, z };
+        binding->sceneCamera->upDirection = lua_tovec3(L, -1);
         return 0;
     }
 
