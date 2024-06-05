@@ -13,6 +13,7 @@ namespace Blink {
         static const std::string MAT2_METATABLE_NAME;
         static const std::string MAT3_METATABLE_NAME;
         static const std::string MAT4_METATABLE_NAME;
+        static const std::string QUAT_METATABLE_NAME;
 
     public:
         static void initialize(lua_State* L);
@@ -32,7 +33,13 @@ namespace Blink {
 
         static int addMat4(lua_State* L);
 
+        static int addQuat(lua_State* L);
+
+        static int angleAxis(lua_State* L);
+
         static int cross(lua_State* L);
+
+        static int degrees(lua_State* L);
 
         static int divideVec2(lua_State* L);
 
@@ -46,6 +53,16 @@ namespace Blink {
 
         static int divideMat4(lua_State* L);
 
+        static int divideQuat(lua_State* L);
+
+        static int dotVec2(lua_State* L);
+
+        static int dotVec3(lua_State* L);
+
+        static int dotVec4(lua_State* L);
+
+        static int eulerAngles(lua_State* L);
+
         static int inverseQuat(lua_State* L);
 
         static int inverseMat2(lua_State* L);
@@ -53,6 +70,8 @@ namespace Blink {
         static int inverseMat3(lua_State* L);
 
         static int inverseMat4(lua_State* L);
+
+        static int length(lua_State* L);
 
         static int lerp(lua_State* L);
 
@@ -80,9 +99,23 @@ namespace Blink {
 
         static int multiplyMat4(lua_State* L);
 
+        static int multiplyQuat(lua_State* L);
+
         static int normalize(lua_State* L);
 
+        static int normalizeQuat(lua_State* L);
+
+        static int quat(lua_State* L);
+
+        static int quatLookAt(lua_State* L);
+
+        static int quatLookAtRH(lua_State* L);
+
+        static int quatLookAtLH(lua_State* L);
+
         static int quatToMat4(lua_State* L);
+
+        static int radians(lua_State* L);
 
         static int rotate(lua_State* L);
 
@@ -106,6 +139,8 @@ namespace Blink {
 
         static int subtractMat4(lua_State* L);
 
+        static int subtractQuat(lua_State* L);
+
         static int translate(lua_State* L);
 
         static int vec2(lua_State* L);
@@ -113,6 +148,8 @@ namespace Blink {
         static int vec3(lua_State* L);
 
         static int vec4(lua_State* L);
+
+        static int foo(lua_State* L);
     };
 }
 

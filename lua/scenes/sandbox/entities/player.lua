@@ -4,29 +4,22 @@ local thrust = 0.5
 local moveSpeed = 0
 local maxMoveSpeed = 100
 
-local yawSpeed = 0.5
+local yawSpeed = 0.75
 local pitchSpeed = 0.5
-local rollSpeed = yawSpeed * 2
+local rollSpeed = yawSpeed * 1.5
 
 local maxRollWhenTurning = 45
 
-local loggingEnabled = false
-
 function Player.onUpdate(entity, timestep)
 
-    if Keyboard:isPressed(Key.L) then
-        loggingEnabled = true
-    end
-    if Keyboard:isPressed(Key.K) then
-        loggingEnabled = false
-    end
-    if loggingEnabled then
-        printt(entity)
-    end
-    if Keyboard:isPressed(Key.Numpad_0) then
+    if Keyboard:isPressed(Key.M) then
         moveSpeed = 0
         Entity:setTransformComponent(entity, {
             position = glm.vec3(0, 0, 0),
+            orientation = glm.quat(1, 0, 0, 0),
+            forwardDirection = WORLD_FORWARD_DIRECTION,
+            upDirection = WORLD_UP_DIRECTION,
+            rightDirection = WORLD_RIGHT_DIRECTION,
             yaw = 0,
             pitch = 0,
             roll = 0,
@@ -41,50 +34,62 @@ function Player.onUpdate(entity, timestep)
     local pitch = transformComponent.pitch
     local roll = transformComponent.roll
 
-    if Keyboard:isPressed(Key.Numpad_4) then
+    local up = Keyboard:isPressed(Key.Numpad_8) or Keyboard:isPressed(Key.I)
+    local down = Keyboard:isPressed(Key.Numpad_5) or Keyboard:isPressed(Key.K)
+
+    local left = Keyboard:isPressed(Key.Numpad_4) or Keyboard:isPressed(Key.J)
+    local right = Keyboard:isPressed(Key.Numpad_6) or Keyboard:isPressed(Key.L)
+
+    local rollLeft = Keyboard:isPressed(Key.Numpad_7) or Keyboard:isPressed(Key.U)
+    local rollRight = Keyboard:isPressed(Key.Numpad_9) or Keyboard:isPressed(Key.O)
+
+    local forwards = Keyboard:isPressed(Key.X)
+    local backwards = Keyboard:isPressed(Key.Z)
+
+    if left then
         yaw = yaw + yawSpeed
         if yaw > 360 then
             yaw = 0
         end
     end
-    if Keyboard:isPressed(Key.Numpad_6) then
+    if right then
         yaw = yaw - yawSpeed
         if yaw < -360 then
             yaw = 0
         end
     end
 
-    if Keyboard:isPressed(Key.Numpad_8) then
+    if up then
         pitch = pitch - pitchSpeed
         if pitch < -360 then
             pitch = 0
         end
     end
-    if Keyboard:isPressed(Key.Numpad_5) then
+    if down then
         pitch = pitch + pitchSpeed
         if pitch > 360 then
             pitch = 0
         end
     end
-    --if not Keyboard:isPressed(Key.Numpad_8) and not Keyboard:isPressed(Key.Numpad_5) then
-    --    if pitch > 0 then
-    --        pitch = pitch - pitchSpeed
-    --    end
-    --end
+    if not up and not down then
+        --if pitch > 0 then
+        --    pitch = pitch - pitchSpeed
+        --end
+    end
 
-    if Keyboard:isPressed(Key.Numpad_4) then
+    if left then
         roll = roll + rollSpeed
         if roll > maxRollWhenTurning then
             roll = maxRollWhenTurning
         end
     end
-    if Keyboard:isPressed(Key.Numpad_6) then
+    if right then
         roll = roll - rollSpeed
         if roll < -maxRollWhenTurning then
             roll = -maxRollWhenTurning
         end
     end
-    if not Keyboard:isPressed(Key.Numpad_6) and not Keyboard:isPressed(Key.Numpad_4) then
+    if not left and not right and not rollLeft and not rollRight then
         if roll < 0 then
             roll = roll + rollSpeed
         end
@@ -93,13 +98,20 @@ function Player.onUpdate(entity, timestep)
         end
     end
 
-    if Keyboard:isPressed(Key.X) then
+    if rollLeft then
+        roll = roll + rollSpeed
+    end
+    if rollRight then
+        roll = roll - rollSpeed
+    end
+
+    if forwards then
         moveSpeed = math.min(moveSpeed + thrust, maxMoveSpeed)
     end
-    if Keyboard:isPressed(Key.Z) then
+    if backwards then
         moveSpeed = math.max(moveSpeed - thrust, -maxMoveSpeed)
     end
-    if not Keyboard:isPressed(Key.X) and not Keyboard:isPressed(Key.Z) then
+    if not forwards and not backwards then
         if moveSpeed > 0 then
             moveSpeed = math.max(moveSpeed - thrust, 0)
         end

@@ -41,30 +41,21 @@ namespace Blink {
 
     void App::gameLoop() const {
         constexpr double oneSecond = 1.0;
-        double secondsPerFrame = oneSecond / (double) config.fps;
         double lastTime = window->getTime();
-        double updateLag = 0.0;
-        double statsLoggingLag = 0.0;
+        double deltaTime = 0.0;
         uint32_t ups = 0;
         uint32_t fps = 0;
         while (!window->shouldClose()) {
             double time = window->update();
             double timestep = std::min(time - lastTime, oneSecond);
             lastTime = time;
+            deltaTime += timestep;
 
             bool paused = state == AppState::Paused;
             if (!paused) {
-                updateLag += timestep;
+                scene->update(timestep);
+                ups++;
             }
-            statsLoggingLag += timestep;
-
-            // while (updateLag >= secondsPerFrame) {
-            //
-            // }
-
-            scene->update(timestep);
-            updateLag -= secondsPerFrame;
-            ups++;
 
             if (renderer->beginFrame()) {
                 scene->render();
@@ -72,11 +63,11 @@ namespace Blink {
                 fps++;
             }
 
-            if (statsLoggingLag >= oneSecond) {
+            if (deltaTime >= oneSecond) {
                 BL_LOG_INFO("UPS [{}], FPS [{}]", ups, fps);
                 ups = 0;
                 fps = 0;
-                statsLoggingLag = 0;
+                deltaTime = 0;
             }
         }
     }

@@ -12,6 +12,7 @@ namespace Blink {
     const std::string GlmLuaBinding::MAT2_METATABLE_NAME = TYPE_NAME + ".mat2__meta";
     const std::string GlmLuaBinding::MAT3_METATABLE_NAME = TYPE_NAME + ".mat3__meta";
     const std::string GlmLuaBinding::MAT4_METATABLE_NAME = TYPE_NAME + ".mat4__meta";
+    const std::string GlmLuaBinding::QUAT_METATABLE_NAME = TYPE_NAME + ".quat__meta";
 
     void GlmLuaBinding::initialize(lua_State* L) {
         // --------------------------------------------------------------------------------------------------------------
@@ -203,6 +204,32 @@ namespace Blink {
             lua_pushcclosure(L, GlmLuaBinding::divideMat4, upvalueCount);
             lua_settable(L, -3);
         }
+
+        luaL_newmetatable(L, QUAT_METATABLE_NAME.c_str());
+        {
+            lua_pushstring(L, "__add");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::addQuat, upvalueCount);
+            lua_settable(L, -3);
+        }
+        {
+            lua_pushstring(L, "__sub");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::subtractQuat, upvalueCount);
+            lua_settable(L, -3);
+        }
+        {
+            lua_pushstring(L, "__mul");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::multiplyQuat, upvalueCount);
+            lua_settable(L, -3);
+        }
+        {
+            lua_pushstring(L, "__div");
+            constexpr int upvalueCount = 0;
+            lua_pushcclosure(L, GlmLuaBinding::divideQuat, upvalueCount);
+            lua_settable(L, -3);
+        }
     }
 
     // Lua stack
@@ -234,8 +261,16 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::addMat4);
             return 1;
         }
+        if (indexName == "angleAxis") {
+            lua_pushcfunction(L, GlmLuaBinding::angleAxis);
+            return 1;
+        }
         if (indexName == "cross") {
             lua_pushcfunction(L, GlmLuaBinding::cross);
+            return 1;
+        }
+        if (indexName == "degrees") {
+            lua_pushcfunction(L, GlmLuaBinding::degrees);
             return 1;
         }
         if (indexName == "divideVec2") {
@@ -262,12 +297,28 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::divideMat4);
             return 1;
         }
+        if (indexName == "dotVec2") {
+            lua_pushcfunction(L, GlmLuaBinding::dotVec2);
+            return 1;
+        }
+        if (indexName == "dotVec3") {
+            lua_pushcfunction(L, GlmLuaBinding::dotVec3);
+            return 1;
+        }
+        if (indexName == "dotVec4") {
+            lua_pushcfunction(L, GlmLuaBinding::dotVec4);
+            return 1;
+        }
+        if (indexName == "eulerAngles") {
+            lua_pushcfunction(L, GlmLuaBinding::eulerAngles);
+            return 1;
+        }
         if (indexName == "inverseQuat") {
             lua_pushcfunction(L, GlmLuaBinding::inverseQuat);
             return 1;
         }
-        if (indexName == "divideMat2") {
-            lua_pushcfunction(L, GlmLuaBinding::divideMat2);
+        if (indexName == "inverseMat2") {
+            lua_pushcfunction(L, GlmLuaBinding::inverseMat2);
             return 1;
         }
         if (indexName == "inverseMat3") {
@@ -276,6 +327,10 @@ namespace Blink {
         }
         if (indexName == "inverseMat4") {
             lua_pushcfunction(L, GlmLuaBinding::inverseMat4);
+            return 1;
+        }
+        if (indexName == "length") {
+            lua_pushcfunction(L, GlmLuaBinding::length);
             return 1;
         }
         if (indexName == "lerp") {
@@ -330,12 +385,40 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::multiplyMat4);
             return 1;
         }
+        if (indexName == "multiplyQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::multiplyQuat);
+            return 1;
+        }
         if (indexName == "normalize") {
             lua_pushcfunction(L, GlmLuaBinding::normalize);
             return 1;
         }
+        if (indexName == "normalizeQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::normalizeQuat);
+            return 1;
+        }
+        if (indexName == "quat") {
+            lua_pushcfunction(L, GlmLuaBinding::quat);
+            return 1;
+        }
+        if (indexName == "quatLookAt") {
+            lua_pushcfunction(L, GlmLuaBinding::quatLookAt);
+            return 1;
+        }
+        if (indexName == "quatLookAtRH") {
+            lua_pushcfunction(L, GlmLuaBinding::quatLookAtRH);
+            return 1;
+        }
+        if (indexName == "quatLookAtLH") {
+            lua_pushcfunction(L, GlmLuaBinding::quatLookAtLH);
+            return 1;
+        }
         if (indexName == "quatToMat4") {
             lua_pushcfunction(L, GlmLuaBinding::quatToMat4);
+            return 1;
+        }
+        if (indexName == "radians") {
+            lua_pushcfunction(L, GlmLuaBinding::radians);
             return 1;
         }
         if (indexName == "rotate") {
@@ -396,6 +479,10 @@ namespace Blink {
         }
         if (indexName == "vec4") {
             lua_pushcfunction(L, GlmLuaBinding::vec4);
+            return 1;
+        }
+        if (indexName == "foo") {
+            lua_pushcfunction(L, GlmLuaBinding::foo);
             return 1;
         }
         BL_LOG_WARN("Could not resolve index [{}]", indexName);
@@ -577,12 +664,43 @@ namespace Blink {
     }
 
     // Lua stack
+    // - [-1] table     Quat B
+    // - [-2] table     Quat A
+    int GlmLuaBinding::addQuat(lua_State* L) {
+        glm::quat quatB = lua_toquat(L, -1);
+        glm::quat quatA = lua_toquat(L, -2);
+        glm::quat result = quatA + quatB;
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Axis vector3
+    // - [-2] number    Angle (degrees)
+    int GlmLuaBinding::angleAxis(lua_State* L) {
+        glm::vec3 axis = lua_tovec3(L, -1);
+        float angle = (float) lua_tonumber(L, -2);
+        glm::quat result = glm::angleAxis(glm::radians(angle), axis);
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
     // - [-1] table     Vector B
     // - [-2] table     Vector A
     int GlmLuaBinding::cross(lua_State* L) {
         glm::vec3 vectorA = lua_tovec3(L, -1);
         glm::vec3 vectorB = lua_tovec3(L, -2);
         glm::vec3 result = glm::cross(vectorA, vectorB);
+        lua_pushvec3(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec3
+    int GlmLuaBinding::degrees(lua_State* L) {
+        glm::vec3 vector = lua_tovec3(L, -1);
+        glm::vec3 result = glm::degrees(vector);
         lua_pushvec3(L, result);
         return 1;
     }
@@ -762,6 +880,62 @@ namespace Blink {
     }
 
     // Lua stack
+    // - [-1] table     Quat B
+    // - [-2] table     Quat A
+    int GlmLuaBinding::divideQuat(lua_State* L) {
+        glm::quat quatB = lua_toquat(L, -1);
+        glm::quat quatA = lua_toquat(L, -2);
+
+        // The division operation quatA / quatB is equivalent to multiplying quatA by the inverse of quatB
+        glm::quat result = quatA * glm::inverse(quatB);
+
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec2 B
+    // - [-2] table     Vec2 A
+    int GlmLuaBinding::dotVec2(lua_State* L) {
+        glm::vec2 vectorB = lua_tovec2(L, -1);
+        glm::vec2 vectorA = lua_tovec2(L, -2);
+        float result = glm::dot(vectorA, vectorB);
+        lua_pushnumber(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec3 B
+    // - [-2] table     Vec3 A
+    int GlmLuaBinding::dotVec3(lua_State* L) {
+        glm::vec3 vectorB = lua_tovec3(L, -1);
+        glm::vec3 vectorA = lua_tovec3(L, -2);
+        float result = glm::dot(vectorA, vectorB);
+        lua_pushnumber(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec4 B
+    // - [-2] table     Vec4 A
+    int GlmLuaBinding::dotVec4(lua_State* L) {
+        glm::vec4 vectorB = lua_tovec4(L, -1);
+        glm::vec4 vectorA = lua_tovec4(L, -2);
+        float result = glm::dot(vectorA, vectorB);
+        lua_pushnumber(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table    Quaternion
+    int GlmLuaBinding::eulerAngles(lua_State* L) {
+        glm::quat quaternion = lua_toquat(L, -1);
+        glm::vec3 result = glm::eulerAngles(quaternion);
+        lua_pushvec3(L, result);
+        return 1;
+    }
+
+    // Lua stack
     // - [-1] table    Quaternion
     int GlmLuaBinding::inverseQuat(lua_State* L) {
         glm::quat quaternion = lua_toquat(L, -1);
@@ -798,6 +972,15 @@ namespace Blink {
     }
 
     // Lua stack
+    // - [-1] table     Vec3
+    int GlmLuaBinding::length(lua_State* L) {
+        glm::vec3 vector = lua_tovec3(L, -1);
+        float result = glm::length(vector);
+        lua_pushnumber(L, result);
+        return 1;
+    }
+
+    // Lua stack
     // - [-1] number    timestep
     // - [-2] table     End position vec3
     // - [-3] table     Start position vec3
@@ -811,14 +994,14 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] table     Up direction vector
-    // - [-2] table     Target position vector
-    // - [-3] table     Position vector
+    // - [-1] table     Up direction vec3
+    // - [-2] table     Center vec3
+    // - [-3] table     Eye vec3
     int GlmLuaBinding::lookAt(lua_State* L) {
         glm::vec3 upDirection = lua_tovec3(L, -1);
-        glm::vec3 targetPosition = lua_tovec3(L, -2);
-        glm::vec3 position = lua_tovec3(L, -3);
-        glm::mat4 result = glm::lookAt(position, targetPosition, upDirection);
+        glm::vec3 center = lua_tovec3(L, -2);
+        glm::vec3 eye = lua_tovec3(L, -3);
+        glm::mat4 result = glm::lookAt(eye, center, upDirection);
         lua_pushmat4(L, result);
         return 1;
     }
@@ -1055,12 +1238,79 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] table     Vector
-    // - [-2] userdata  Binding
+    // - [-1] table     Quat B
+    // - [-2] table     Quat A
+    int GlmLuaBinding::multiplyQuat(lua_State* L) {
+        glm::quat quatB = lua_toquat(L, -1);
+        glm::quat quatA = lua_toquat(L, -2);
+        glm::quat result = quatA * quatB;
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vector3
     int GlmLuaBinding::normalize(lua_State* L) {
         glm::vec3 vector = lua_tovec3(L, -1);
         glm::vec3 result = glm::normalize(vector);
         lua_pushvec3(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Quaternion
+    int GlmLuaBinding::normalizeQuat(lua_State* L) {
+        glm::quat quaternion = lua_toquat(L, -1);
+        glm::quat result = glm::normalize(quaternion);
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] number     Z
+    // - [-2] number     Y
+    // - [-3] number     X
+    // - [-4] number     W
+    int GlmLuaBinding::quat(lua_State* L) {
+        glm::quat result{};
+        result.z = (float) lua_tonumber(L, -1);
+        result.y = (float) lua_tonumber(L, -2);
+        result.x = (float) lua_tonumber(L, -3);
+        result.w = (float) lua_tonumber(L, -4);
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Up direction vector3
+    // - [-2] table     Forward direction vector3
+    int GlmLuaBinding::quatLookAt(lua_State* L) {
+        glm::vec3 upDirection = lua_tovec3(L, -1);
+        glm::vec3 forwardDirection = lua_tovec3(L, -2);
+        glm::quat result = glm::quatLookAt(forwardDirection, upDirection);
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Up direction vector3
+    // - [-2] table     Forward direction vector3
+    int GlmLuaBinding::quatLookAtRH(lua_State* L) {
+        glm::vec3 upDirection = lua_tovec3(L, -1);
+        glm::vec3 forwardDirection = lua_tovec3(L, -2);
+        glm::quat result = glm::quatLookAtRH(forwardDirection, upDirection);
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Up direction vector3
+    // - [-2] table     Forward direction vector3
+    int GlmLuaBinding::quatLookAtLH(lua_State* L) {
+        glm::vec3 upDirection = lua_tovec3(L, -1);
+        glm::vec3 forwardDirection = lua_tovec3(L, -2);
+        glm::quat result = glm::quatLookAtLH(forwardDirection, upDirection);
+        lua_pushquat(L, result);
         return 1;
     }
 
@@ -1070,6 +1320,15 @@ namespace Blink {
         glm::quat quaternion = lua_toquat(L, -1);
         glm::mat4 result = glm::toMat4(quaternion);
         lua_pushmat4(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] number    Angle (degrees)
+    int GlmLuaBinding::radians(lua_State* L) {
+        float angle = (float) lua_tonumber(L, -1);
+        float result = glm::radians(angle);
+        lua_pushnumber(L, result);
         return 1;
     }
 
@@ -1305,6 +1564,17 @@ namespace Blink {
     }
 
     // Lua stack
+    // - [-1] table     Quat B
+    // - [-2] table     Quat A
+    int GlmLuaBinding::subtractQuat(lua_State* L) {
+        glm::quat quatB = lua_toquat(L, -1);
+        glm::quat quatA = lua_toquat(L, -2);
+        glm::quat result = quatA - quatB;
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
     // - [-1] table    Vec3
     // - [-2] table    Mat4
     int GlmLuaBinding::translate(lua_State* L) {
@@ -1410,6 +1680,89 @@ namespace Blink {
         lua_pushvec4(L, vector);
         return 1;
     }
+
+    #include "scene/CoordinateSystem.h"
+    int GlmLuaBinding::foo(lua_State* L) {
+        // glm::mat4 m = lua_tomat4(L, -1);
+        // glm::quat q = glm::toQuat(m);
+
+        glm::quat q = lua_toquat(L, -1);
+
+        glm::vec3 e = glm::eulerAngles(q);
+        // e = glm::degrees(e);
+        //
+        // float pitch = e.x;
+        // float yaw = e.y;
+        // float roll = e.z;
+        //
+        // float yawRadians = glm::radians(yaw);
+        // float pitchRadians = glm::radians(pitch);
+        // float rollRadians = glm::radians(roll);
+
+        float pitchRadians = e.x;
+        float yawRadians = e.y;
+        float rollRadians = e.z;
+
+        glm::quat yawRotation = glm::normalize(glm::angleAxis(yawRadians, Blink::POSITIVE_Y_AXIS));
+        glm::quat pitchRotation = glm::normalize(glm::angleAxis(pitchRadians, Blink::POSITIVE_X_AXIS));
+        glm::quat rollRotation = glm::normalize(glm::angleAxis(rollRadians, Blink::POSITIVE_Z_AXIS));
+
+        // Multiplication order is crucial.
+        // Changing the order changes the final orientation, similar to the behavior of matrix multiplication.
+        glm::quat orientation = glm::normalize(yawRotation * pitchRotation * rollRotation);
+
+        glm::vec3 rightDirection = glm::normalize(orientation * Blink::WORLD_RIGHT_DIRECTION);
+        glm::vec3 upDirection = glm::normalize(orientation * Blink::WORLD_UP_DIRECTION);
+        glm::vec3 forwardDirection = glm::normalize(orientation * Blink::WORLD_FORWARD_DIRECTION);
+
+        // glm::mat4 rotation = glm::toMat4(orientation);
+        // lua_pushmat4(L, rotation);
+
+        lua_pushquat(L, orientation);
+
+        return 1;
+    }
+}
+
+#include "scene/Components.h"
+void fml(double timestep) {
+    using namespace ::Blink;
+
+    CameraComponent cameraCameraComponent{};
+    TransformComponent cameraTransformComponent{};
+    TransformComponent playerTransformComponent{};
+
+    glm::vec3 cameraPosition = cameraTransformComponent.position;
+    glm::quat cameraOrientation = cameraTransformComponent.orientation;
+
+    glm::vec3 playerPosition = playerTransformComponent.position;
+    glm::quat playerOrientation = playerTransformComponent.orientation;
+
+    glm::vec3 offset = glm::vec3(0, 20, 30);
+    glm::vec3 worldOffset = glm::rotate(playerOrientation, offset);
+    glm::vec3 targetCameraPosition = playerPosition + worldOffset;
+
+    // float positionLerpFactor = 5.0f;
+    // glm::vec3 newCameraPosition = glm::mix(cameraPosition, targetCameraPosition, positionLerpFactor * timestep);;
+    glm::vec3 newCameraPosition = targetCameraPosition;
+
+    glm::vec3 WORLD_UP_DIRECTION = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    glm::vec3 forward = glm::normalize(playerPosition - newCameraPosition);
+    glm::quat targetCameraOrientation = glm::quatLookAtRH(forward, WORLD_UP_DIRECTION);
+
+    // float orientationSlerpFactor = 5.0f;
+    // glm::quat newCameraOrientation = glm::slerp(cameraOrientation, targetCameraOrientation, static_cast<float>(orientationSlerpFactor * timestep));
+    glm::quat newCameraOrientation = targetCameraOrientation;
+
+    glm::mat4 rotation = glm::toMat4(glm::inverse(newCameraOrientation));
+
+    glm::mat4 translation = glm::translate(glm::mat4(1.0), -newCameraPosition);
+    glm::mat4 cameraView = rotation * translation;
+
+    cameraTransformComponent.position = newCameraPosition;
+    cameraTransformComponent.orientation = newCameraOrientation;
+    cameraCameraComponent.view = cameraView;
 }
 
 glm::vec2 lua_tovec2(lua_State* L, int index) {
@@ -1666,4 +2019,6 @@ void lua_pushquat(lua_State* L, const glm::quat& quaternion) {
     lua_setfield(L, -2, "z");
     lua_pushnumber(L, quaternion.w);
     lua_setfield(L, -2, "w");
+    luaL_getmetatable(L, Blink::GlmLuaBinding::QUAT_METATABLE_NAME.c_str());
+    lua_setmetatable(L, -2);
 }
