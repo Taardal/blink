@@ -19,13 +19,29 @@ namespace Blink {
         static void initialize(lua_State* L);
 
     private:
+        static void createVec2Metatable(lua_State* L);
+
+        static void createVec3Metatable(lua_State* L);
+
+        static void createVec4Metatable(lua_State* L);
+
+        static void createMat2Metatable(lua_State* L);
+
+        static void createMat3Metatable(lua_State* L);
+
+        static void createMat4Metatable(lua_State* L);
+
+        static void createQuatMetatable(lua_State* L);
+
         static int index(lua_State* L);
 
-        static int addVec2(lua_State* L);
+        static int indexVec2(lua_State* L);
 
-        static int addVec3(lua_State* L);
+        static int indexVec3(lua_State* L);
 
-        static int addVec4(lua_State* L);
+        static int indexVec4(lua_State* L);
+
+        static int indexQuat(lua_State* L);
 
         static int addMat2(lua_State* L);
 
@@ -35,17 +51,17 @@ namespace Blink {
 
         static int addQuat(lua_State* L);
 
+        static int addVec2(lua_State* L);
+
+        static int addVec3(lua_State* L);
+
+        static int addVec4(lua_State* L);
+
         static int angleAxis(lua_State* L);
 
         static int cross(lua_State* L);
 
         static int degrees(lua_State* L);
-
-        static int divideVec2(lua_State* L);
-
-        static int divideVec3(lua_State* L);
-
-        static int divideVec4(lua_State* L);
 
         static int divideMat2(lua_State* L);
 
@@ -54,6 +70,12 @@ namespace Blink {
         static int divideMat4(lua_State* L);
 
         static int divideQuat(lua_State* L);
+
+        static int divideVec2(lua_State* L);
+
+        static int divideVec3(lua_State* L);
+
+        static int divideVec4(lua_State* L);
 
         static int dotVec2(lua_State* L);
 
@@ -71,7 +93,11 @@ namespace Blink {
 
         static int inverseMat4(lua_State* L);
 
-        static int length(lua_State* L);
+        static int lengthVec2(lua_State* L);
+
+        static int lengthVec3(lua_State* L);
+
+        static int lengthVec4(lua_State* L);
 
         static int lerp(lua_State* L);
 
@@ -87,12 +113,6 @@ namespace Blink {
 
         static int mat4ToQuat(lua_State* L);
 
-        static int multiplyVec2(lua_State* L);
-
-        static int multiplyVec3(lua_State* L);
-
-        static int multiplyVec4(lua_State* L);
-
         static int multiplyMat2(lua_State* L);
 
         static int multiplyMat3(lua_State* L);
@@ -101,7 +121,17 @@ namespace Blink {
 
         static int multiplyQuat(lua_State* L);
 
-        static int normalize(lua_State* L);
+        static int multiplyVec2(lua_State* L);
+
+        static int multiplyVec3(lua_State* L);
+
+        static int multiplyVec4(lua_State* L);
+
+        static int normalizeVec2(lua_State* L);
+
+        static int normalizeVec3(lua_State* L);
+
+        static int normalizeVec4(lua_State* L);
 
         static int normalizeQuat(lua_State* L);
 
@@ -127,12 +157,6 @@ namespace Blink {
 
         static int slerp(lua_State* L);
 
-        static int subtractVec2(lua_State* L);
-
-        static int subtractVec3(lua_State* L);
-
-        static int subtractVec4(lua_State* L);
-
         static int subtractMat2(lua_State* L);
 
         static int subtractMat3(lua_State* L);
@@ -141,7 +165,25 @@ namespace Blink {
 
         static int subtractQuat(lua_State* L);
 
+        static int subtractVec2(lua_State* L);
+
+        static int subtractVec3(lua_State* L);
+
+        static int subtractVec4(lua_State* L);
+
+        static int toStringVec2(lua_State* L);
+
+        static int toStringVec3(lua_State* L);
+
+        static int toStringVec4(lua_State* L);
+
         static int translate(lua_State* L);
+
+        static int unaryMinusVec2(lua_State* L);
+
+        static int unaryMinusVec3(lua_State* L);
+
+        static int unaryMinusVec4(lua_State* L);
 
         static int vec2(lua_State* L);
 

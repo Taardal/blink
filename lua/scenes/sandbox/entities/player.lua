@@ -10,20 +10,23 @@ local rollSpeed = yawSpeed * 1.5
 
 local maxRollWhenTurning = 45
 
-function Player.onUpdate(entity, timestep)
+local function reset(entity)
+    moveSpeed = 0
+    Entity:setTransformComponent(entity, {
+        position = glm.vec3(0, 0, 0),
+        orientation = glm.quat(1, 0, 0, 0),
+        forwardDirection = WORLD_FORWARD_DIRECTION,
+        upDirection = WORLD_UP_DIRECTION,
+        rightDirection = WORLD_RIGHT_DIRECTION,
+        yaw = 0,
+        pitch = 0,
+        roll = 0,
+    })
+end
 
+function Player.onUpdate(entity, timestep)
     if Keyboard:isPressed(Key.M) then
-        moveSpeed = 0
-        Entity:setTransformComponent(entity, {
-            position = glm.vec3(0, 0, 0),
-            orientation = glm.quat(1, 0, 0, 0),
-            forwardDirection = WORLD_FORWARD_DIRECTION,
-            upDirection = WORLD_UP_DIRECTION,
-            rightDirection = WORLD_RIGHT_DIRECTION,
-            yaw = 0,
-            pitch = 0,
-            roll = 0,
-        })
+        reset(entity)
     end
 
     local transformComponent = Entity:getTransformComponent(entity)
@@ -70,11 +73,6 @@ function Player.onUpdate(entity, timestep)
         if pitch > 360 then
             pitch = 0
         end
-    end
-    if not up and not down then
-        --if pitch > 0 then
-        --    pitch = pitch - pitchSpeed
-        --end
     end
 
     if left then
@@ -124,10 +122,10 @@ function Player.onUpdate(entity, timestep)
     local distance = forwardDirection * velocity
     position = position + distance
 
-    transformComponent.position = position
-    transformComponent.yaw = yaw
-    transformComponent.pitch = pitch
-    transformComponent.roll = roll
-
-    Entity:setTransformComponent(entity, transformComponent)
+    Entity:setTransformComponent(entity, {
+        position = position,
+        yaw = yaw,
+        pitch = pitch,
+        roll = roll,
+    })
 end

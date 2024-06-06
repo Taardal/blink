@@ -1,3 +1,5 @@
+require("utils")
+
 local offset = glm.vec3(0, 20, 30)
 
 function Camera.onUpdate(entity, timestep)
@@ -16,27 +18,36 @@ function Camera.onUpdate(entity, timestep)
     local targetCameraPosition = playerPosition + worldOffset
 
     local positionLerpFactor = 5
-    local newCameraPosition = glm.lerp(cameraPosition, targetCameraPosition, positionLerpFactor * timestep);
+    local newCameraPosition = glm.lerp(cameraPosition, targetCameraPosition, positionLerpFactor * timestep)
 
-    local forward = glm.normalize(playerPosition - newCameraPosition)
-    local right = glm.normalize(glm.cross(WORLD_UP_DIRECTION, forward))
-    local up = glm.normalize(glm.cross(forward, right))
+    local forward = (playerPosition - newCameraPosition):normalize()
+    local right = glm.cross(WORLD_UP_DIRECTION, forward):normalize()
+    local up = glm.cross(forward, right):normalize()
 
     local cameraView = glm.lookAt(newCameraPosition, playerPosition, up)
-    local targetCameraOrientation = glm.normalizeQuat(glm.mat4ToQuat(cameraView))
+    local targetCameraOrientation = glm.mat4ToQuat(cameraView):normalize()
 
     local orientationSlerpFactor = 5
-    local newCameraOrientation = glm.normalizeQuat(glm.slerp(cameraOrientation, targetCameraOrientation, orientationSlerpFactor * timestep))
+    local newCameraOrientation = glm.slerp(cameraOrientation, targetCameraOrientation, orientationSlerpFactor * timestep)
+    newCameraOrientation = newCameraOrientation:normalize()
 
-    local rotation = glm.quatToMat4(newCameraOrientation)
-    local translation = glm.translate(glm.mat4(1.0), glm.vec3(-newCameraPosition.x, -newCameraPosition.y, -newCameraPosition.z))
-    local newCameraView = rotation * translation
+    --local eulerAngles = glm.degrees(glm.eulerAngles(newCameraOrientation))
 
     Entity:setTransformComponent(entity, {
         position = newCameraPosition,
         orientation = newCameraOrientation,
+        --rightDirection = (newCameraOrientation * WORLD_RIGHT_DIRECTION):normalize(),
+        --upDirection = (newCameraOrientation * WORLD_UP_DIRECTION):normalize(),
+        --forwardDirection = (newCameraOrientation * WORLD_FORWARD_DIRECTION):normalize(),
+        --pitch = eulerAngles.x,
+        --yaw = eulerAngles.y,
+        --roll = eulerAngles.z,
     })
-    Entity:setCameraComponent(entity, {
-        view = newCameraView
-    })
+
+    --local viewRotation = newCameraOrientation:toMat4()
+    --local viewTranslation = glm.translate(glm.mat4(1.0), -newCameraPosition)
+    --
+    --Entity:setCameraComponent(entity, {
+    --    view = viewRotation * viewTranslation
+    --})
 end

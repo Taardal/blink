@@ -44,7 +44,7 @@ namespace Blink {
     public:
         explicit SceneCamera(const SceneCameraConfig& config);
 
-        void onEvent(Event& event);
+        void onResize();
 
         void update(double timestep);
 

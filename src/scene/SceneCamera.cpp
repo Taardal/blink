@@ -9,19 +9,18 @@
 namespace Blink {
     SceneCamera::SceneCamera(const SceneCameraConfig& config) : config(config) {
         calculateAspectRatio();
+        calculateProjection();
     }
 
-    void SceneCamera::onEvent(Event& event) {
-        if (event.type == EventType::WindowResize) {
-            calculateAspectRatio();
-        }
+    void SceneCamera::onResize() {
+        calculateAspectRatio();
+        calculateProjection();
     }
 
     void SceneCamera::update(double timestep) {
         processInput(timestep);
         calculateDirections();
         calculateView();
-        calculateProjection();
         if (loggingEnabled) {
             logState();
         }

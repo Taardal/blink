@@ -1,13 +1,14 @@
 {
     "diagnostics.globals": [
-        "Camera",
         "Entity",
         "glm",
         "Key",
         "Keyboard",
-        "Player",
         "Scene",
         "SceneCamera",
-        "Window"
+        "Window",
+        "WORLD_FORWARD_DIRECTION",
+        "WORLD_RIGHT_DIRECTION",
+        "WORLD_UP_DIRECTION"
     ]
 }

@@ -296,7 +296,7 @@ function Scene.onCreateEntities()
     })
     Entity:setMeshComponent(player, {
         modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/krulspeld5.jpg",
+        textureAtlasPath = "models/fighter/krulspeld1.jpg",
     })
     Entity:setTransformComponent(player, {
         size = glm.vec3(25, 25, 25),

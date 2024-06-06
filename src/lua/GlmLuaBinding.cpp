@@ -22,214 +22,222 @@ namespace Blink {
         // `glm::normalize` etc.
         // --------------------------------------------------------------------------------------------------------------
 
-        // Create Lua object
         lua_newtable(L);
-
-        // Create a new metatable and push it onto the Lua stack
         luaL_newmetatable(L, TYPE_METATABLE_NAME.c_str());
-        // Set the __index metamethod of the metatable to GlmBinding::index
-        {
-            lua_pushstring(L, "__index");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::index, upvalueCount);
-            lua_settable(L, -3);
-        }
-        // Set the newly created metatable as the metatable of the userdata
-        lua_setmetatable(L, -2);
 
-        // Create a global Lua variable and assign the userdata to it (C++ object)
+        lua_pushstring(L, "__index");
+        lua_pushcfunction(L, GlmLuaBinding::index);
+        lua_settable(L, -3);
+
+        lua_setmetatable(L, -2);
         lua_setglobal(L, TYPE_NAME.c_str());
 
         // -------------------------------------------------------------------------------------------------------------
-        // Metatables
+        // Mathematical object metatables
         // -------------------------------------------------------------------------------------------------------------
         // Create extra metatables to be added to vector, matrix and similar tables. This should not be used on the
         // binding itself, but rather on the tables that represents glm::vecX, glm::matX objects, or similar.
-        // The metatables facilitates doing arithmetic operations on the tables like `vecA + vecB`, instead of having
-        // to do `glm.add(vecA, vecB)`
         // -------------------------------------------------------------------------------------------------------------
 
+        createVec2Metatable(L);
+        createVec3Metatable(L);
+        createVec4Metatable(L);
+        createMat2Metatable(L);
+        createMat3Metatable(L);
+        createMat4Metatable(L);
+        createQuatMetatable(L);
+    }
+
+    void GlmLuaBinding::createVec2Metatable(lua_State* L) {
         luaL_newmetatable(L, VEC2_METATABLE_NAME.c_str());
-        {
-            lua_pushstring(L, "__add");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::addVec2, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__sub");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::subtractVec2, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__mul");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::multiplyVec2, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__div");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::divideVec2, upvalueCount);
-            lua_settable(L, -3);
-        }
 
+        lua_pushstring(L, "__add");
+        lua_pushcfunction(L, GlmLuaBinding::addVec2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__div");
+        lua_pushcfunction(L, GlmLuaBinding::divideVec2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__index");
+        lua_pushcfunction(L, GlmLuaBinding::indexVec2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__len");
+        lua_pushcfunction(L, GlmLuaBinding::lengthVec2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__mul");
+        lua_pushcfunction(L, GlmLuaBinding::multiplyVec2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__sub");
+        lua_pushcfunction(L, GlmLuaBinding::subtractVec2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__unm");
+        lua_pushcfunction(L, GlmLuaBinding::unaryMinusVec2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__tostring");
+        lua_pushcfunction(L, GlmLuaBinding::toStringVec2);
+        lua_settable(L, -3);
+    }
+
+    void GlmLuaBinding::createVec3Metatable(lua_State* L) {
         luaL_newmetatable(L, VEC3_METATABLE_NAME.c_str());
-        {
-            lua_pushstring(L, "__add");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::addVec3, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__sub");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::subtractVec3, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__mul");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::multiplyVec3, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__div");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::divideVec3, upvalueCount);
-            lua_settable(L, -3);
-        }
 
+        lua_pushstring(L, "__add");
+        lua_pushcfunction(L, GlmLuaBinding::addVec3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__div");
+        lua_pushcfunction(L, GlmLuaBinding::divideVec3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__index");
+        lua_pushcfunction(L, GlmLuaBinding::indexVec3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__len");
+        lua_pushcfunction(L, GlmLuaBinding::lengthVec3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__mul");
+        lua_pushcfunction(L, GlmLuaBinding::multiplyVec3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__sub");
+        lua_pushcfunction(L, GlmLuaBinding::subtractVec3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__unm");
+        lua_pushcfunction(L, GlmLuaBinding::unaryMinusVec3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__tostring");
+        lua_pushcfunction(L, GlmLuaBinding::toStringVec3);
+        lua_settable(L, -3);
+    }
+
+    void GlmLuaBinding::createVec4Metatable(lua_State* L) {
         luaL_newmetatable(L, VEC4_METATABLE_NAME.c_str());
-        {
-            lua_pushstring(L, "__add");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::addVec4, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__sub");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::subtractVec4, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__mul");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::multiplyVec4, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__div");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::divideVec4, upvalueCount);
-            lua_settable(L, -3);
-        }
 
+        lua_pushstring(L, "__add");
+        lua_pushcfunction(L, GlmLuaBinding::addVec4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__div");
+        lua_pushcfunction(L, GlmLuaBinding::divideVec4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__index");
+        lua_pushcfunction(L, GlmLuaBinding::indexVec4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__len");
+        lua_pushcfunction(L, GlmLuaBinding::lengthVec4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__mul");
+        lua_pushcfunction(L, GlmLuaBinding::multiplyVec4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__sub");
+        lua_pushcfunction(L, GlmLuaBinding::subtractVec4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__unm");
+        lua_pushcfunction(L, GlmLuaBinding::unaryMinusVec4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__tostring");
+        lua_pushcfunction(L, GlmLuaBinding::toStringVec4);
+        lua_settable(L, -3);
+    }
+
+    void GlmLuaBinding::createMat2Metatable(lua_State* L) {
         luaL_newmetatable(L, MAT2_METATABLE_NAME.c_str());
-        {
-            lua_pushstring(L, "__add");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::addMat2, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__sub");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::subtractMat2, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__mul");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::multiplyMat2, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__div");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::divideMat2, upvalueCount);
-            lua_settable(L, -3);
-        }
 
+        lua_pushstring(L, "__add");
+        lua_pushcfunction(L, GlmLuaBinding::addMat2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__div");
+        lua_pushcfunction(L, GlmLuaBinding::divideMat2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__mul");
+        lua_pushcfunction(L, GlmLuaBinding::multiplyMat2);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__sub");
+        lua_pushcfunction(L, GlmLuaBinding::subtractMat2);
+        lua_settable(L, -3);
+    }
+
+    void GlmLuaBinding::createMat3Metatable(lua_State* L) {
         luaL_newmetatable(L, MAT3_METATABLE_NAME.c_str());
-        {
-            lua_pushstring(L, "__add");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::addMat3, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__sub");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::subtractMat3, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__mul");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::multiplyMat3, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__div");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::divideMat3, upvalueCount);
-            lua_settable(L, -3);
-        }
 
+        lua_pushstring(L, "__add");
+        lua_pushcfunction(L, GlmLuaBinding::addMat3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__div");
+        lua_pushcfunction(L, GlmLuaBinding::divideMat3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__mul");
+        lua_pushcfunction(L, GlmLuaBinding::multiplyMat3);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__sub");
+        lua_pushcfunction(L, GlmLuaBinding::subtractMat3);
+        lua_settable(L, -3);
+    }
+
+    void GlmLuaBinding::createMat4Metatable(lua_State* L) {
         luaL_newmetatable(L, MAT4_METATABLE_NAME.c_str());
-        {
-            lua_pushstring(L, "__add");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::addMat4, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__sub");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::subtractMat4, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__mul");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::multiplyMat4, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__div");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::divideMat4, upvalueCount);
-            lua_settable(L, -3);
-        }
 
+        lua_pushstring(L, "__add");
+        lua_pushcfunction(L, GlmLuaBinding::addMat4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__div");
+        lua_pushcfunction(L, GlmLuaBinding::divideMat4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__mul");
+        lua_pushcfunction(L, GlmLuaBinding::multiplyMat4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__sub");
+        lua_pushcfunction(L, GlmLuaBinding::subtractMat4);
+        lua_settable(L, -3);
+    }
+
+    void GlmLuaBinding::createQuatMetatable(lua_State* L) {
         luaL_newmetatable(L, QUAT_METATABLE_NAME.c_str());
-        {
-            lua_pushstring(L, "__add");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::addQuat, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__sub");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::subtractQuat, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__mul");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::multiplyQuat, upvalueCount);
-            lua_settable(L, -3);
-        }
-        {
-            lua_pushstring(L, "__div");
-            constexpr int upvalueCount = 0;
-            lua_pushcclosure(L, GlmLuaBinding::divideQuat, upvalueCount);
-            lua_settable(L, -3);
-        }
+
+        lua_pushstring(L, "__add");
+        lua_pushcfunction(L, GlmLuaBinding::addQuat);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__div");
+        lua_pushcfunction(L, GlmLuaBinding::divideQuat);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__index");
+        lua_pushcfunction(L, GlmLuaBinding::indexQuat);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__mul");
+        lua_pushcfunction(L, GlmLuaBinding::multiplyQuat);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__sub");
+        lua_pushcfunction(L, GlmLuaBinding::subtractQuat);
+        lua_settable(L, -3);
     }
 
     // Lua stack
@@ -237,18 +245,6 @@ namespace Blink {
     // - [-2] userdata  Binding
     int GlmLuaBinding::index(lua_State* L) {
         std::string indexName = lua_tostring(L, -1);
-        if (indexName == "addVec2") {
-            lua_pushcfunction(L, GlmLuaBinding::addVec2);
-            return 1;
-        }
-        if (indexName == "addVec3") {
-            lua_pushcfunction(L, GlmLuaBinding::addVec3);
-            return 1;
-        }
-        if (indexName == "addVec4") {
-            lua_pushcfunction(L, GlmLuaBinding::addVec4);
-            return 1;
-        }
         if (indexName == "addMat2") {
             lua_pushcfunction(L, GlmLuaBinding::addMat2);
             return 1;
@@ -259,6 +255,22 @@ namespace Blink {
         }
         if (indexName == "addMat4") {
             lua_pushcfunction(L, GlmLuaBinding::addMat4);
+            return 1;
+        }
+        if (indexName == "addQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::addQuat);
+            return 1;
+        }
+        if (indexName == "addVec2") {
+            lua_pushcfunction(L, GlmLuaBinding::addVec2);
+            return 1;
+        }
+        if (indexName == "addVec3") {
+            lua_pushcfunction(L, GlmLuaBinding::addVec3);
+            return 1;
+        }
+        if (indexName == "addVec4") {
+            lua_pushcfunction(L, GlmLuaBinding::addVec4);
             return 1;
         }
         if (indexName == "angleAxis") {
@@ -273,18 +285,6 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::degrees);
             return 1;
         }
-        if (indexName == "divideVec2") {
-            lua_pushcfunction(L, GlmLuaBinding::divideVec2);
-            return 1;
-        }
-        if (indexName == "divideVec3") {
-            lua_pushcfunction(L, GlmLuaBinding::divideVec3);
-            return 1;
-        }
-        if (indexName == "divideVec4") {
-            lua_pushcfunction(L, GlmLuaBinding::divideVec4);
-            return 1;
-        }
         if (indexName == "divideMat2") {
             lua_pushcfunction(L, GlmLuaBinding::divideMat2);
             return 1;
@@ -295,6 +295,22 @@ namespace Blink {
         }
         if (indexName == "divideMat4") {
             lua_pushcfunction(L, GlmLuaBinding::divideMat4);
+            return 1;
+        }
+        if (indexName == "divideQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::divideQuat);
+            return 1;
+        }
+        if (indexName == "divideVec2") {
+            lua_pushcfunction(L, GlmLuaBinding::divideVec2);
+            return 1;
+        }
+        if (indexName == "divideVec3") {
+            lua_pushcfunction(L, GlmLuaBinding::divideVec3);
+            return 1;
+        }
+        if (indexName == "divideVec4") {
+            lua_pushcfunction(L, GlmLuaBinding::divideVec4);
             return 1;
         }
         if (indexName == "dotVec2") {
@@ -329,8 +345,16 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::inverseMat4);
             return 1;
         }
-        if (indexName == "length") {
-            lua_pushcfunction(L, GlmLuaBinding::length);
+        if (indexName == "lengthVec2") {
+            lua_pushcfunction(L, GlmLuaBinding::lengthVec2);
+            return 1;
+        }
+        if (indexName == "lengthVec3") {
+            lua_pushcfunction(L, GlmLuaBinding::lengthVec3);
+            return 1;
+        }
+        if (indexName == "lengthVec4") {
+            lua_pushcfunction(L, GlmLuaBinding::lengthVec4);
             return 1;
         }
         if (indexName == "lerp") {
@@ -361,18 +385,6 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::mat4ToQuat);
             return 1;
         }
-        if (indexName == "multiplyVec2") {
-            lua_pushcfunction(L, GlmLuaBinding::multiplyVec2);
-            return 1;
-        }
-        if (indexName == "multiplyVec3") {
-            lua_pushcfunction(L, GlmLuaBinding::multiplyVec3);
-            return 1;
-        }
-        if (indexName == "multiplyVec4") {
-            lua_pushcfunction(L, GlmLuaBinding::multiplyVec4);
-            return 1;
-        }
         if (indexName == "multiplyMat2") {
             lua_pushcfunction(L, GlmLuaBinding::multiplyMat2);
             return 1;
@@ -389,8 +401,28 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::multiplyQuat);
             return 1;
         }
-        if (indexName == "normalize") {
-            lua_pushcfunction(L, GlmLuaBinding::normalize);
+        if (indexName == "multiplyVec2") {
+            lua_pushcfunction(L, GlmLuaBinding::multiplyVec2);
+            return 1;
+        }
+        if (indexName == "multiplyVec3") {
+            lua_pushcfunction(L, GlmLuaBinding::multiplyVec3);
+            return 1;
+        }
+        if (indexName == "multiplyVec4") {
+            lua_pushcfunction(L, GlmLuaBinding::multiplyVec4);
+            return 1;
+        }
+        if (indexName == "normalizeVec2") {
+            lua_pushcfunction(L, GlmLuaBinding::normalizeVec2);
+            return 1;
+        }
+        if (indexName == "normalizeVec3") {
+            lua_pushcfunction(L, GlmLuaBinding::normalizeVec3);
+            return 1;
+        }
+        if (indexName == "normalizeVec4") {
+            lua_pushcfunction(L, GlmLuaBinding::normalizeVec4);
             return 1;
         }
         if (indexName == "normalizeQuat") {
@@ -441,18 +473,6 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::slerp);
             return 1;
         }
-        if (indexName == "subtractVec2") {
-            lua_pushcfunction(L, GlmLuaBinding::subtractVec2);
-            return 1;
-        }
-        if (indexName == "subtractVec3") {
-            lua_pushcfunction(L, GlmLuaBinding::subtractVec3);
-            return 1;
-        }
-        if (indexName == "subtractVec4") {
-            lua_pushcfunction(L, GlmLuaBinding::subtractVec4);
-            return 1;
-        }
         if (indexName == "subtractMat2") {
             lua_pushcfunction(L, GlmLuaBinding::subtractMat2);
             return 1;
@@ -463,6 +483,22 @@ namespace Blink {
         }
         if (indexName == "subtractMat4") {
             lua_pushcfunction(L, GlmLuaBinding::subtractMat4);
+            return 1;
+        }
+        if (indexName == "subtractQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::subtractQuat);
+            return 1;
+        }
+        if (indexName == "subtractVec2") {
+            lua_pushcfunction(L, GlmLuaBinding::subtractVec2);
+            return 1;
+        }
+        if (indexName == "subtractVec3") {
+            lua_pushcfunction(L, GlmLuaBinding::subtractVec3);
+            return 1;
+        }
+        if (indexName == "subtractVec4") {
+            lua_pushcfunction(L, GlmLuaBinding::subtractVec4);
             return 1;
         }
         if (indexName == "translate") {
@@ -486,6 +522,62 @@ namespace Blink {
             return 1;
         }
         BL_LOG_WARN("Could not resolve index [{}]", indexName);
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] string    Name of the index being accessed
+    // - [-2] table     Vec2 (self)
+    int GlmLuaBinding::indexVec2(lua_State* L) {
+        std::string indexName = lua_tostring(L, -1);
+        if (indexName == "normalize") {
+            lua_pushcfunction(L, GlmLuaBinding::normalizeVec2);
+            return 1;
+        }
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] string    Name of the index being accessed
+    // - [-2] table     Vec3 (self)
+    int GlmLuaBinding::indexVec3(lua_State* L) {
+        std::string indexName = lua_tostring(L, -1);
+        if (indexName == "normalize") {
+            lua_pushcfunction(L, GlmLuaBinding::normalizeVec3);
+            return 1;
+        }
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] string    Name of the index being accessed
+    // - [-2] table     Vec4 (self)
+    int GlmLuaBinding::indexVec4(lua_State* L) {
+        std::string indexName = lua_tostring(L, -1);
+        if (indexName == "normalize") {
+            lua_pushcfunction(L, GlmLuaBinding::normalizeVec4);
+            return 1;
+        }
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] string    Name of the index being accessed
+    // - [-2] table     Quaternion (self)
+    int GlmLuaBinding::indexQuat(lua_State* L) {
+        std::string indexName = lua_tostring(L, -1);
+        if (indexName == "inverse") {
+            lua_pushcfunction(L, GlmLuaBinding::inverseQuat);
+            return 1;
+        }
+        if (indexName == "normalize") {
+            lua_pushcfunction(L, GlmLuaBinding::normalizeQuat);
+            return 1;
+        }
+        if (indexName == "toMat4") {
+            lua_pushcfunction(L, GlmLuaBinding::quatToMat4);
+            return 1;
+        }
         return 0;
     }
 
@@ -972,9 +1064,27 @@ namespace Blink {
     }
 
     // Lua stack
+    // - [-1] table     Vec2
+    int GlmLuaBinding::lengthVec2(lua_State* L) {
+        glm::vec2 vector = lua_tovec2(L, -1);
+        float result = glm::length(vector);
+        lua_pushnumber(L, result);
+        return 1;
+    }
+
+    // Lua stack
     // - [-1] table     Vec3
-    int GlmLuaBinding::length(lua_State* L) {
+    int GlmLuaBinding::lengthVec3(lua_State* L) {
         glm::vec3 vector = lua_tovec3(L, -1);
+        float result = glm::length(vector);
+        lua_pushnumber(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec4
+    int GlmLuaBinding::lengthVec4(lua_State* L) {
+        glm::vec4 vector = lua_tovec4(L, -1);
         float result = glm::length(vector);
         lua_pushnumber(L, result);
         return 1;
@@ -1249,8 +1359,26 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] table     Vector3
-    int GlmLuaBinding::normalize(lua_State* L) {
+    // - [-1] table     Quaternion
+    int GlmLuaBinding::normalizeQuat(lua_State* L) {
+        glm::quat quaternion = lua_toquat(L, -1);
+        glm::quat result = glm::normalize(quaternion);
+        lua_pushquat(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec2
+    int GlmLuaBinding::normalizeVec2(lua_State* L) {
+        glm::vec2 vector = lua_tovec2(L, -1);
+        glm::vec2 result = glm::normalize(vector);
+        lua_pushvec2(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec3
+    int GlmLuaBinding::normalizeVec3(lua_State* L) {
         glm::vec3 vector = lua_tovec3(L, -1);
         glm::vec3 result = glm::normalize(vector);
         lua_pushvec3(L, result);
@@ -1258,11 +1386,11 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] table     Quaternion
-    int GlmLuaBinding::normalizeQuat(lua_State* L) {
-        glm::quat quaternion = lua_toquat(L, -1);
-        glm::quat result = glm::normalize(quaternion);
-        lua_pushquat(L, result);
+    // - [-1] table     Vec4
+    int GlmLuaBinding::normalizeVec4(lua_State* L) {
+        glm::vec4 vector = lua_tovec4(L, -1);
+        glm::vec4 result = glm::normalize(vector);
+        lua_pushvec4(L, result);
         return 1;
     }
 
@@ -1531,6 +1659,30 @@ namespace Blink {
     }
 
     // Lua stack
+    // - [-1] table     Vec2 (self)
+    int GlmLuaBinding::toStringVec2(lua_State* L) {
+        glm::vec2 self = lua_tovec2(L, -1);
+        lua_pushfstring(L, "x: %d, y: %d", self.x, self.y);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec3 (self)
+    int GlmLuaBinding::toStringVec3(lua_State* L) {
+        glm::vec3 self = lua_tovec3(L, -1);
+        lua_pushfstring(L, "x: %d, y: %d, z: %d", self.x, self.y, self.z);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec4 (self)
+    int GlmLuaBinding::toStringVec4(lua_State* L) {
+        glm::vec4 self = lua_tovec4(L, -1);
+        lua_pushfstring(L, "x: %d, y: %d, z: %d, w: %d", self.x, self.y, self.z, self.w);
+        return 1;
+    }
+
+    // Lua stack
     // - [-1] table     Mat2 B
     // - [-2] table     Mat2 A
     int GlmLuaBinding::subtractMat2(lua_State* L) {
@@ -1582,6 +1734,30 @@ namespace Blink {
         glm::mat4 matrix = lua_tomat4(L, -2);
         glm::mat4 result = glm::translate(matrix, vector);
         lua_pushmat4(L, result);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec2 (self)
+    int GlmLuaBinding::unaryMinusVec2(lua_State* L) {
+        glm::vec2 self = lua_tovec2(L, -1);
+        lua_pushvec2(L, -self);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec3 (self)
+    int GlmLuaBinding::unaryMinusVec3(lua_State* L) {
+        glm::vec3 self = lua_tovec3(L, -1);
+        lua_pushvec3(L, -self);
+        return 1;
+    }
+
+    // Lua stack
+    // - [-1] table     Vec4 (self)
+    int GlmLuaBinding::unaryMinusVec4(lua_State* L) {
+        glm::vec4 self = lua_tovec4(L, -1);
+        lua_pushvec4(L, -self);
         return 1;
     }
 
