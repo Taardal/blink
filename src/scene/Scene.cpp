@@ -230,17 +230,27 @@ namespace Blink {
     }
 
     void Scene::calculateCameraRotation(TransformComponent* transformComponent) const {
+        // Unlike non-camera entities, the orientation is calculated in the camera's Lua-script
         glm::quat& orientation = transformComponent->orientation;
 
-         glm::vec3 eulerAngles = glm::degrees(glm::eulerAngles(orientation));
-         transformComponent->pitch = eulerAngles.x;
-         transformComponent->yaw = eulerAngles.y;
-         transformComponent->roll = eulerAngles.z;
+        // Calculate the euler angles based on the orientation, to keep all values in the transform component consistent
+        glm::vec3 eulerAngles = glm::degrees(glm::eulerAngles(orientation));
+        transformComponent->pitch = eulerAngles.x;
+        transformComponent->yaw = eulerAngles.y;
+        transformComponent->roll = eulerAngles.z;
 
-         transformComponent->rightDirection = glm::normalize(orientation * WORLD_RIGHT_DIRECTION);
-         transformComponent->upDirection = glm::normalize(orientation * WORLD_UP_DIRECTION);
-         transformComponent->forwardDirection = glm::normalize(orientation * WORLD_FORWARD_DIRECTION);
+        // Calculate the directional vectors based on the orientation, to keep all values in the transform component consistent
+        transformComponent->rightDirection = glm::normalize(orientation * WORLD_RIGHT_DIRECTION);
+        transformComponent->upDirection = glm::normalize(orientation * WORLD_UP_DIRECTION);
+        transformComponent->forwardDirection = glm::normalize(orientation * WORLD_FORWARD_DIRECTION);
 
+        // Calculate the camera's rotational matrix by using the _inverse_ orientation
+        //
+        // ChatGPT:
+        // The need to inverse the camera's orientation when rendering a camera model is due to the nature of the
+        // view matrix, which applies an inverse transformation to simulate the camera's perspective.
+        // To display the camera model accurately in the world, this inverse transformation must be reversed,
+        // hence applying the inverse of the camera's orientation to the model.
         transformComponent->rotation = glm::toMat4(glm::inverse(orientation));
     }
 

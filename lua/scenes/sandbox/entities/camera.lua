@@ -31,23 +31,8 @@ function Camera.onUpdate(entity, timestep)
     local newCameraOrientation = glm.slerp(cameraOrientation, targetCameraOrientation, orientationSlerpFactor * timestep)
     newCameraOrientation = newCameraOrientation:normalize()
 
-    --local eulerAngles = glm.degrees(glm.eulerAngles(newCameraOrientation))
-
     Entity:setTransformComponent(entity, {
         position = newCameraPosition,
         orientation = newCameraOrientation,
-        --rightDirection = (newCameraOrientation * WORLD_RIGHT_DIRECTION):normalize(),
-        --upDirection = (newCameraOrientation * WORLD_UP_DIRECTION):normalize(),
-        --forwardDirection = (newCameraOrientation * WORLD_FORWARD_DIRECTION):normalize(),
-        --pitch = eulerAngles.x,
-        --yaw = eulerAngles.y,
-        --roll = eulerAngles.z,
     })
-
-    --local viewRotation = newCameraOrientation:toMat4()
-    --local viewTranslation = glm.translate(glm.mat4(1.0), -newCameraPosition)
-    --
-    --Entity:setCameraComponent(entity, {
-    --    view = viewRotation * viewTranslation
-    --})
 end
