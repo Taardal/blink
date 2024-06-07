@@ -93,6 +93,7 @@ namespace Blink {
             sceneFilePath
         );
 
+        lua_pushcfunction(L, printLuaError);
         lua_getglobal(L, tableName);
         lua_getfield(L, -1, functionName);
 
@@ -100,8 +101,8 @@ namespace Blink {
         if (!functionMissing) {
             constexpr int argumentCount = 0;
             constexpr int returnValueCount = 0;
-            constexpr int messageHandlerIndex = 0;
-            if (lua_pcall(L, argumentCount, returnValueCount, messageHandlerIndex) != LUA_OK) {
+            constexpr int errorHandlerIndex = -3;
+            if (lua_pcall(L, argumentCount, returnValueCount, errorHandlerIndex) != LUA_OK) {
                 const char* errorMessage = lua_tostring(L, -1);
                 BL_LOG_ERROR(
                     "Could not invoke [{}:{}:{}]: {}",
@@ -137,12 +138,15 @@ namespace Blink {
             sceneFilePath
         );
 
+        lua_pushcfunction(L, printLuaError);
         lua_getglobal(L, tableName);
         lua_getfield(L, -1, functionName);
+
         constexpr int argumentCount = 0;
         constexpr int returnValueCount = 0;
-        constexpr int messageHandlerIndex = 0;
-        if (lua_pcall(L, argumentCount, returnValueCount, messageHandlerIndex) != LUA_OK) {
+        constexpr int errorHandlerIndex = -3;
+
+        if (lua_pcall(L, argumentCount, returnValueCount, errorHandlerIndex) != LUA_OK) {
             const char* errorMessage = lua_tostring(L, -1);
             BL_LOG_ERROR(
                 "Could not invoke [{}:{}:{}]: {}",
@@ -160,8 +164,9 @@ namespace Blink {
         static const char* functionName = "onUpdate";
         for (entt::entity entity : scene->entityRegistry.view<LuaComponent>()) {
             const LuaComponent& luaComponent = scene->entityRegistry.get<LuaComponent>(entity);
-
             std::string tableName = luaComponent.type;
+
+            lua_pushcfunction(L, printLuaError);
             lua_getglobal(L, tableName.c_str());
             lua_getfield(L, -1, functionName);
             lua_pushnumber(L, (uint32_t) entity);
@@ -169,8 +174,8 @@ namespace Blink {
 
             constexpr int argumentCount = 2;
             constexpr int returnValueCount = 0;
-            constexpr int messageHandlerIndex = 0;
-            if (lua_pcall(L, argumentCount, returnValueCount, messageHandlerIndex) != LUA_OK) {
+            constexpr int errorHandlerIndex = -5;
+            if (lua_pcall(L, argumentCount, returnValueCount, errorHandlerIndex) != LUA_OK) {
                 const auto* tagComponent = scene->entityRegistry.try_get<TagComponent>(entity);
                 const std::string& entityTag = tagComponent != nullptr ? tagComponent->tag : "Unknown";
                 const char* errorMessage = lua_tostring(L, -1);
@@ -200,7 +205,7 @@ namespace Blink {
         luaL_dostring(L, "package.path = './lua/?.out;' .. package.path");
 
         // Override Lua 'print' function with custom logger
-        lua_pushcfunction(L, LuaEngine::luaPrint);
+        lua_pushcfunction(L, LuaEngine::printLuaMessage);
         lua_setglobal(L, "print");
     }
 
@@ -218,9 +223,127 @@ namespace Blink {
         std::system(command.c_str());
     }
 
-    int LuaEngine::luaPrint(lua_State* L) {
+    int LuaEngine::printLuaMessage(lua_State* L) {
         const char* msg = lua_tostring(L, -1);
         BL_LOG_INFO("[LUA] - {}", msg);
         return 0;
+    }
+
+    int LuaEngine::printLuaError(lua_State* L) {
+        std::cerr << "--------------------------------------------------------------------------------------------------------------" << std::endl;
+        std::cerr << "[Lua error] " << lua_tostring(L, -1) << std::endl;
+        std::cerr << "--------------------------------------------------------------------------------------------------------------" << std::endl;
+
+        lua_Debug debugInfo;
+        uint32_t stackLevel = 0;
+
+        // Populate lua_Debug with information about the interpreter runtime stack
+        // Level 0 is the current running function, whereas level n+1 is the function that has called level n (except for tail calls, which do not count in the stack).
+        // When called with a level greater than the stack depth, lua_getstack returns 0; otherwise it returns 1.
+        while (lua_getstack(L, stackLevel, &debugInfo) > 0) {
+
+            // Get information about a specific function or function invocation.
+            // - [n] fills in the field name and namewhat;
+            // - [S] fills in the fields source, short_src, linedefined, lastlinedefined, and what;
+            // - [l] fills in the field currentline;
+            // - [t] fills in the field istailcall;
+            // - [u] fills in the fields nups, nparams, and isvararg;
+            // - [f] pushes onto the stack the function that is running at the given level;
+            // - [L] pushes onto the stack a table whose indices are the numbers of the lines that are valid on the function.
+            //      - A valid line is a line with some associated code, that is, a line where you can put a break point.
+            //      - Non-valid lines include empty lines and comments.
+            lua_getinfo(L, "nSltuf", &debugInfo);
+
+            // A reasonable name for the given function.
+            // Because functions in Lua are first-class values, they do not have a fixed name.
+            // The lua_getinfo function checks how the function was called to find a suitable name.
+            // If it cannot find a name, then name is set to NULL.
+            std::string name = debugInfo.name ? debugInfo.name : "";
+
+            // Explains the name field according to how the function was called.
+            // Possible values:
+            // - [global]
+            // - [local]
+            // - [method]
+            // - [field]
+            // - [upvalue]
+            // - [""] (Empty string when no other option seems to apply)
+            std::string namewhat = debugInfo.namewhat != nullptr ? debugInfo.namewhat : "";
+
+            // What type of function it is
+            // - [Lua] if the function is a Lua function
+            // - [C] if it is a C function
+            // - [main] if it is the main part of a chunk
+            std::string what = debugInfo.what != nullptr ? debugInfo.what : "";
+
+            // The source of the chunk that created the function.
+            // If the source starts with...
+            // - [@] The function was defined in a file where the file name follows the '@'
+            // - [=] The remainder of its contents describes the source in a user-dependent manner.
+            // - [ ] The function was defined in a string where source is that string.
+            std::string source = debugInfo.source != nullptr ? debugInfo.source : "";
+
+            // A "printable" version of source, to be used in error messages.
+            std::string shortSource = strlen(debugInfo.short_src) > 0 ? debugInfo.short_src : "";
+
+            // The current line where the given function is executing. When no line information is available, currentline is set to -1.
+            int currentLine = debugInfo.currentline;
+
+            // The line number where the definition of the function starts.
+            int lineDefined = debugInfo.linedefined;
+
+            // The line number where the definition of the function ends.
+            int lastLineDefined = debugInfo.lastlinedefined;
+
+            // The number of upvalues of the function.
+            int numberOfUpvalues = debugInfo.nups;
+
+            // The number of parameters of the function (always 0 for C functions).
+            int numberOfParameters = debugInfo.nparams;
+
+            // True if the function is a variadic function (always true for C functions).
+            bool variadicFunction = debugInfo.isvararg;
+
+            // True if this function invocation was called by a tail call.
+            // In this case, the caller of this level is not in the stack.
+            bool tailCall = debugInfo.istailcall;
+
+            std::string filename = "";
+            size_t sourceLastSlashIndex = source.find_last_of("/");
+            if (sourceLastSlashIndex != std::string::npos && sourceLastSlashIndex + 1 < source.length()) {
+                filename = source.substr(sourceLastSlashIndex + 1);
+            }
+
+            std::stringstream ss;
+            if (filename.length() > 0) {
+                ss << filename;
+            }
+            if (currentLine > -1) {
+                if (filename.length() > 0) {
+                    ss << ":";
+                }
+                ss << currentLine;
+            }
+            std::string tag = ss.str();
+            std::cerr << "[" << stackLevel << "]" << " " << tag << std::endl;
+
+            std::cerr << "  Source: " << (source.length() > 0 ? source : "--") << std::endl;
+            std::cerr << "  Line: " << currentLine << std::endl;
+            std::cerr << "  Name: " << (name.length() > 0 ? name : "--") << std::endl;
+            std::cerr << "  Description: " << (namewhat.length() > 0 ? namewhat : "--") << std::endl;
+            std::cerr << "  Parameters: " << numberOfParameters << std::endl;
+            std::cerr << "  Upvalues: " << numberOfUpvalues << std::endl;
+            std::cerr << "  Start line: " << lineDefined << std::endl;
+            std::cerr << "  End line: " << lastLineDefined << std::endl;
+            std::cerr << "  Variadic function: " << (variadicFunction ? "Yes" : "No") << std::endl;
+            std::cerr << "  Tail call: " << (tailCall ? "Yes" : "No") << std::endl;
+
+            lua_pop(L, 1); // Remove the function pushed by lua_getstack
+            ++stackLevel;
+        }
+        std::cerr << "--------------------------------------------------------------------------------------------------------------" << std::endl;
+        std::cerr << std::endl;
+
+        return 1; // Return the error message
     }
 }

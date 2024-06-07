@@ -21,12 +21,60 @@ function Scene.onCreateEntities()
     })
     Entity:setTransformComponent(terrain, {
         position = glm.vec3(0, -50, 0),
-        --yawOffset = 180,
     })
 
     -- --------------------------------------------------------------------------------------------------------------
     -- CHURCH
     -- --------------------------------------------------------------------------------------------------------------
+
+    local churchRoofCamera = Entity:create()
+
+    Entity:setTagComponent(churchRoofCamera, {
+        tag = "Church roof camera"
+    })
+    Entity:setLuaComponent(churchRoofCamera, {
+        type = "ChurchRoofCamera",
+        path = "lua/scenes/sandbox/entities/church_roof_camera.out",
+    })
+    Entity:setMeshComponent(churchRoofCamera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(churchRoofCamera, {
+        position = glm.vec3(-447, 110, -579),
+        size = glm.vec3(50, 50, 50)
+    })
+    Entity:setCameraComponent(churchRoofCamera, {
+        aspectRatio = Window:getAspectRatio(),
+        fieldOfView = 45,
+        nearClip = 0.1,
+        farClip = 10000,
+    })
+
+    local churchIndoorCamera = Entity:create()
+
+    Entity:setTagComponent(churchIndoorCamera, {
+        tag = "Church indoor camera"
+    })
+    Entity:setLuaComponent(churchIndoorCamera, {
+        type = "ChurchIndoorCamera",
+        path = "lua/scenes/sandbox/entities/church_indoor_camera.out",
+    })
+    Entity:setMeshComponent(churchIndoorCamera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(churchIndoorCamera, {
+        position = glm.vec3(-479, 0, -590),
+        size = glm.vec3(50, 50, 50),
+        yaw = 110,
+    })
+    Entity:setCameraComponent(churchIndoorCamera, {
+        aspectRatio = Window:getAspectRatio(),
+        fieldOfView = 46,
+        nearClip = 0.1,
+        farClip = 10000,
+    })
 
     local church = Entity:create()
 
@@ -92,6 +140,29 @@ function Scene.onCreateEntities()
     -- --------------------------------------------------------------------------------------------------------------
     -- ROLL PATROL 1
     -- --------------------------------------------------------------------------------------------------------------
+
+    local rollPatrol1Camera = Entity:create()
+
+    Entity:setTagComponent(rollPatrol1Camera, {
+        tag = "Roll patrol 1 camera"
+    })
+    Entity:setLuaComponent(rollPatrol1Camera, {
+        type = "RollPatrolCamera",
+        path = "lua/scenes/sandbox/entities/roll_patrol_camera.out",
+    })
+    Entity:setMeshComponent(rollPatrol1Camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(rollPatrol1Camera, {
+        size = glm.vec3(50, 50, 50)
+    })
+    Entity:setCameraComponent(rollPatrol1Camera, {
+        aspectRatio = Window:getAspectRatio(),
+        fieldOfView = 45,
+        nearClip = 0.1,
+        farClip = 10000,
+    })
 
     local rollPatrol1 = Entity:create()
 
@@ -215,6 +286,29 @@ function Scene.onCreateEntities()
     -- LINE PATROL
     -- --------------------------------------------------------------------------------------------------------------
 
+    local linePatrol1Camera = Entity:create()
+
+    Entity:setTagComponent(linePatrol1Camera, {
+        tag = "Line Patrol Camera"
+    })
+    Entity:setLuaComponent(linePatrol1Camera, {
+        type = "LinePatrolCamera",
+        path = "lua/scenes/sandbox/entities/line_patrol_camera.out",
+    })
+    Entity:setMeshComponent(linePatrol1Camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(linePatrol1Camera, {
+        size = glm.vec3(100, 100, 100),
+    })
+    Entity:setCameraComponent(linePatrol1Camera, {
+        aspectRatio = Window:getAspectRatio(),
+        fieldOfView = 45,
+        nearClip = 0.1,
+        farClip = 10000,
+    })
+
     local linePatrol1 = Entity:create()
 
     Entity:setTagComponent(linePatrol1, {
@@ -230,8 +324,8 @@ function Scene.onCreateEntities()
     })
     Entity:setTransformComponent(linePatrol1, {
         position = glm.vec3(0, 50, 0),
+        size = glm.vec3(100, 100, 100),
         yaw = 90,
-        size = glm.vec3(100, 100, 100)
     })
 
     local linePatrol2 = Entity:create()
@@ -254,36 +348,32 @@ function Scene.onCreateEntities()
     })
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- PLAYER CAMERA
+    -- PLAYER
     -- --------------------------------------------------------------------------------------------------------------
 
-    local camera = Entity:create()
+    local playerCamera = Entity:create()
 
-    Entity:setTagComponent(camera, {
+    Entity:setTagComponent(playerCamera, {
         tag = "Camera"
     })
-    Entity:setLuaComponent(camera, {
+    Entity:setLuaComponent(playerCamera, {
         type = "Camera",
         path = "lua/scenes/sandbox/entities/camera.out",
     })
-    Entity:setMeshComponent(camera, {
+    Entity:setMeshComponent(playerCamera, {
         modelPath = "models/camera/11673_camera_v1_L3.obj",
         texturesDirectoryPath = "models/camera",
     })
-    Entity:setTransformComponent(camera, {
+    Entity:setTransformComponent(playerCamera, {
         position = glm.vec3(0, 0, 0),
         size = glm.vec3(25, 25, 25),
     })
-    Entity:setCameraComponent(camera, {
+    Entity:setCameraComponent(playerCamera, {
         aspectRatio = Window:getAspectRatio(),
-        fieldOfView = SceneCamera:getFieldOfView(),
-        nearClip = SceneCamera:getNearClip(),
-        farClip = SceneCamera:getFarClip(),
+        fieldOfView = 45,
+        nearClip = 0.1,
+        farClip = 10000,
     })
-
-    -- --------------------------------------------------------------------------------------------------------------
-    -- PLAYER
-    -- --------------------------------------------------------------------------------------------------------------
 
     local player = Entity:create()
 

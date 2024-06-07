@@ -187,6 +187,10 @@ namespace Blink {
         lua_pushcfunction(L, GlmLuaBinding::divideMat3);
         lua_settable(L, -3);
 
+        lua_pushstring(L, "__index");
+        lua_pushcfunction(L, GlmLuaBinding::indexMat3);
+        lua_settable(L, -3);
+
         lua_pushstring(L, "__mul");
         lua_pushcfunction(L, GlmLuaBinding::multiplyMat3);
         lua_settable(L, -3);
@@ -205,6 +209,10 @@ namespace Blink {
 
         lua_pushstring(L, "__div");
         lua_pushcfunction(L, GlmLuaBinding::divideMat4);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "__index");
+        lua_pushcfunction(L, GlmLuaBinding::indexMat4);
         lua_settable(L, -3);
 
         lua_pushstring(L, "__mul");
@@ -527,6 +535,50 @@ namespace Blink {
 
     // Lua stack
     // - [-1] string    Name of the index being accessed
+    // - [-2] table     Mat3 (self)
+    int GlmLuaBinding::indexMat3(lua_State* L) {
+        std::string indexName = lua_tostring(L, -1);
+        if (indexName == "toQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::mat3ToQuat);
+            return 1;
+        }
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] string    Name of the index being accessed
+    // - [-2] table     Mat4 (self)
+    int GlmLuaBinding::indexMat4(lua_State* L) {
+        std::string indexName = lua_tostring(L, -1);
+        if (indexName == "toQuat") {
+            lua_pushcfunction(L, GlmLuaBinding::mat4ToQuat);
+            return 1;
+        }
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] string    Name of the index being accessed
+    // - [-2] table     Quaternion (self)
+    int GlmLuaBinding::indexQuat(lua_State* L) {
+        std::string indexName = lua_tostring(L, -1);
+        if (indexName == "inverse") {
+            lua_pushcfunction(L, GlmLuaBinding::inverseQuat);
+            return 1;
+        }
+        if (indexName == "normalize") {
+            lua_pushcfunction(L, GlmLuaBinding::normalizeQuat);
+            return 1;
+        }
+        if (indexName == "toMat4") {
+            lua_pushcfunction(L, GlmLuaBinding::quatToMat4);
+            return 1;
+        }
+        return 0;
+    }
+
+    // Lua stack
+    // - [-1] string    Name of the index being accessed
     // - [-2] table     Vec2 (self)
     int GlmLuaBinding::indexVec2(lua_State* L) {
         std::string indexName = lua_tostring(L, -1);
@@ -556,26 +608,6 @@ namespace Blink {
         std::string indexName = lua_tostring(L, -1);
         if (indexName == "normalize") {
             lua_pushcfunction(L, GlmLuaBinding::normalizeVec4);
-            return 1;
-        }
-        return 0;
-    }
-
-    // Lua stack
-    // - [-1] string    Name of the index being accessed
-    // - [-2] table     Quaternion (self)
-    int GlmLuaBinding::indexQuat(lua_State* L) {
-        std::string indexName = lua_tostring(L, -1);
-        if (indexName == "inverse") {
-            lua_pushcfunction(L, GlmLuaBinding::inverseQuat);
-            return 1;
-        }
-        if (indexName == "normalize") {
-            lua_pushcfunction(L, GlmLuaBinding::normalizeQuat);
-            return 1;
-        }
-        if (indexName == "toMat4") {
-            lua_pushcfunction(L, GlmLuaBinding::quatToMat4);
             return 1;
         }
         return 0;
@@ -768,11 +800,11 @@ namespace Blink {
 
     // Lua stack
     // - [-1] table     Axis vector3
-    // - [-2] number    Angle (degrees)
+    // - [-2] number    Angle (radians)
     int GlmLuaBinding::angleAxis(lua_State* L) {
         glm::vec3 axis = lua_tovec3(L, -1);
         float angle = (float) lua_tonumber(L, -2);
-        glm::quat result = glm::angleAxis(glm::radians(angle), axis);
+        glm::quat result = glm::angleAxis(angle, axis);
         lua_pushquat(L, result);
         return 1;
     }

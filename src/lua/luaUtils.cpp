@@ -13,7 +13,7 @@ namespace Blink {
 
         int level = 0;
         while (lua_getstack(L, level, &ar)) {
-            lua_getinfo(L, "nSl", &ar);
+            lua_getinfo(L, "nSltufL", &ar);
 
             std::cout << "Level: " << level << std::endl;
             std::cout << "  Function: " << (ar.name ? ar.name : "nil") << std::endl;

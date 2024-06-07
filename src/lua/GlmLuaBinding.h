@@ -35,13 +35,17 @@ namespace Blink {
 
         static int index(lua_State* L);
 
+        static int indexMat3(lua_State* L);
+
+        static int indexMat4(lua_State* L);
+
+        static int indexQuat(lua_State* L);
+
         static int indexVec2(lua_State* L);
 
         static int indexVec3(lua_State* L);
 
         static int indexVec4(lua_State* L);
-
-        static int indexQuat(lua_State* L);
 
         static int addMat2(lua_State* L);
 

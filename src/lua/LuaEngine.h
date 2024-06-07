@@ -47,6 +47,8 @@ namespace Blink {
 
         void compileLuaFiles() const;
 
-        static int luaPrint(lua_State* L);
+        static int printLuaMessage(lua_State* L);
+
+        static int printLuaError(lua_State* L);
     };
 }

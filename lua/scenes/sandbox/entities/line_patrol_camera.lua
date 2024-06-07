@@ -2,10 +2,10 @@ require("utils")
 
 local offset = glm.vec3(0, 20, 30)
 
-function Camera.onUpdate(entity, timestep)
+function LinePatrolCamera.onUpdate(entity, timestep)
     local cameraTransformComponent = Entity:getTransformComponent(entity)
 
-    local playerEntity = Entity:getEntityByTag("Player")
+    local playerEntity = Entity:getEntityByTag("Line patrol fighter jet 1")
     local playerTransformComponent = Entity:getTransformComponent(playerEntity)
 
     local cameraPosition = cameraTransformComponent.position

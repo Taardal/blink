@@ -11,13 +11,13 @@ namespace Blink {
 
     std::string Log::tag(const char* filename, const char* functionName, uint32_t lineNumber) {
         std::stringstream ss;
-        ss << filename << ":" << functionName << ":" << lineNumber;
+        ss << filename << ":" << lineNumber << " (" << functionName << ")";
         return ss.str();
     }
 
     std::string Log::tagMessage(const char* filename, const char* functionName, uint32_t lineNumber, std::string_view message) {
         std::stringstream ss;
-        ss << "[" << filename << ":" << functionName << ":" << lineNumber << "] - " << message;
+        ss << "[" << filename << ":" << lineNumber << "] [" << functionName << "] - " << message;
         return ss.str();
     }
 

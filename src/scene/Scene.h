@@ -26,7 +26,7 @@ namespace Blink {
     private:
         SceneConfig config;
         entt::registry entityRegistry;
-        bool useSceneCamera = false;
+        entt::entity activeCameraEntity = entt::null;
 
     public:
         explicit Scene(const SceneConfig& config);
