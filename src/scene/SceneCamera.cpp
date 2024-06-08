@@ -21,6 +21,7 @@ namespace Blink {
         processInput(timestep);
         calculateDirections();
         calculateView();
+        calculateProjection();
         if (loggingEnabled) {
             logState();
         }

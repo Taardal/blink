@@ -15,4 +15,7 @@ function Scene.onCreateEntities()
         modelPath = "models/viking_room/viking_room.obj",
         textureAtlasPath = "models/viking_room/viking_room.png",
     })
+    Entity:setTransformComponent(vikingRoom, {
+        yaw = 180,
+    })
 end

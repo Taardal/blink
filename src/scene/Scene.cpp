@@ -22,6 +22,7 @@ namespace Blink {
             activeCameraEntity = entt::null;
             return;
         }
+
         // Use a camera entity (Key: 2-8)
         if (event.type == EventType::KeyPressed) {
             auto key = event.as<KeyPressedEvent>().keyCode;
@@ -40,11 +41,13 @@ namespace Blink {
                 return;
             }
         }
+
         // Toggle scene camera debug logging
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Num_9) {
             config.sceneCamera->loggingEnabled = !config.sceneCamera->loggingEnabled;
             return;
         }
+
         // Reset the scene camera
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Num_0) {
             configureSceneCameraWithDefaultSettings();
@@ -52,66 +55,93 @@ namespace Blink {
             config.sceneCamera->calculateProjection();
             return;
         }
+
         // Recompile Lua scripts while the scene is running (hot reload)
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::R) {
-            config.luaEngine->reloadLuaScripts(this);
+            config.luaEngine->compileLuaFiles();
+            config.luaEngine->initializeCoreBindings(this);
+            for (const entt::entity entity : entityRegistry.view<LuaComponent>()) {
+                auto& luaComponent = entityRegistry.get<LuaComponent>(entity);
+                auto& tagComponent = entityRegistry.get<TagComponent>(entity);
+                config.luaEngine->initializeEntityBinding(entity, luaComponent, tagComponent);
+            }
             return;
         }
+
         // Unload, recompile and load entire scene again (cold reload)
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::T) {
             terminateScene();
-            config.luaEngine->reloadLuaScripts(this);
+            config.luaEngine->compileLuaFiles();
             initializeScene();
             return;
         }
+
         // Update scene camera and all camera entites when the window resizes
         if (event.type == EventType::WindowResize) {
             config.sceneCamera->onResize();
             for (const entt::entity entity : entityRegistry.view<CameraComponent>()) {
                 auto& cameraComponent = entityRegistry.get<CameraComponent>(entity);
                 cameraComponent.aspectRatio = config.sceneCamera->aspectRatio;
-                calculateCameraProjection(&cameraComponent);
             }
         }
     }
 
+    //
+    // Update sequence:
+    // 1. Run Lua-scripts
+    // 2. Calculate transforms (all entities must have a transform to exist in the world)
+    // 3. Calculate model matrices for rendering
+    // 4. Calculate camera view (either the active camera entity or the scene camera)
+    //
+    // NOTE:
+    // All non-camera entities must be updated _before_ camera entities.
+    // This is because cameras often need to track other entities, so the transforms of the entities being tracked must
+    // always be up-to-date and correct when used by the camera(s).
+    //
     void Scene::update(double timestep) {
-        // Run lua scripts
-        config.luaEngine->updateEntities(this, timestep);
+        // Run Lua-scripts for all non-camera entites
+        for (const entt::entity entity : entityRegistry.view<LuaComponent>(entt::exclude<CameraComponent>)) {
+            auto& luaComponent = entityRegistry.get<LuaComponent>(entity);
+            auto& tagComponent = entityRegistry.get<TagComponent>(entity);
+            config.luaEngine->updateEntity(entity, luaComponent, tagComponent, timestep);
+        }
 
-        // // Update all non-camera entites
-        // // Cameras often need to track other entities, so make sure the other entities have been updated first
-        // for (const entt::entity entity : entityRegistry.view<TransformComponent>(entt::exclude<CameraComponent>)) {
-        // }
-        //
-        // // Update all camera entites _after_ non-camera entities
-        // // Cameras often need to track other entities, so make sure the other entities have been updated first
-        // for (const entt::entity entity : entityRegistry.view<TransformComponent, CameraComponent>()) {
-        // }
-        //
-        // // Calcuate model matrix for all entities _after_ they have been updated
-        // for (const entt::entity entity : entityRegistry.view<TransformComponent, MeshComponent>()) {
-        // }
+        // Calculate transforms for all non-camera entities
+        for (const entt::entity entity : entityRegistry.view<TransformComponent>(entt::exclude<CameraComponent>)) {
+            auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
+            calculateTranslation(&transformComponent);
+            calculateRotation(&transformComponent);
+            calculateScale(&transformComponent);
+        }
 
-        // Calculate model matrices
+        // Run Lua-scripts for all camera entites
+        for (const entt::entity entity : entityRegistry.view<LuaComponent, CameraComponent>()) {
+            auto& luaComponent = entityRegistry.get<LuaComponent>(entity);
+            auto& tagComponent = entityRegistry.get<TagComponent>(entity);
+            config.luaEngine->updateEntity(entity, luaComponent, tagComponent, timestep);
+        }
+
+        // Calculate transforms for all camera entities
+        for (const entt::entity entity : entityRegistry.view<TransformComponent, CameraComponent>()) {
+            auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
+            calculateTranslation(&transformComponent);
+            calculateCameraRotation(&transformComponent);
+            calculateScale(&transformComponent);
+        }
+
+        // Calculate model matrices for all entities (both cameras and non-cameras)
         for (const entt::entity entity : entityRegistry.view<TransformComponent, MeshComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
-            calculateTranslation(&transformComponent);
-            if (isCameraEntity(entity)) {
-                calculateCameraRotation(&transformComponent);
-            } else {
-                calculateRotation(&transformComponent);
-            }
-            calculateScale(&transformComponent);
             meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
 
-        // Calculate camera view
+        // Calculate camera view-projection
         if (activeCameraEntity != entt::null) {
             auto& cameraComponent = entityRegistry.get<CameraComponent>(activeCameraEntity);
             auto& transformComponent = entityRegistry.get<TransformComponent>(activeCameraEntity);
             calculateCameraView(&cameraComponent, &transformComponent);
+            calculateCameraProjection(&cameraComponent);
         } else {
             config.sceneCamera->update(timestep);
         }
@@ -144,10 +174,12 @@ namespace Blink {
     entt::entity Scene::createEntityWithDefaultComponents() {
         entt::entity entity = entityRegistry.create();
 
+        // All entities must have a tag for easier identification and debugging
         TagComponent tagComponent{};
         tagComponent.tag = "Entity " + std::to_string((uint32_t) entity);
         entityRegistry.emplace<TagComponent>(entity, tagComponent);
 
+        // All entities must have a transform to be able to exist in the world
         TransformComponent transformComponent{};
         transformComponent.translation = glm::mat4(1.0f);
         transformComponent.rotation = glm::mat4(1.0f);
@@ -175,7 +207,6 @@ namespace Blink {
         // REQUIRES core bindings
         configureSceneCameraWithDefaultSettings();
         config.luaEngine->configureSceneCamera(config.scene);
-        config.sceneCamera->calculateProjection();
 
         // Run Lua-script to create the entities for the scene and initialize them with components
         // REQUIRES core bindings and scene camera configuration
@@ -183,33 +214,38 @@ namespace Blink {
 
         // Configure bindings to entities' associated Lua-script to be invoked each game update
         // REQUIRES entities to have been created
-        config.luaEngine->initializeEntityBindings(this);
+        for (const entt::entity entity : entityRegistry.view<LuaComponent>()) {
+            auto& luaComponent = entityRegistry.get<LuaComponent>(entity);
+            auto& tagComponent = entityRegistry.get<TagComponent>(entity);
+            config.luaEngine->initializeEntityBinding(entity, luaComponent, tagComponent);
+        }
+
+        // Calculate transforms for all non-camera entities
+        // REQUIRES entities to have been created
+        for (const entt::entity entity : entityRegistry.view<TransformComponent>(entt::exclude<CameraComponent>)) {
+            auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
+            calculateTranslation(&transformComponent);
+            calculateRotation(&transformComponent);
+            calculateScale(&transformComponent);
+        }
+
+        // Calculate transforms and view-projection for all camera entities
+        // REQUIRES entities to have been created
+        for (const entt::entity entity : entityRegistry.view<TransformComponent, CameraComponent>()) {
+            auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
+            auto& cameraComponent = entityRegistry.get<CameraComponent>(entity);
+            calculateTranslation(&transformComponent);
+            calculateCameraRotation(&transformComponent);
+            calculateScale(&transformComponent);
+            calculateCameraView(&cameraComponent, &transformComponent);
+            calculateCameraProjection(&cameraComponent);
+        }
 
         // Load meshes for entities in the scene
         // REQUIRES entities to have been created
         for (const entt::entity entity : entityRegistry.view<MeshComponent>()) {
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
             meshComponent.mesh = config.meshManager->getMesh(meshComponent.meshInfo);
-        }
-
-        // Calculate transforms for entities in the scene
-        // REQUIRES entities to have been created
-        for (const entt::entity entity : entityRegistry.view<TransformComponent>()) {
-            auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
-            calculateTranslation(&transformComponent);
-            if (isCameraEntity(entity)) {
-                calculateCameraRotation(&transformComponent);
-            } else {
-                calculateRotation(&transformComponent);
-            }
-            calculateScale(&transformComponent);
-        }
-
-        // Set camera projection matrices
-        // REQUIRES entities to have been created
-        for (const entt::entity entity : entityRegistry.view<CameraComponent>()) {
-            auto& cameraComponent = entityRegistry.get<CameraComponent>(entity);
-            calculateCameraProjection(&cameraComponent);
         }
     }
 
@@ -266,6 +302,10 @@ namespace Blink {
         transformComponent->rotation = glm::toMat4(transformComponent->orientation);
     }
 
+    void Scene::calculateScale(TransformComponent* transformComponent) const {
+        transformComponent->scale = glm::scale(glm::mat4(1.0f), transformComponent->size);
+    }
+
     void Scene::calculateCameraRotation(TransformComponent* transformComponent) const {
         // Unlike non-camera entities, the orientation is calculated in the camera's Lua-script
         glm::quat orientation = transformComponent->orientation;
@@ -277,10 +317,6 @@ namespace Blink {
 
         // Use the _inverse_ orientation to make sure the mesh will have the correct orientation relative to the world
         transformComponent->rotation = glm::toMat4(glm::inverse(orientation));
-    }
-
-    void Scene::calculateScale(TransformComponent* transformComponent) const {
-        transformComponent->scale = glm::scale(glm::mat4(1.0f), transformComponent->size);
     }
 
     void Scene::calculateCameraView(CameraComponent* cameraComponent, TransformComponent* transformComponent) const {
@@ -302,9 +338,5 @@ namespace Blink {
             cameraComponent->nearClip,
             cameraComponent->farClip
         );
-    }
-
-    bool Scene::isCameraEntity(entt::entity entity) const {
-        return entityRegistry.try_get<CameraComponent>(entity) != nullptr;
     }
 }

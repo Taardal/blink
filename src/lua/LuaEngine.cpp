@@ -26,12 +26,6 @@ namespace Blink {
         initialize();
     }
 
-    void LuaEngine::reloadLuaScripts(Scene* scene) const {
-        compileLuaFiles();
-        initializeCoreBindings(scene);
-        initializeEntityBindings(scene);
-    }
-
     void LuaEngine::initializeCoreBindings(Scene* scene) const {
         CoordinateSystemLuaBinding::initialize(L);
         EntityLuaBinding::initialize(L, scene);
@@ -41,36 +35,31 @@ namespace Blink {
         WindowLuaBinding::initialize(L, config.window);
     }
 
-    void LuaEngine::initializeEntityBindings(Scene* scene) const {
-        for (entt::entity entity : scene->entityRegistry.view<LuaComponent>()) {
-            const auto& luaComponent = scene->entityRegistry.get<LuaComponent>(entity);
-            const std::string& tableName = luaComponent.type;
-            const std::string& filepath = luaComponent.path;
+    void LuaEngine::initializeEntityBinding(entt::entity entity, const LuaComponent& luaComponent, const TagComponent& tagComponent) const {
+        const std::string& tableName = luaComponent.type;
+        const std::string& filepath = luaComponent.path;
 
-            const auto* tagComponent = scene->entityRegistry.try_get<TagComponent>(entity);
-            const std::string& entityTag = tagComponent != nullptr ? tagComponent->tag : "Unknown";
+        lua_newtable(L);
+        lua_setglobal(L, tableName.c_str());
 
-            lua_newtable(L);
-            lua_setglobal(L, tableName.c_str());
-            if (luaL_dofile(L, filepath.c_str()) != LUA_OK) {
-                const char* errorMessage = lua_tostring(L, -1);
-                BL_LOG_ERROR(
-                    "Could not load Lua script [{}] for entity [id: {}, type: {}, tag: {}]: {}",
-                    filepath,
-                    tableName,
-                    entityTag,
-                    errorMessage
-                );
-                BL_THROW("Could not load Lua script");
-            }
-            BL_LOG_INFO(
-                "Loaded Lua script [{}] for entity [id: {}, type: {}, tag: {}]",
+        if (luaL_dofile(L, filepath.c_str()) != LUA_OK) {
+            const char* errorMessage = lua_tostring(L, -1);
+            BL_LOG_ERROR(
+                "Could not load Lua script [{}] for entity [id: {}, type: {}, tag: {}]: {}",
                 filepath,
-                entity,
                 tableName,
-                entityTag
+                tagComponent.tag,
+                errorMessage
             );
+            BL_THROW("Could not initialize entity binding");
         }
+        BL_LOG_INFO(
+            "Loaded Lua script [{}] for entity [id: {}, type: {}, tag: {}]",
+            filepath,
+            entity,
+            tableName,
+            tagComponent.tag
+        );
     }
 
     void LuaEngine::configureSceneCamera(const std::string& sceneFilePath) const {
@@ -79,19 +68,13 @@ namespace Blink {
 
         lua_newtable(L);
         lua_setglobal(L, tableName);
+
         if (luaL_dofile(L, sceneFilePath.c_str()) != LUA_OK) {
             const char* errorMessage = lua_tostring(L, -1);
-            BL_LOG_ERROR(
-                "Could not load Lua script [{}]: {}",
-                sceneFilePath,
-                errorMessage
-            );
+            BL_LOG_ERROR("Could not load Lua script [{}]: {}", sceneFilePath, errorMessage);
             BL_THROW("Could not load Lua script");
         }
-        BL_LOG_INFO(
-            "Loaded Lua script [{}]",
-            sceneFilePath
-        );
+        BL_LOG_INFO("Loaded Lua script [{}]", sceneFilePath);
 
         lua_pushcfunction(L, printLuaError);
         lua_getglobal(L, tableName);
@@ -111,7 +94,7 @@ namespace Blink {
                     functionName,
                     errorMessage
                 );
-                BL_THROW("Could not call Lua function");
+                BL_THROW("Could not configure scene camera");
             }
         }
 
@@ -160,39 +143,45 @@ namespace Blink {
         lua_pop(L, lua_gettop(L));
     }
 
-    void LuaEngine::updateEntities(Scene* scene, double timestep) const {
+    void LuaEngine::updateEntity(entt::entity entity, const LuaComponent& luaComponent, const TagComponent& tagComponent, double timestep) const {
         static const char* functionName = "onUpdate";
-        for (entt::entity entity : scene->entityRegistry.view<LuaComponent>()) {
-            const LuaComponent& luaComponent = scene->entityRegistry.get<LuaComponent>(entity);
-            std::string tableName = luaComponent.type;
+        std::string tableName = luaComponent.type;
 
-            lua_pushcfunction(L, printLuaError);
-            lua_getglobal(L, tableName.c_str());
-            lua_getfield(L, -1, functionName);
-            lua_pushnumber(L, (uint32_t) entity);
-            lua_pushnumber(L, timestep);
+        lua_pushcfunction(L, printLuaError);
+        lua_getglobal(L, tableName.c_str());
+        lua_getfield(L, -1, functionName);
+        lua_pushnumber(L, (uint32_t) entity);
+        lua_pushnumber(L, timestep);
 
-            constexpr int argumentCount = 2;
-            constexpr int returnValueCount = 0;
-            constexpr int errorHandlerIndex = -5;
-            if (lua_pcall(L, argumentCount, returnValueCount, errorHandlerIndex) != LUA_OK) {
-                const auto* tagComponent = scene->entityRegistry.try_get<TagComponent>(entity);
-                const std::string& entityTag = tagComponent != nullptr ? tagComponent->tag : "Unknown";
-                const char* errorMessage = lua_tostring(L, -1);
-                BL_LOG_ERROR(
-                    "Could not invoke [{}:{}:{}] for entity [id: {}, tag: {}]: {}",
-                    luaComponent.path,
-                    luaComponent.type,
-                    functionName,
-                    entity,
-                    entityTag,
-                    errorMessage
-                );
-                BL_THROW("Could not call Lua function");
-            }
+        constexpr int argumentCount = 2;
+        constexpr int returnValueCount = 0;
+        constexpr int errorHandlerIndex = -5;
 
-            lua_pop(L, lua_gettop(L));
+        if (lua_pcall(L, argumentCount, returnValueCount, errorHandlerIndex) != LUA_OK) {
+            const char* errorMessage = lua_tostring(L, -1);
+            BL_LOG_ERROR(
+                "Could not invoke [{}:{}:{}] for entity [id: {}, tag: {}]: {}",
+                luaComponent.path,
+                luaComponent.type,
+                functionName,
+                entity,
+                tagComponent.tag,
+                errorMessage
+            );
+            BL_THROW("Could not update entity");
         }
+
+        lua_pop(L, lua_gettop(L));
+    }
+
+    void LuaEngine::compileLuaFiles() const {
+        std::stringstream ss;
+        ss << "cmake";
+        ss << " -D LUA_SOURCE_DIR=" << CMAKE_LUA_SOURCE_DIR;
+        ss << " -D LUA_OUTPUT_DIR=" << CMAKE_LUA_OUTPUT_DIR;
+        ss << " -P " << CMAKE_SCRIPTS_DIR << "/compile_lua.cmake";
+        std::string command = ss.str();
+        std::system(command.c_str());
     }
 
     void LuaEngine::initialize() {
@@ -211,16 +200,6 @@ namespace Blink {
 
     void LuaEngine::terminate() const {
         lua_close(L);
-    }
-
-    void LuaEngine::compileLuaFiles() const {
-        std::stringstream ss;
-        ss << "cmake";
-        ss << " -D LUA_SOURCE_DIR=" << CMAKE_LUA_SOURCE_DIR;
-        ss << " -D LUA_OUTPUT_DIR=" << CMAKE_LUA_OUTPUT_DIR;
-        ss << " -P " << CMAKE_SCRIPTS_DIR << "/compile_lua.cmake";
-        std::string command = ss.str();
-        std::system(command.c_str());
     }
 
     int LuaEngine::printLuaMessage(lua_State* L) {

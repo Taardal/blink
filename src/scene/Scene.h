@@ -52,14 +52,12 @@ namespace Blink {
 
         void calculateRotation(TransformComponent* transformComponent) const;
 
-        void calculateCameraRotation(TransformComponent* transformComponent) const;
-
         void calculateScale(TransformComponent* transformComponent) const;
+
+        void calculateCameraRotation(TransformComponent* transformComponent) const;
 
         void calculateCameraView(CameraComponent* cameraComponent, TransformComponent* transformComponent) const;
 
         void calculateCameraProjection(CameraComponent* cameraComponent) const;
-
-        bool isCameraEntity(entt::entity entity) const;
     };
 }
