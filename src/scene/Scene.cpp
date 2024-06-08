@@ -79,20 +79,31 @@ namespace Blink {
         // Run lua scripts
         config.luaEngine->updateEntities(this, timestep);
 
+        // // Update all non-camera entites
+        // // Cameras often need to track other entities, so make sure the other entities have been updated first
+        // for (const entt::entity entity : entityRegistry.view<TransformComponent>(entt::exclude<CameraComponent>)) {
+        // }
+        //
+        // // Update all camera entites _after_ non-camera entities
+        // // Cameras often need to track other entities, so make sure the other entities have been updated first
+        // for (const entt::entity entity : entityRegistry.view<TransformComponent, CameraComponent>()) {
+        // }
+        //
+        // // Calcuate model matrix for all entities _after_ they have been updated
+        // for (const entt::entity entity : entityRegistry.view<TransformComponent, MeshComponent>()) {
+        // }
+
         // Calculate model matrices
         for (const entt::entity entity : entityRegistry.view<TransformComponent, MeshComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
-            bool cameraEntity = entityRegistry.try_get<CameraComponent>(entity) != nullptr;
-
             calculateTranslation(&transformComponent);
-            if (cameraEntity) {
+            if (isCameraEntity(entity)) {
                 calculateCameraRotation(&transformComponent);
             } else {
                 calculateRotation(&transformComponent);
             }
             calculateScale(&transformComponent);
-
             meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
 
@@ -185,9 +196,8 @@ namespace Blink {
         // REQUIRES entities to have been created
         for (const entt::entity entity : entityRegistry.view<TransformComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
-            bool cameraEntity = entityRegistry.try_get<CameraComponent>(entity) != nullptr;
             calculateTranslation(&transformComponent);
-            if (cameraEntity) {
+            if (isCameraEntity(entity)) {
                 calculateCameraRotation(&transformComponent);
             } else {
                 calculateRotation(&transformComponent);
@@ -248,7 +258,7 @@ namespace Blink {
         // Changing the order changes the final orientation, similar to the behavior of matrix multiplication.
         transformComponent->orientation = glm::normalize(yawRotation * pitchRotation * rollRotation);
 
-        // Keep all rotation-related values in the transform component consistent with the orientation
+        // Keep direction vectors consistent with the orientation
         transformComponent->rightDirection = glm::normalize(transformComponent->orientation * WORLD_RIGHT_DIRECTION);
         transformComponent->upDirection = glm::normalize(transformComponent->orientation * WORLD_UP_DIRECTION);
         transformComponent->forwardDirection = glm::normalize(transformComponent->orientation * WORLD_FORWARD_DIRECTION);
@@ -258,30 +268,15 @@ namespace Blink {
 
     void Scene::calculateCameraRotation(TransformComponent* transformComponent) const {
         // Unlike non-camera entities, the orientation is calculated in the camera's Lua-script
-        glm::quat orientation = glm::inverse(transformComponent->orientation);
+        glm::quat orientation = transformComponent->orientation;
 
-        // Keep all rotation-related values in the transform component consistent with the orientation
-        // glm::vec3 eulerAngles = glm::eulerAngles(orientation);
-        // eulerAngles = glm::degrees(eulerAngles);
-        // transformComponent->pitch = eulerAngles.x;
-        // transformComponent->yaw = eulerAngles.y;
-        // transformComponent->roll = eulerAngles.z;
+        // Keep direction vectors consistent with the orientation
+        transformComponent->rightDirection = glm::normalize(orientation * WORLD_RIGHT_DIRECTION);
+        transformComponent->upDirection = glm::normalize(orientation * WORLD_UP_DIRECTION);
+        transformComponent->forwardDirection = glm::normalize(orientation * WORLD_FORWARD_DIRECTION);
 
-        // Keep all rotation-related values in the transform component consistent with the orientation
-        // transformComponent->rightDirection = glm::normalize(transformComponent->orientation * WORLD_RIGHT_DIRECTION);
-        // transformComponent->upDirection = glm::normalize(transformComponent->orientation * WORLD_UP_DIRECTION);
-        // transformComponent->forwardDirection = glm::normalize(transformComponent->orientation * WORLD_FORWARD_DIRECTION);
-
-        // Calculate the rotation of the camera's mesh in the world by using the _inverse_ orientation.
-        //
-        // ChatGPT:
-        // ---
-        // The need to inverse the camera's orientation when rendering a camera model is due to the nature of the
-        // view matrix, which applies an inverse transformation to simulate the camera's perspective.
-        // To display the camera model accurately in the world, this inverse transformation must be reversed,
-        // hence applying the inverse of the camera's orientation to the model.
-        //
-        transformComponent->rotation = glm::toMat4(orientation);
+        // Use the _inverse_ orientation to make sure the mesh will have the correct orientation relative to the world
+        transformComponent->rotation = glm::toMat4(glm::inverse(orientation));
     }
 
     void Scene::calculateScale(TransformComponent* transformComponent) const {
@@ -289,14 +284,15 @@ namespace Blink {
     }
 
     void Scene::calculateCameraView(CameraComponent* cameraComponent, TransformComponent* transformComponent) const {
+        // Convert the orientation quaternion directly into a rotation matrix
         glm::mat4 viewRotation = glm::toMat4(transformComponent->orientation);
-        glm::mat4 viewTranslation = glm::translate(glm::mat4(1.0), -transformComponent->position);
-        cameraComponent->view = viewRotation * viewTranslation;
 
-        transformComponent->rightDirection = glm::normalize(glm::inverse(transformComponent->orientation) * WORLD_RIGHT_DIRECTION);
-        transformComponent->upDirection = glm::normalize(glm::inverse(transformComponent->orientation) * WORLD_UP_DIRECTION);
-        transformComponent->forwardDirection = glm::normalize(glm::inverse(transformComponent->orientation) * WORLD_FORWARD_DIRECTION);
-         cameraComponent->view = glm::lookAt(transformComponent->position, transformComponent->position + transformComponent->forwardDirection, transformComponent->upDirection);
+        // Translate the camera to the negative of its position to move the world in the opposite direction
+        glm::mat4 viewTranslation = glm::translate(glm::mat4(1.0), -transformComponent->position);
+
+        // Combine the rotation and translation to form the view matrix
+        // Don't want to use the glm::lookAt function to avoid issues with directional vectors and gimbal locking
+        cameraComponent->view = viewRotation * viewTranslation;
     }
 
     void Scene::calculateCameraProjection(CameraComponent* cameraComponent) const {
@@ -306,5 +302,9 @@ namespace Blink {
             cameraComponent->nearClip,
             cameraComponent->farClip
         );
+    }
+
+    bool Scene::isCameraEntity(entt::entity entity) const {
+        return entityRegistry.try_get<CameraComponent>(entity) != nullptr;
     }
 }

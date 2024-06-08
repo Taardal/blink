@@ -7,7 +7,7 @@ function ChurchRoofCamera.onUpdate(entity, timestep)
     local pitch = transformComponent.pitch
     local roll = transformComponent.roll
 
-    yaw = yaw + 0.2
+    yaw = yaw - 0.2
     if yaw > 360 then
         yaw = 0
     end
@@ -20,7 +20,7 @@ function ChurchRoofCamera.onUpdate(entity, timestep)
     local pitchRotation = (glm.angleAxis(pitchRadians, POSITIVE_X_AXIS)):normalize()
     local rollRotation = (glm.angleAxis(rollRadians, POSITIVE_Z_AXIS)):normalize()
 
-    orientation = (yawRotation * pitchRotation * rollRotation):normalize()
+    local orientation = (yawRotation * pitchRotation * rollRotation):normalize()
 
     Entity:setTransformComponent(entity, {
         orientation = orientation,

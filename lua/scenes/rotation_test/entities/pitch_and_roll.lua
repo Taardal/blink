@@ -1,4 +1,4 @@
-function FighterJetPitchAndRoll.onUpdate(entity, timestep)
+function PitchAndRoll.onUpdate(entity, timestep)
     local transformComponent = Entity:getTransformComponent(entity)
 
     transformComponent.pitch = transformComponent.pitch + 1

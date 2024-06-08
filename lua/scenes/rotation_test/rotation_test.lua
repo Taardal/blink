@@ -1,184 +1,983 @@
-function Scene.onConfigureCamera()
-    SceneCamera:setMoveSpeed(100)
-    SceneCamera:setNearClip(0.1)
-    SceneCamera:setFarClip(10000)
-    SceneCamera:setPosition(-347.88528, 254.04382, -295.1399)
-    SceneCamera:setPitch(-36)
-    SceneCamera:setYaw(-132)
+local testCount = 0
+
+local entityOffset = 100
+
+local groundSize = glm.vec3(50, 1, 100)
+local fighterSize = glm.vec3(100, 100, 100)
+local oxarFreighterSize = glm.vec3(100, 100, 100)
+local cameraSize = glm.vec3(100, 100, 100)
+local sibenikSize = glm.vec3(1, 1, 1)
+local vikingRoomSize = glm.vec3(33, 33, 33)
+
+local function calculateGroundPosition()
+    return glm.vec3(0, 0, (testCount * (groundSize.z * 2)) * 1.5)
 end
 
-local plainSize = glm.vec3(200, 1, 200)
-local fighterJetSize = glm.vec3(100, 100, 100)
+local function calculateEntityPosition()
+    return calculateGroundPosition() + glm.vec3(0, 50, 0)
+end
 
-function Scene.onCreateEntities()
+local function createEntityOffsetCalculationFunction()
+    local xOffset = 0
+    return function(entityCount)
+        if entityCount % 2 ~= 0 then
+            xOffset = xOffset + entityOffset
+        end
+        local x = xOffset
+        if entityCount % 2 == 0 then
+            x = x * -1
+        end
+        return glm.vec3(x, 0, 0)
+    end
+end
+
+local function yawTest()
+    local entityCount = 0
+    local calculateEntityOffset = createEntityOffsetCalculationFunction()
+
     -- --------------------------------------------------------------------------------------------------------------
-    -- FLAT PLAIN / GROUND
+    -- FIGHTER
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local fighter = Entity:create()
+    Entity:setTagComponent(fighter, {
+        tag = "Yaw: Fighter"
+    })
+    Entity:setLuaComponent(fighter, {
+        type = "Yaw",
+        path = "lua/scenes/rotation_test/entities/yaw.out",
+    })
+    Entity:setMeshComponent(fighter, {
+        modelPath = "models/fighter/fighter.obj",
+        textureAtlasPath = "models/fighter/cinfa.jpg",
+    })
+    Entity:setTransformComponent(fighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = fighterSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- OXAR FREIGHTER
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local oxarFreighter = Entity:create()
+    Entity:setTagComponent(oxarFreighter, {
+        tag = "Yaw: Oxar Freighter"
+    })
+    Entity:setLuaComponent(oxarFreighter, {
+        type = "Yaw",
+        path = "lua/scenes/rotation_test/entities/yaw.out",
+    })
+    Entity:setMeshComponent(oxarFreighter, {
+        modelPath = "models/oxar_freighter/Meshes/oxar_freighter.obj",
+        textureAtlasPath = "models/oxar_freighter/Textures/Oxar_Diffuse.png",
+    })
+    Entity:setTransformComponent(oxarFreighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = oxarFreighterSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- CAMERA
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local camera = Entity:create()
+    Entity:setTagComponent(camera, {
+        tag = "Yaw: Camera"
+    })
+    Entity:setLuaComponent(camera, {
+        type = "Yaw",
+        path = "lua/scenes/rotation_test/entities/yaw.out",
+    })
+    Entity:setMeshComponent(camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(camera, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = cameraSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- SIBENIK CATHEDRAL
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local sibenik = Entity:create()
+    Entity:setTagComponent(sibenik, {
+        tag = "Yaw: Sibenik"
+    })
+    Entity:setLuaComponent(sibenik, {
+        type = "Yaw",
+        path = "lua/scenes/rotation_test/entities/yaw.out",
+    })
+    Entity:setMeshComponent(sibenik, {
+        modelPath = "models/sibenik/sibenik.obj",
+        texturesDirectoryPath = "models/sibenik",
+    })
+    Entity:setTransformComponent(sibenik, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = sibenikSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- VIKING ROOM
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local vikingRoom = Entity:create()
+    Entity:setTagComponent(vikingRoom, {
+        tag = "Yaw: Viking Room"
+    })
+    Entity:setLuaComponent(vikingRoom, {
+        type = "Yaw",
+        path = "lua/scenes/rotation_test/entities/yaw.out",
+    })
+    Entity:setMeshComponent(vikingRoom, {
+        modelPath = "models/viking_room/viking_room.obj",
+        textureAtlasPath = "models/viking_room/viking_room.png",
+    })
+    Entity:setTransformComponent(vikingRoom, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = vikingRoomSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- GROUND
     -- --------------------------------------------------------------------------------------------------------------
 
     local ground = Entity:create()
     Entity:setTagComponent(ground, {
-        tag = "Flat plain"
+        tag = "Yaw: Ground"
     })
     Entity:setMeshComponent(ground, {
         modelPath = "models/flat_plain/flat_plain.obj",
         textureAtlasPath = "models/flat_plain/grass_4k.png",
     })
     Entity:setTransformComponent(ground, {
-        position = glm.vec3(0, 0, 0),
-        size = plainSize,
+        position = calculateGroundPosition(),
+        size = groundSize + glm.vec3(entityCount * groundSize.x, 0, 0)
     })
+end
+
+
+local function pitchTest()
+    local entityCount = 0
+    local calculateEntityOffset = createEntityOffsetCalculationFunction()
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- YAW
+    -- FIGHTER
     -- --------------------------------------------------------------------------------------------------------------
 
-    local fighterJetYaw = Entity:create()
-
-    Entity:setTagComponent(fighterJetYaw, {
-        tag = "Fighter jet: Yaw"
+    local fighter = Entity:create()
+    Entity:setTagComponent(fighter, {
+        tag = "Pitch: Fighter"
     })
-    Entity:setLuaComponent(fighterJetYaw, {
-        type = "FighterJetYaw",
-        path = "lua/scenes/rotation_test/entities/fighter_jet_yaw.out",
+    Entity:setLuaComponent(fighter, {
+        type = "Pitch",
+        path = "lua/scenes/rotation_test/entities/pitch.out",
     })
-    Entity:setMeshComponent(fighterJetYaw, {
+    Entity:setMeshComponent(fighter, {
         modelPath = "models/fighter/fighter.obj",
         textureAtlasPath = "models/fighter/cinfa.jpg",
     })
-    Entity:setTransformComponent(fighterJetYaw, {
-        position = glm.vec3(-100, 50, 0),
-        size = fighterJetSize,
+    Entity:setTransformComponent(fighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = fighterSize,
     })
+    entityCount = entityCount + 1
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- PITCH
+    -- OXAR FREIGHTER
     -- --------------------------------------------------------------------------------------------------------------
 
-    local fighterJetPitch = Entity:create()
+    local oxarFreighter = Entity:create()
+    Entity:setTagComponent(oxarFreighter, {
+        tag = "Pitch: Oxar Freighter"
+    })
+    Entity:setLuaComponent(oxarFreighter, {
+        type = "Pitch",
+        path = "lua/scenes/rotation_test/entities/pitch.out",
+    })
+    Entity:setMeshComponent(oxarFreighter, {
+        modelPath = "models/oxar_freighter/Meshes/oxar_freighter.obj",
+        textureAtlasPath = "models/oxar_freighter/Textures/Oxar_Diffuse.png",
+    })
+    Entity:setTransformComponent(oxarFreighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = oxarFreighterSize,
+    })
+    entityCount = entityCount + 1
 
-    Entity:setTagComponent(fighterJetPitch, {
-        tag = "Fighter jet: Pitch"
+    -- --------------------------------------------------------------------------------------------------------------
+    -- CAMERA
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local camera = Entity:create()
+    Entity:setTagComponent(camera, {
+        tag = "Pitch: Camera"
     })
-    Entity:setLuaComponent(fighterJetPitch, {
-        type = "FighterJetPitch",
-        path = "lua/scenes/rotation_test/entities/fighter_jet_pitch.out",
+    Entity:setLuaComponent(camera, {
+        type = "Pitch",
+        path = "lua/scenes/rotation_test/entities/pitch.out",
     })
-    Entity:setMeshComponent(fighterJetPitch, {
+    Entity:setMeshComponent(camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(camera, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = cameraSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- SIBENIK CATHEDRAL
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local sibenik = Entity:create()
+    Entity:setTagComponent(sibenik, {
+        tag = "Pitch: Sibenik"
+    })
+    Entity:setLuaComponent(sibenik, {
+        type = "Pitch",
+        path = "lua/scenes/rotation_test/entities/pitch.out",
+    })
+    Entity:setMeshComponent(sibenik, {
+        modelPath = "models/sibenik/sibenik.obj",
+        texturesDirectoryPath = "models/sibenik",
+    })
+    Entity:setTransformComponent(sibenik, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = sibenikSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- VIKING ROOM
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local vikingRoom = Entity:create()
+    Entity:setTagComponent(vikingRoom, {
+        tag = "Pitch: Viking Room"
+    })
+    Entity:setLuaComponent(vikingRoom, {
+        type = "Pitch",
+        path = "lua/scenes/rotation_test/entities/pitch.out",
+    })
+    Entity:setMeshComponent(vikingRoom, {
+        modelPath = "models/viking_room/viking_room.obj",
+        textureAtlasPath = "models/viking_room/viking_room.png",
+    })
+    Entity:setTransformComponent(vikingRoom, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = vikingRoomSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- GROUND
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local ground = Entity:create()
+    Entity:setTagComponent(ground, {
+        tag = "Pitch: Ground"
+    })
+    Entity:setMeshComponent(ground, {
+        modelPath = "models/flat_plain/flat_plain.obj",
+        textureAtlasPath = "models/flat_plain/grass_4k.png",
+    })
+    Entity:setTransformComponent(ground, {
+        position = calculateGroundPosition(),
+        size = groundSize + glm.vec3(entityCount * groundSize.x, 0, 0)
+    })
+end
+
+local function rollTest()
+    local entityCount = 0
+    local calculateEntityOffset = createEntityOffsetCalculationFunction()
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- FIGHTER
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local fighter = Entity:create()
+    Entity:setTagComponent(fighter, {
+        tag = "Roll: Fighter"
+    })
+    Entity:setLuaComponent(fighter, {
+        type = "Roll",
+        path = "lua/scenes/rotation_test/entities/roll.out",
+    })
+    Entity:setMeshComponent(fighter, {
         modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/crono782.jpg",
+        textureAtlasPath = "models/fighter/cinfa.jpg",
     })
-    Entity:setTransformComponent(fighterJetPitch, {
-        position = glm.vec3(-100, 50, -100),
-        size = fighterJetSize,
+    Entity:setTransformComponent(fighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = fighterSize,
     })
+    entityCount = entityCount + 1
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- ROLL
+    -- OXAR FREIGHTER
     -- --------------------------------------------------------------------------------------------------------------
 
-    local fighterJetRoll = Entity:create()
+    local oxarFreighter = Entity:create()
+    Entity:setTagComponent(oxarFreighter, {
+        tag = "Roll: Oxar Freighter"
+    })
+    Entity:setLuaComponent(oxarFreighter, {
+        type = "Roll",
+        path = "lua/scenes/rotation_test/entities/roll.out",
+    })
+    Entity:setMeshComponent(oxarFreighter, {
+        modelPath = "models/oxar_freighter/Meshes/oxar_freighter.obj",
+        textureAtlasPath = "models/oxar_freighter/Textures/Oxar_Diffuse.png",
+    })
+    Entity:setTransformComponent(oxarFreighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = oxarFreighterSize,
+    })
+    entityCount = entityCount + 1
 
-    Entity:setTagComponent(fighterJetRoll, {
-        tag = "Fighter jet: Roll"
+    -- --------------------------------------------------------------------------------------------------------------
+    -- CAMERA
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local camera = Entity:create()
+    Entity:setTagComponent(camera, {
+        tag = "Roll: Camera"
     })
-    Entity:setLuaComponent(fighterJetRoll, {
-        type = "FighterJetRoll",
-        path = "lua/scenes/rotation_test/entities/fighter_jet_roll.out",
+    Entity:setLuaComponent(camera, {
+        type = "Roll",
+        path = "lua/scenes/rotation_test/entities/roll.out",
     })
-    Entity:setMeshComponent(fighterJetRoll, {
+    Entity:setMeshComponent(camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(camera, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = cameraSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- SIBENIK CATHEDRAL
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local sibenik = Entity:create()
+    Entity:setTagComponent(sibenik, {
+        tag = "Roll: Sibenik"
+    })
+    Entity:setLuaComponent(sibenik, {
+        type = "Roll",
+        path = "lua/scenes/rotation_test/entities/roll.out",
+    })
+    Entity:setMeshComponent(sibenik, {
+        modelPath = "models/sibenik/sibenik.obj",
+        texturesDirectoryPath = "models/sibenik",
+    })
+    Entity:setTransformComponent(sibenik, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = sibenikSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- VIKING ROOM
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local vikingRoom = Entity:create()
+    Entity:setTagComponent(vikingRoom, {
+        tag = "Roll: Viking Room"
+    })
+    Entity:setLuaComponent(vikingRoom, {
+        type = "Roll",
+        path = "lua/scenes/rotation_test/entities/roll.out",
+    })
+    Entity:setMeshComponent(vikingRoom, {
+        modelPath = "models/viking_room/viking_room.obj",
+        textureAtlasPath = "models/viking_room/viking_room.png",
+    })
+    Entity:setTransformComponent(vikingRoom, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = vikingRoomSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- GROUND
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local ground = Entity:create()
+    Entity:setTagComponent(ground, {
+        tag = "Roll: Ground"
+    })
+    Entity:setMeshComponent(ground, {
+        modelPath = "models/flat_plain/flat_plain.obj",
+        textureAtlasPath = "models/flat_plain/grass_4k.png",
+    })
+    Entity:setTransformComponent(ground, {
+        position = calculateGroundPosition(),
+        size = groundSize + glm.vec3(entityCount * groundSize.x, 0, 0)
+    })
+end
+
+local function yawAndPitchTest()
+    local entityCount = 0
+    local calculateEntityOffset = createEntityOffsetCalculationFunction()
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- FIGHTER
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local fighter = Entity:create()
+    Entity:setTagComponent(fighter, {
+        tag = "Yaw and Pitch: Fighter"
+    })
+    Entity:setLuaComponent(fighter, {
+        type = "YawAndPitch",
+        path = "lua/scenes/rotation_test/entities/yaw_and_pitch.out",
+    })
+    Entity:setMeshComponent(fighter, {
         modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/idolknight.jpg",
+        textureAtlasPath = "models/fighter/cinfa.jpg",
     })
-    Entity:setTransformComponent(fighterJetRoll, {
-        position = glm.vec3(-100, 50, 100),
-        size = fighterJetSize,
+    Entity:setTransformComponent(fighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = fighterSize,
     })
+    entityCount = entityCount + 1
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- YAW AND PITCH
+    -- OXAR FREIGHTER
     -- --------------------------------------------------------------------------------------------------------------
 
-    local fighterJetYawAndPitch = Entity:create()
+    local oxarFreighter = Entity:create()
+    Entity:setTagComponent(oxarFreighter, {
+        tag = "Yaw and Pitch: Oxar Freighter"
+    })
+    Entity:setLuaComponent(oxarFreighter, {
+        type = "YawAndPitch",
+        path = "lua/scenes/rotation_test/entities/yaw_and_pitch.out",
+    })
+    Entity:setMeshComponent(oxarFreighter, {
+        modelPath = "models/oxar_freighter/Meshes/oxar_freighter.obj",
+        textureAtlasPath = "models/oxar_freighter/Textures/Oxar_Diffuse.png",
+    })
+    Entity:setTransformComponent(oxarFreighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = oxarFreighterSize,
+    })
+    entityCount = entityCount + 1
 
-    Entity:setTagComponent(fighterJetYawAndPitch, {
-        tag = "Fighter jet: YawAndPitch"
+    -- --------------------------------------------------------------------------------------------------------------
+    -- CAMERA
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local camera = Entity:create()
+    Entity:setTagComponent(camera, {
+        tag = "Yaw and Pitch: Camera"
     })
-    Entity:setLuaComponent(fighterJetYawAndPitch, {
-        type = "FighterJetYawAndPitch",
-        path = "lua/scenes/rotation_test/entities/fighter_jet_yaw_and_pitch.out",
+    Entity:setLuaComponent(camera, {
+        type = "YawAndPitch",
+        path = "lua/scenes/rotation_test/entities/yaw_and_pitch.out",
     })
-    Entity:setMeshComponent(fighterJetYawAndPitch, {
+    Entity:setMeshComponent(camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(camera, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = cameraSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- SIBENIK CATHEDRAL
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local sibenik = Entity:create()
+    Entity:setTagComponent(sibenik, {
+        tag = "Yaw and Pitch: Sibenik"
+    })
+    Entity:setLuaComponent(sibenik, {
+        type = "YawAndPitch",
+        path = "lua/scenes/rotation_test/entities/yaw_and_pitch.out",
+    })
+    Entity:setMeshComponent(sibenik, {
+        modelPath = "models/sibenik/sibenik.obj",
+        texturesDirectoryPath = "models/sibenik",
+    })
+    Entity:setTransformComponent(sibenik, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = sibenikSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- VIKING ROOM
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local vikingRoom = Entity:create()
+    Entity:setTagComponent(vikingRoom, {
+        tag = "Yaw and Pitch: Viking Room"
+    })
+    Entity:setLuaComponent(vikingRoom, {
+        type = "YawAndPitch",
+        path = "lua/scenes/rotation_test/entities/yaw_and_pitch.out",
+    })
+    Entity:setMeshComponent(vikingRoom, {
+        modelPath = "models/viking_room/viking_room.obj",
+        textureAtlasPath = "models/viking_room/viking_room.png",
+    })
+    Entity:setTransformComponent(vikingRoom, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = vikingRoomSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- GROUND
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local ground = Entity:create()
+    Entity:setTagComponent(ground, {
+        tag = "Yaw and Pitch: Ground"
+    })
+    Entity:setMeshComponent(ground, {
+        modelPath = "models/flat_plain/flat_plain.obj",
+        textureAtlasPath = "models/flat_plain/grass_4k.png",
+    })
+    Entity:setTransformComponent(ground, {
+        position = calculateGroundPosition(),
+        size = groundSize + glm.vec3(entityCount * groundSize.x, 0, 0)
+    })
+end
+
+local function yawAndRollTest()
+    local entityCount = 0
+    local calculateEntityOffset = createEntityOffsetCalculationFunction()
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- FIGHTER
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local fighter = Entity:create()
+    Entity:setTagComponent(fighter, {
+        tag = "Yaw and Roll: Fighter"
+    })
+    Entity:setLuaComponent(fighter, {
+        type = "YawAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_and_roll.out",
+    })
+    Entity:setMeshComponent(fighter, {
         modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/jodomatis.jpg",
+        textureAtlasPath = "models/fighter/cinfa.jpg",
     })
-    Entity:setTransformComponent(fighterJetYawAndPitch, {
-        position = glm.vec3(100, 50, -100),
-        size = fighterJetSize,
+    Entity:setTransformComponent(fighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = fighterSize,
     })
+    entityCount = entityCount + 1
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- YAW AND ROLL
+    -- OXAR FREIGHTER
     -- --------------------------------------------------------------------------------------------------------------
 
-    local fighterJetYawAndRoll = Entity:create()
+    local oxarFreighter = Entity:create()
+    Entity:setTagComponent(oxarFreighter, {
+        tag = "Yaw and Roll: Oxar Freighter"
+    })
+    Entity:setLuaComponent(oxarFreighter, {
+        type = "YawAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_and_roll.out",
+    })
+    Entity:setMeshComponent(oxarFreighter, {
+        modelPath = "models/oxar_freighter/Meshes/oxar_freighter.obj",
+        textureAtlasPath = "models/oxar_freighter/Textures/Oxar_Diffuse.png",
+    })
+    Entity:setTransformComponent(oxarFreighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = oxarFreighterSize,
+    })
+    entityCount = entityCount + 1
 
-    Entity:setTagComponent(fighterJetYawAndRoll, {
-        tag = "Fighter jet: YawAndRoll"
+    -- --------------------------------------------------------------------------------------------------------------
+    -- CAMERA
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local camera = Entity:create()
+    Entity:setTagComponent(camera, {
+        tag = "Yaw and Roll: Camera"
     })
-    Entity:setLuaComponent(fighterJetYawAndRoll, {
-        type = "FighterJetYawAndRoll",
-        path = "lua/scenes/rotation_test/entities/fighter_jet_yaw_and_roll.out",
+    Entity:setLuaComponent(camera, {
+        type = "YawAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_and_roll.out",
     })
-    Entity:setMeshComponent(fighterJetYawAndRoll, {
+    Entity:setMeshComponent(camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(camera, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = cameraSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- SIBENIK CATHEDRAL
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local sibenik = Entity:create()
+    Entity:setTagComponent(sibenik, {
+        tag = "Yaw and Roll: Sibenik"
+    })
+    Entity:setLuaComponent(sibenik, {
+        type = "YawAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_and_roll.out",
+    })
+    Entity:setMeshComponent(sibenik, {
+        modelPath = "models/sibenik/sibenik.obj",
+        texturesDirectoryPath = "models/sibenik",
+    })
+    Entity:setTransformComponent(sibenik, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = sibenikSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- VIKING ROOM
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local vikingRoom = Entity:create()
+    Entity:setTagComponent(vikingRoom, {
+        tag = "Yaw and Roll: Viking Room"
+    })
+    Entity:setLuaComponent(vikingRoom, {
+        type = "YawAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_and_roll.out",
+    })
+    Entity:setMeshComponent(vikingRoom, {
+        modelPath = "models/viking_room/viking_room.obj",
+        textureAtlasPath = "models/viking_room/viking_room.png",
+    })
+    Entity:setTransformComponent(vikingRoom, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = vikingRoomSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- GROUND
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local ground = Entity:create()
+    Entity:setTagComponent(ground, {
+        tag = "Yaw and Roll: Ground"
+    })
+    Entity:setMeshComponent(ground, {
+        modelPath = "models/flat_plain/flat_plain.obj",
+        textureAtlasPath = "models/flat_plain/grass_4k.png",
+    })
+    Entity:setTransformComponent(ground, {
+        position = calculateGroundPosition(),
+        size = groundSize + glm.vec3(entityCount * groundSize.x, 0, 0)
+    })
+end
+
+local function pitchAndRollTest()
+    local entityCount = 0
+    local calculateEntityOffset = createEntityOffsetCalculationFunction()
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- FIGHTER
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local fighter = Entity:create()
+    Entity:setTagComponent(fighter, {
+        tag = "Pitch and Roll: Fighter"
+    })
+    Entity:setLuaComponent(fighter, {
+        type = "PitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/pitch_and_roll.out",
+    })
+    Entity:setMeshComponent(fighter, {
         modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/kaoskiwi.jpg",
+        textureAtlasPath = "models/fighter/cinfa.jpg",
     })
-    Entity:setTransformComponent(fighterJetYawAndRoll, {
-        position = glm.vec3(100, 50, 0),
-        size = fighterJetSize,
+    Entity:setTransformComponent(fighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = fighterSize,
     })
+    entityCount = entityCount + 1
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- PITCH AND ROLL
+    -- OXAR FREIGHTER
     -- --------------------------------------------------------------------------------------------------------------
 
-    local fighterJetPitchAndRoll = Entity:create()
+    local oxarFreighter = Entity:create()
+    Entity:setTagComponent(oxarFreighter, {
+        tag = "Pitch and Roll: Oxar Freighter"
+    })
+    Entity:setLuaComponent(oxarFreighter, {
+        type = "PitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/pitch_and_roll.out",
+    })
+    Entity:setMeshComponent(oxarFreighter, {
+        modelPath = "models/oxar_freighter/Meshes/oxar_freighter.obj",
+        textureAtlasPath = "models/oxar_freighter/Textures/Oxar_Diffuse.png",
+    })
+    Entity:setTransformComponent(oxarFreighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = oxarFreighterSize,
+    })
+    entityCount = entityCount + 1
 
-    Entity:setTagComponent(fighterJetPitchAndRoll, {
-        tag = "Fighter jet: PitchAndRoll"
+    -- --------------------------------------------------------------------------------------------------------------
+    -- CAMERA
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local camera = Entity:create()
+    Entity:setTagComponent(camera, {
+        tag = "Pitch and Roll: Camera"
     })
-    Entity:setLuaComponent(fighterJetPitchAndRoll, {
-        type = "FighterJetPitchAndRoll",
-        path = "lua/scenes/rotation_test/entities/fighter_jet_pitch_and_roll.out",
+    Entity:setLuaComponent(camera, {
+        type = "PitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/pitch_and_roll.out",
     })
-    Entity:setMeshComponent(fighterJetPitchAndRoll, {
+    Entity:setMeshComponent(camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
+    })
+    Entity:setTransformComponent(camera, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = cameraSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- SIBENIK CATHEDRAL
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local sibenik = Entity:create()
+    Entity:setTagComponent(sibenik, {
+        tag = "Pitch and Roll: Sibenik"
+    })
+    Entity:setLuaComponent(sibenik, {
+        type = "PitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/pitch_and_roll.out",
+    })
+    Entity:setMeshComponent(sibenik, {
+        modelPath = "models/sibenik/sibenik.obj",
+        texturesDirectoryPath = "models/sibenik",
+    })
+    Entity:setTransformComponent(sibenik, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = sibenikSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- VIKING ROOM
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local vikingRoom = Entity:create()
+    Entity:setTagComponent(vikingRoom, {
+        tag = "Pitch and Roll: Viking Room"
+    })
+    Entity:setLuaComponent(vikingRoom, {
+        type = "PitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/pitch_and_roll.out",
+    })
+    Entity:setMeshComponent(vikingRoom, {
+        modelPath = "models/viking_room/viking_room.obj",
+        textureAtlasPath = "models/viking_room/viking_room.png",
+    })
+    Entity:setTransformComponent(vikingRoom, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = vikingRoomSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- GROUND
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local ground = Entity:create()
+    Entity:setTagComponent(ground, {
+        tag = "Pitch and Roll: Ground"
+    })
+    Entity:setMeshComponent(ground, {
+        modelPath = "models/flat_plain/flat_plain.obj",
+        textureAtlasPath = "models/flat_plain/grass_4k.png",
+    })
+    Entity:setTransformComponent(ground, {
+        position = calculateGroundPosition(),
+        size = groundSize + glm.vec3(entityCount * groundSize.x, 0, 0)
+    })
+end
+
+local function yawPitchAndRollTest()
+    local entityCount = 0
+    local calculateEntityOffset = createEntityOffsetCalculationFunction()
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- FIGHTER
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local fighter = Entity:create()
+    Entity:setTagComponent(fighter, {
+        tag = "Yaw, Pitch and Roll: Fighter"
+    })
+    Entity:setLuaComponent(fighter, {
+        type = "YawPitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_pitch_and_roll.out",
+    })
+    Entity:setMeshComponent(fighter, {
         modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/NMT3000.jpg",
+        textureAtlasPath = "models/fighter/cinfa.jpg",
     })
-    Entity:setTransformComponent(fighterJetPitchAndRoll, {
-        position = glm.vec3(100, 50, 100),
-        size = fighterJetSize,
+    Entity:setTransformComponent(fighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = fighterSize,
     })
+    entityCount = entityCount + 1
 
     -- --------------------------------------------------------------------------------------------------------------
-    -- YAW, PITCH AND ROLL
+    -- OXAR FREIGHTER
     -- --------------------------------------------------------------------------------------------------------------
 
-    local fighterJetYawPitchAndRoll = Entity:create()
+    local oxarFreighter = Entity:create()
+    Entity:setTagComponent(oxarFreighter, {
+        tag = "Yaw, Pitch and Roll: Oxar Freighter"
+    })
+    Entity:setLuaComponent(oxarFreighter, {
+        type = "YawPitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_pitch_and_roll.out",
+    })
+    Entity:setMeshComponent(oxarFreighter, {
+        modelPath = "models/oxar_freighter/Meshes/oxar_freighter.obj",
+        textureAtlasPath = "models/oxar_freighter/Textures/Oxar_Diffuse.png",
+    })
+    Entity:setTransformComponent(oxarFreighter, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = oxarFreighterSize,
+    })
+    entityCount = entityCount + 1
 
-    Entity:setTagComponent(fighterJetYawPitchAndRoll, {
-        tag = "Fighter jet: YawPitchAndRoll"
+    -- --------------------------------------------------------------------------------------------------------------
+    -- CAMERA
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local camera = Entity:create()
+    Entity:setTagComponent(camera, {
+        tag = "Yaw, Pitch and Roll: Camera"
     })
-    Entity:setLuaComponent(fighterJetYawPitchAndRoll, {
-        type = "FighterJetYawPitchAndRoll",
-        path = "lua/scenes/rotation_test/entities/fighter_jet_yaw_pitch_and_roll.out",
+    Entity:setLuaComponent(camera, {
+        type = "YawPitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_pitch_and_roll.out",
     })
-    Entity:setMeshComponent(fighterJetYawPitchAndRoll, {
-        modelPath = "models/fighter/fighter.obj",
-        textureAtlasPath = "models/fighter/psionic.jpg",
+    Entity:setMeshComponent(camera, {
+        modelPath = "models/camera/11673_camera_v1_L3.obj",
+        texturesDirectoryPath = "models/camera",
     })
-    Entity:setTransformComponent(fighterJetYawPitchAndRoll, {
-        position = glm.vec3(0, 50, 0),
-        size = fighterJetSize,
+    Entity:setTransformComponent(camera, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = cameraSize,
     })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- SIBENIK CATHEDRAL
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local sibenik = Entity:create()
+    Entity:setTagComponent(sibenik, {
+        tag = "Yaw, Pitch and Roll: Sibenik"
+    })
+    Entity:setLuaComponent(sibenik, {
+        type = "YawPitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_pitch_and_roll.out",
+    })
+    Entity:setMeshComponent(sibenik, {
+        modelPath = "models/sibenik/sibenik.obj",
+        texturesDirectoryPath = "models/sibenik",
+    })
+    Entity:setTransformComponent(sibenik, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = sibenikSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- VIKING ROOM
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local vikingRoom = Entity:create()
+    Entity:setTagComponent(vikingRoom, {
+        tag = "Yaw, Pitch and Roll: Viking Room"
+    })
+    Entity:setLuaComponent(vikingRoom, {
+        type = "YawPitchAndRoll",
+        path = "lua/scenes/rotation_test/entities/yaw_pitch_and_roll.out",
+    })
+    Entity:setMeshComponent(vikingRoom, {
+        modelPath = "models/viking_room/viking_room.obj",
+        textureAtlasPath = "models/viking_room/viking_room.png",
+    })
+    Entity:setTransformComponent(vikingRoom, {
+        position = calculateEntityPosition() + calculateEntityOffset(entityCount),
+        size = vikingRoomSize,
+    })
+    entityCount = entityCount + 1
+
+    -- --------------------------------------------------------------------------------------------------------------
+    -- GROUND
+    -- --------------------------------------------------------------------------------------------------------------
+
+    local ground = Entity:create()
+    Entity:setTagComponent(ground, {
+        tag = "Yaw, Pitch and Roll: Ground"
+    })
+    Entity:setMeshComponent(ground, {
+        modelPath = "models/flat_plain/flat_plain.obj",
+        textureAtlasPath = "models/flat_plain/grass_4k.png",
+    })
+    Entity:setTransformComponent(ground, {
+        position = calculateGroundPosition(),
+        size = groundSize + glm.vec3(entityCount * groundSize.x, 0, 0)
+    })
+end
+
+function Scene.onCreateEntities()
+    yawTest()
+    testCount = testCount + 1
+    pitchTest()
+    testCount = testCount + 1
+    rollTest()
+    testCount = testCount + 1
+    yawAndPitchTest()
+    testCount = testCount + 1
+    yawAndRollTest()
+    testCount = testCount + 1
+    pitchAndRollTest()
+    testCount = testCount + 1
+    yawPitchAndRollTest()
+    testCount = testCount + 1
+end
+
+function Scene.onConfigureCamera()
+    SceneCamera:setMoveSpeed(200)
+    SceneCamera:setNearClip(0.1)
+    SceneCamera:setFarClip(10000)
+    SceneCamera:setPosition(-347.88528, 254.04382, -295.1399)
+    SceneCamera:setPitch(-36)
+    SceneCamera:setYaw(-132)
 end

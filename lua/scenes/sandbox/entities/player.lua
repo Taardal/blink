@@ -103,12 +103,6 @@ function Player.onUpdate(entity, timestep)
         roll = roll - rollSpeed
     end
 
-    --yaw = yaw + 1
-    --if yaw > 360 then
-    --	yaw = 0
-    --end
-    --print("PLAYER yaw: " .. yaw)
-
     if forwards then
         moveSpeed = math.min(moveSpeed + thrust, maxMoveSpeed)
     end

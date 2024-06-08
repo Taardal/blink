@@ -1,4 +1,4 @@
-function FighterJetYaw.onUpdate(entity, timestep)
+function Yaw.onUpdate(entity, timestep)
     local transformComponent = Entity:getTransformComponent(entity)
     transformComponent.yaw = transformComponent.yaw + 1
     if transformComponent.yaw > 360 then

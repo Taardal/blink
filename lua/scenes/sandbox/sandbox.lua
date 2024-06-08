@@ -42,7 +42,7 @@ function Scene.onCreateEntities()
     })
     Entity:setTransformComponent(churchRoofCamera, {
         position = glm.vec3(-447, 110, -579),
-        size = glm.vec3(50, 50, 50)
+        size = glm.vec3(100, 100, 100)
     })
     Entity:setCameraComponent(churchRoofCamera, {
         aspectRatio = Window:getAspectRatio(),

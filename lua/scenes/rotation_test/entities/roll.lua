@@ -1,4 +1,4 @@
-function FighterJetRoll.onUpdate(entity, timestep)
+function Roll.onUpdate(entity, timestep)
     local transformComponent = Entity:getTransformComponent(entity)
     transformComponent.roll = transformComponent.roll + 1
     if transformComponent.roll > 360 then

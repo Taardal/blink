@@ -46,8 +46,6 @@ namespace Blink {
 
         void terminateScene();
 
-        void configureSceneCamera() const;
-
         void configureSceneCameraWithDefaultSettings() const;
 
         void calculateTranslation(TransformComponent* transformComponent) const;
@@ -61,5 +59,7 @@ namespace Blink {
         void calculateCameraView(CameraComponent* cameraComponent, TransformComponent* transformComponent) const;
 
         void calculateCameraProjection(CameraComponent* cameraComponent) const;
+
+        bool isCameraEntity(entt::entity entity) const;
     };
 }
