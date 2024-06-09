@@ -4,6 +4,7 @@
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 
 namespace Blink {
     struct WindowSize {
@@ -37,15 +38,27 @@ namespace Blink {
 
         double update() const;
 
+        double getTime() const;
+
+        void pollEvents() const;
+
         bool shouldClose() const;
 
         void setShouldClose(bool shouldClose) const;
 
         bool isKeyPressed(uint16_t key) const;
 
+        bool isMouseButtonPressed(uint16_t key) const;
+
+        void setMouseCursorHidden(bool hidden) const;
+
+        glm::vec2 getMousePosition() const;
+
         WindowSize getSizeInPixels() const;
 
         void getSizeInPixels(int32_t* width, int32_t* height) const;
+
+        float getAspectRatio() const;
 
         bool isVulkanSupported() const;
 

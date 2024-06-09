@@ -20,6 +20,9 @@ namespace Blink {
 }
 
 namespace Blink {
+
+    #define BL_IS_KEY_PRESSED_EVENT(KEY) event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == KEY
+
     struct KeyPressedEvent final : KeyEvent {
         explicit KeyPressedEvent(int32_t key, int32_t mods, int32_t scanCode);
     };

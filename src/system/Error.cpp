@@ -28,8 +28,13 @@ namespace Blink {
     }
 
     void Error::printStacktrace(const Error& error) {
-        fprintf(stderr, "Stacktrace (%s):\n", BL_TO_STRING(Blink::Error));
         std::vector<StacktraceEntry> stack = error.getStacktrace();
+        std::string& errorMessage = stack[0].message;
+
+        fprintf(stderr, "--------------------------------------------------------------------------------------------------------------\n");
+        fprintf(stderr, "[%s] %s\n", BL_TO_STRING(Blink::Error), errorMessage.c_str());
+        fprintf(stderr, "--------------------------------------------------------------------------------------------------------------\n");
+
         uint32_t longestTagLength = 0;
         for (uint32_t i = 0; i < stack.size(); i++) {
             StacktraceEntry& stackEntry = stack[i];
@@ -38,34 +43,49 @@ namespace Blink {
                 longestTagLength = tagLength;
             }
         }
+
         static constexpr uint8_t segmentSpacing = 4;
         for (uint32_t i = 0; i < stack.size(); i++) {
             StacktraceEntry& stackEntry = stack[i];
             uint32_t tagLength = stackEntry.tag.size();
             uint32_t tagRightSpacing = segmentSpacing + tagLength + (longestTagLength - tagLength);
-            fprintf(stderr, "%*d", -segmentSpacing, i);
+            fprintf(stderr, "[%d]", i);
+            fprintf(stderr, " ");
             fprintf(stderr, "%*s", -tagRightSpacing, stackEntry.tag.c_str());
             fprintf(stderr, "%s", stackEntry.message.c_str());
             fprintf(stderr, "\n");
         }
+
+        fprintf(stderr, "--------------------------------------------------------------------------------------------------------------\n");
+        fprintf(stderr, "\n");
     }
 
     std::ostream& operator<<(std::ostream& os, const Error& error) {
-        os << "Stacktrace (" << BL_TO_STRING(Blink::Error) << "):\n";
         std::vector<StacktraceEntry> stack = error.getStacktrace();
+        std::string& errorMessage = stack[0].message;
+
+        os << "--------------------------------------------------------------------------------------------------------------\n";
+        os << "[" << BL_TO_STRING(Blink::Error) << "] " << errorMessage.c_str() << "\n";
+        os << "--------------------------------------------------------------------------------------------------------------\n";
+
         uint32_t longestTagLength = 0;
         for (const auto& stackEntry : stack) {
             uint32_t tagLength = stackEntry.tag.size();
             longestTagLength = std::max(longestTagLength, tagLength);
         }
+
         static constexpr uint8_t segmentSpacing = 4;
         for (size_t i = 0; i < stack.size(); i++) {
             const auto& stackEntry = stack[i];
-            os << std::setw(segmentSpacing) << std::left << i;
+            os << "[" << i << "]";
+            os << " ";
             os << std::setw(segmentSpacing + longestTagLength) << std::left << stackEntry.tag;
             os << stackEntry.message;
             os << "\n";
         }
+
+        os << "--------------------------------------------------------------------------------------------------------------\n";
+        os << "\n";
         return os;
     }
 }

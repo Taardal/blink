@@ -1,0 +1,17 @@
+{
+    "diagnostics.globals": [
+        "Entity",
+        "glm",
+        "Key",
+        "Keyboard",
+        "POSITIVE_X_AXIS",
+        "POSITIVE_Y_AXIS",
+        "POSITIVE_Z_AXIS",
+        "Scene",
+        "SceneCamera",
+        "Window",
+        "WORLD_FORWARD_DIRECTION",
+        "WORLD_RIGHT_DIRECTION",
+        "WORLD_UP_DIRECTION"
+    ]
+}

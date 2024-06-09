@@ -54,6 +54,14 @@ namespace Blink {
         return glfwGetTime();
     }
 
+    double Window::getTime() const {
+        return glfwGetTime(); // Seconds
+    }
+
+    void Window::pollEvents() const {
+        glfwPollEvents();
+    }
+
     bool Window::shouldClose() const {
         return glfwWindowShouldClose(glfwWindow);
     }
@@ -66,8 +74,18 @@ namespace Blink {
         return glfwGetKey(glfwWindow, key) == GLFW_PRESS;
     }
 
-    void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
-        glfwGetFramebufferSize(glfwWindow, width, height);
+    bool Window::isMouseButtonPressed(uint16_t key) const {
+        return glfwGetMouseButton(glfwWindow, key) == GLFW_PRESS;
+    }
+
+    glm::vec2 Window::getMousePosition() const {
+        double x, y;
+        glfwGetCursorPos(glfwWindow, &x, &y);
+        return {x, y};
+    }
+
+    void Window::setMouseCursorHidden(bool hidden) const {
+        glfwSetInputMode(glfwWindow, GLFW_CURSOR, hidden ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
     }
 
     WindowSize Window::getSizeInPixels() const {
@@ -75,6 +93,15 @@ namespace Blink {
         int32_t height = 0;
         getSizeInPixels(&width, &height);
         return { width, height };
+    }
+
+    void Window::getSizeInPixels(int32_t* width, int32_t* height) const {
+        glfwGetFramebufferSize(glfwWindow, width, height);
+    }
+
+    float Window::getAspectRatio() const {
+        WindowSize size = getSizeInPixels();
+        return (float) size.width / (float) size.height;
     }
 
     bool Window::isVulkanSupported() const {

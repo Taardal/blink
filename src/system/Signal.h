@@ -11,15 +11,15 @@
 
 namespace Blink {
 
-    void addErrorSignalHandlers();
+    void addErrorSignalStacktracePrinters();
 
-    void onErrorSignal(int signal);
+    void printStacktrace(int signal);
 
     std::string getSignalName(int signal);
 
 #ifdef BL_PRINT_UNIX_STACKTRACE
     void printUnixStacktrace();
 
-    void demangleUnixSymbol(std::string* symbol);
+    void demangleUnixStacktraceLine(std::string* stacktraceLine);
 #endif
 }

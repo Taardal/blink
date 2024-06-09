@@ -34,7 +34,6 @@ add_executable(
         ${SRC_DIR}/pch.h
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
-        ${SRC_DIR}/AppConfig.h
         ${SRC_DIR}/graphics/Mesh.h
         ${SRC_DIR}/graphics/MeshManager.cpp
         ${SRC_DIR}/graphics/MeshManager.h
@@ -72,19 +71,30 @@ add_executable(
         ${SRC_DIR}/graphics/VulkanUniformBuffer.h
         ${SRC_DIR}/graphics/VulkanVertexBuffer.cpp
         ${SRC_DIR}/graphics/VulkanVertexBuffer.h
+        ${SRC_DIR}/lua/CoordinateSystemLuaBinding.cpp
+        ${SRC_DIR}/lua/CoordinateSystemLuaBinding.h
         ${SRC_DIR}/lua/EntityLuaBinding.cpp
         ${SRC_DIR}/lua/EntityLuaBinding.h
+        ${SRC_DIR}/lua/GlmLuaBinding.cpp
+        ${SRC_DIR}/lua/GlmLuaBinding.h
         ${SRC_DIR}/lua/KeyboardLuaBinding.cpp
         ${SRC_DIR}/lua/KeyboardLuaBinding.h
         ${SRC_DIR}/lua/LuaEngine.cpp
         ${SRC_DIR}/lua/LuaEngine.h
         ${SRC_DIR}/lua/luaUtils.cpp
         ${SRC_DIR}/lua/luaUtils.h
-        ${SRC_DIR}/scene/Camera.cpp
-        ${SRC_DIR}/scene/Camera.h
+        ${SRC_DIR}/lua/MouseLuaBinding.cpp
+        ${SRC_DIR}/lua/MouseLuaBinding.h
+        ${SRC_DIR}/lua/SceneCameraLuaBinding.cpp
+        ${SRC_DIR}/lua/SceneCameraLuaBinding.h
+        ${SRC_DIR}/lua/WindowLuaBinding.cpp
+        ${SRC_DIR}/lua/WindowLuaBinding.h
         ${SRC_DIR}/scene/Components.h
         ${SRC_DIR}/scene/Scene.cpp
         ${SRC_DIR}/scene/Scene.h
+        ${SRC_DIR}/scene/SceneCamera.cpp
+        ${SRC_DIR}/scene/SceneCamera.h
+        ${SRC_DIR}/scene/CoordinateSystem.h
         ${SRC_DIR}/system/Assert.h
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/Error.cpp
@@ -102,13 +112,16 @@ add_executable(
         ${SRC_DIR}/system/Signal.h
         ${SRC_DIR}/system/Uuid.cpp
         ${SRC_DIR}/system/Uuid.h
-        ${SRC_DIR}/utils/size.h
+        ${SRC_DIR}/utils/utils.cpp
+        ${SRC_DIR}/utils/utils.h
         ${SRC_DIR}/window/Event.cpp
         ${SRC_DIR}/window/Event.h
         ${SRC_DIR}/window/Keyboard.cpp
         ${SRC_DIR}/window/Keyboard.h
         ${SRC_DIR}/window/KeyEvent.cpp
         ${SRC_DIR}/window/KeyEvent.h
+        ${SRC_DIR}/window/Mouse.cpp
+        ${SRC_DIR}/window/Mouse.h
         ${SRC_DIR}/window/MouseEvent.cpp
         ${SRC_DIR}/window/MouseEvent.h
         ${SRC_DIR}/window/Window.cpp

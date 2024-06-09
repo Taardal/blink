@@ -12,10 +12,10 @@ namespace Blink {
     }
 
     MeshManager::~MeshManager() {
-        config.device->destroySampler(textureSampler);
-        config.device->destroyDescriptorSetLayout(descriptorSetLayout);
-        config.device->destroyDescriptorPool(descriptorPool);
-        delete commandPool;
+        destroyTextureSampler();
+        destroyDescriptorSetLayout();
+        destroyDescriptorPool();
+        destroyCommandPool();
     }
 
     VkDescriptorSetLayout MeshManager::getDescriptorSetLayout() const {
@@ -23,19 +23,9 @@ namespace Blink {
     }
 
     std::shared_ptr<Mesh> MeshManager::getMesh(const MeshInfo& meshInfo) {
-        const auto iterator = meshCache.find(meshInfo.modelPath);
-        if (iterator != meshCache.end()) {
-            return iterator->second;
-        }
-        std::shared_ptr<Mesh> mesh = loadMesh(meshInfo);
-        meshCache[meshInfo.modelPath] = mesh;
-        return mesh;
-    }
-
-    std::shared_ptr<Mesh> MeshManager::loadMesh(const MeshInfo& meshInfo) {
         auto mesh = std::make_shared<Mesh>();
 
-        std::shared_ptr<ObjFile> objFile = config.fileSystem->readObj(meshInfo.modelPath);
+        std::shared_ptr<ObjFile> objFile = getObjFile(meshInfo.modelPath);
 
         // Ensure that duplicate vertices are not added to the mesh for optimization purposes
         std::unordered_map<Vertex, uint32_t> indicesByUniqueVertices{};
@@ -124,14 +114,8 @@ namespace Blink {
             if (textureFilepath.size() == 0) {
                 texture = placeholderTexture;
             } else {
-                auto iterator = textureCache.find(textureFilepath);
-                if (iterator != textureCache.end()) {
-                    texture = iterator->second;
-                } else {
-                    auto imageFile = config.fileSystem->readImage(textureFilepath);
-                    texture = createTexture(imageFile);
-                    textureCache.insert({textureFilepath, texture});
-                }
+                std::shared_ptr<ImageFile> imageFile = getImageFile(textureFilepath);
+                texture = createTexture(imageFile);
             }
             mesh->textures.push_back(texture);
 
@@ -152,6 +136,31 @@ namespace Blink {
             config.device->updateDescriptorSets(1, &descriptorWrite);
         }
         return mesh;
+    }
+
+    void MeshManager::resetDescriptors() {
+        destroyDescriptorPool();
+        createDescriptorPool();
+    }
+
+    std::shared_ptr<ObjFile> MeshManager::getObjFile(const std::string& path) {
+        const auto iterator = objCache.find(path);
+        if (iterator != objCache.end()) {
+            return iterator->second;
+        }
+        std::shared_ptr<ObjFile> objFile = config.fileSystem->readObj(path);
+        objCache[path] = objFile;
+        return objFile;
+    }
+
+    std::shared_ptr<ImageFile> MeshManager::getImageFile(const std::string& path) {
+        const auto iterator = imageCache.find(path);
+        if (iterator != imageCache.end()) {
+            return iterator->second;
+        }
+        std::shared_ptr<ImageFile> imageFile = config.fileSystem->readImage(path);
+        imageCache[path] = imageFile;
+        return imageFile;
     }
 
     std::shared_ptr<VulkanImage> MeshManager::createTexture(const std::shared_ptr<ImageFile>& imageFile) const {
@@ -178,10 +187,14 @@ namespace Blink {
         commandPool = new VulkanCommandPool(commandPoolConfig);
     }
 
+    void MeshManager::destroyCommandPool() const {
+        delete commandPool;
+    }
+
     void MeshManager::createDescriptorPool() {
         VkDescriptorPoolSize descriptorPoolSize{};
         descriptorPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorPoolSize.descriptorCount = MAX_MESHES;
+        descriptorPoolSize.descriptorCount = MAX_TEXTURES;
 
         VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
         descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -190,6 +203,10 @@ namespace Blink {
         descriptorPoolCreateInfo.maxSets = MAX_MESHES;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorPool(&descriptorPoolCreateInfo, &descriptorPool));
+    }
+
+    void MeshManager::destroyDescriptorPool() const {
+        config.device->destroyDescriptorPool(descriptorPool);
     }
 
     void MeshManager::createDescriptorSetLayout() {
@@ -205,6 +222,10 @@ namespace Blink {
         descriptorSetLayoutCreateInfo.pBindings = &textureSamplerLayoutBinding;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, &descriptorSetLayout));
+    }
+
+    void MeshManager::destroyDescriptorSetLayout() const {
+        config.device->destroyDescriptorSetLayout(descriptorSetLayout);
     }
 
     void MeshManager::createTextureSampler() {
@@ -232,6 +253,10 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createSampler(&textureSamplerCreateInfo, &textureSampler));
     }
 
+    void MeshManager::destroyTextureSampler() const {
+        config.device->destroySampler(textureSampler);
+    }
+
     void MeshManager::createPlaceholderTexture() {
         auto placeholderTextureImage = std::make_shared<ImageFile>();
         placeholderTextureImage->width = 1;
@@ -243,7 +268,6 @@ namespace Blink {
         placeholderTextureImage->pixels[1] = 0; // Green
         placeholderTextureImage->pixels[2] = 0; // Blue
         placeholderTextureImage->pixels[3] = 0; // Alpha (transparent)
-
         placeholderTexture = createTexture(placeholderTextureImage);
     }
 }

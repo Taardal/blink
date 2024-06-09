@@ -64,7 +64,7 @@ namespace Blink {
     }
 
     // Lua stack
-    // - [-1] userdata  Binding object
+    // - [-1] userdata  Binding
     int KeyboardLuaBinding::destroy(lua_State* L) {
         auto* binding = (KeyboardLuaBinding*) lua_touserdata(L, -1);
         binding->~KeyboardLuaBinding();
@@ -73,19 +73,20 @@ namespace Blink {
 
     // Lua stack
     // - [-1] string    Name of the index being accessed
-    // - [-2] userdata  Binding object
+    // - [-2] userdata  Binding
     int KeyboardLuaBinding::index(lua_State* L) {
         std::string indexName = lua_tostring(L, -1);
         if (indexName == "isPressed") {
             lua_pushcfunction(L, KeyboardLuaBinding::isPressed);
             return 1;
         }
+        BL_LOG_WARN("Could not resolve index [{}]", indexName);
         return 0;
     }
 
     // Lua stack
     // - [-1] number/string Key to check, given by either value or name
-    // - [-2] userdata      Binding object
+    // - [-2] userdata      Binding
     int KeyboardLuaBinding::isPressed(lua_State* L) {
         auto* binding = (KeyboardLuaBinding*) lua_touserdata(L, -2);
         bool pressed;

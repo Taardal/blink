@@ -1,13 +1,20 @@
 #pragma once
 
-#include "EntityLuaBinding.h"
+#include "lua/EntityLuaBinding.h"
+#include "lua/SceneCameraLuaBinding.h"
+#include "scene/Components.h"
 #include "window/Keyboard.h"
 
 #include <lua.hpp>
 
 namespace Blink {
+    // Forward declaration
+    class Scene;
+
     struct LuaEngineConfig {
         Keyboard* keyboard;
+        SceneCamera* sceneCamera;
+        Window* window;
     };
 
     class LuaEngine {
@@ -20,17 +27,27 @@ namespace Blink {
 
         ~LuaEngine();
 
-        void reloadScripts(entt::registry* entityRegistry) const;
+        void resetState();
 
-        void createEntityBindings(entt::registry* entityRegistry) const;
+        void initializeCoreBindings(Scene* scene) const;
 
-        void updateEntityBindings(entt::registry* entityRegistry, double timestep) const;
+        void initializeEntityBinding(entt::entity entity, const LuaComponent& luaComponent, const TagComponent& tagComponent) const;
+
+        void configureSceneCamera(const std::string& sceneFilePath) const;
+
+        void createEntities(const std::string& sceneFilePath) const;
+
+        void updateEntity(entt::entity entity, const LuaComponent& luaComponent, const TagComponent& tagComponent, double timestep) const;
+
+        void compileLuaFiles() const;
 
     private:
-        void createGlobalBindings() const;
+        void initialize();
 
-        static void compileLuaScripts();
+        void terminate() const;
 
-        static int luaPrint(lua_State* L);
+        static int printLuaMessage(lua_State* L);
+
+        static int printLuaError(lua_State* L);
     };
 }

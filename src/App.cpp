@@ -8,7 +8,7 @@ namespace Blink {
         try {
             BL_LOG_INFO("Initializing...");
             initialize();
-            initialized = true;
+            state = AppState::Initialized;
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Initialization error");
             e.printStacktrace();
@@ -18,19 +18,18 @@ namespace Blink {
     }
 
     App::~App() {
+        BL_LOG_INFO("Terminating...");
         terminate();
     }
 
     void App::run() {
-        if (!initialized) {
+        if (state != AppState::Initialized) {
             return;
         }
         try {
             BL_LOG_INFO("Running...");
-            while (!window->shouldClose()) {
-                update();
-                render();
-            }
+            state = AppState::Running;
+            gameLoop();
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Runtime error");
             e.printStacktrace();
@@ -40,39 +39,84 @@ namespace Blink {
         renderer->waitUntilIdle();
     }
 
-    void App::update() {
-        double time = window->update();
-        double timestep = time - lastTime;
-        lastTime = time;
+    void App::gameLoop() const {
+        constexpr double oneSecond = 1.0;
+        double lastTime = window->getTime();
+        double deltaTime = 0.0;
+        uint32_t ups = 0;
+        uint32_t fps = 0;
+        while (!window->shouldClose()) {
+            double time = window->update();
+            double timestep = std::min(time - lastTime, oneSecond);
+            lastTime = time;
+            deltaTime += timestep;
 
-        fps++;
-        fpsUpdateTimestep += timestep;
-        if (fpsUpdateTimestep >= 1.0) {
-            BL_LOG_DEBUG("FPS [{}]", fps);
-            fps = 0;
-            fpsUpdateTimestep = 0;
+            bool paused = state == AppState::Paused;
+            if (!paused) {
+                scene->update(timestep);
+                ups++;
+            }
+
+            if (renderer->beginFrame()) {
+                scene->render();
+                renderer->endFrame();
+                fps++;
+            }
+
+            if (deltaTime >= oneSecond) {
+                BL_LOG_INFO("UPS [{}], FPS [{}]", ups, fps);
+                ups = 0;
+                fps = 0;
+                deltaTime = 0;
+            }
         }
-
-        camera->update(timestep);
-        scene->update(timestep);
     }
 
-    void App::render() const {
-        if (!renderer->beginFrame()) {
-            return;
-        }
-        scene->render();
-        renderer->endFrame();
-    }
-
-    void App::onEvent(Event& event) const {
+    void App::onEvent(Event& event) {
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Escape) {
             window->setShouldClose(true);
             return;
         }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::P) {
+            state = AppState::Paused;
+            return;
+        }
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
+            state = AppState::Running;
+            return;
+        }
+        if (event.type == EventType::KeyPressed) {
+            auto key = event.as<KeyPressedEvent>().keyCode;
+            auto f1Key = (uint32_t) Key::F1;
+            if (key >= f1Key) {
+                int32_t sceneIndex = key - f1Key;
+                if (sceneIndex > -1 && sceneIndex < config.scenes.size()) {
+                    setScene(config.scenes[sceneIndex]);
+                    return;
+                }
+            }
+        }
         renderer->onEvent(event);
-        camera->onEvent(event);
         scene->onEvent(event);
+    }
+
+    void App::setScene(const std::string& scenePath) {
+        BL_LOG_INFO("Setting scene [{}]", scenePath);
+
+        if (scene != nullptr) {
+            renderer->waitUntilIdle();
+            delete scene;
+        }
+
+        SceneConfig sceneConfig{};
+        sceneConfig.scene = scenePath;
+        sceneConfig.keyboard = keyboard;
+        sceneConfig.meshManager = meshManager;
+        sceneConfig.renderer = renderer;
+        sceneConfig.luaEngine = luaEngine;
+        sceneConfig.sceneCamera = sceneCamera;
+
+        BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
     }
 
     void App::initialize() {
@@ -92,6 +136,10 @@ namespace Blink {
         KeyboardConfig keyboardConfig{};
         keyboardConfig.window = window;
         BL_EXECUTE_THROW(keyboard = new Keyboard(keyboardConfig));
+
+        MouseConfig mouseConfig{};
+        mouseConfig.window = window;
+        BL_EXECUTE_THROW(mouse = new Mouse(mouseConfig));
 
         VulkanAppConfig vulkanAppConfig{};
         vulkanAppConfig.window = window;
@@ -129,28 +177,25 @@ namespace Blink {
         rendererConfig.device = vulkanDevice;
         BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
 
-        LuaEngineConfig luaEngineConfig{};
-        luaEngineConfig.keyboard = keyboard;
-        BL_EXECUTE_THROW(luaEngine = new LuaEngine(luaEngineConfig));
-
-        CameraConfig cameraConfig{};
+        SceneCameraConfig cameraConfig{};
         cameraConfig.window = window;
         cameraConfig.keyboard = keyboard;
-        BL_EXECUTE_THROW(camera = new Camera(cameraConfig));
+        cameraConfig.mouse = mouse;
+        BL_EXECUTE_THROW(sceneCamera = new SceneCamera(cameraConfig));
 
-        SceneConfig sceneConfig{};
-        sceneConfig.keyboard = keyboard;
-        sceneConfig.meshManager = meshManager;
-        sceneConfig.renderer = renderer;
-        sceneConfig.luaEngine = luaEngine;
-        sceneConfig.camera = camera;
-        BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
+        LuaEngineConfig luaEngineConfig{};
+        luaEngineConfig.keyboard = keyboard;
+        luaEngineConfig.sceneCamera = sceneCamera;
+        luaEngineConfig.window = window;
+        BL_EXECUTE_THROW(luaEngine = new LuaEngine(luaEngineConfig));
+
+        BL_ASSERT_THROW(!config.scenes.empty());
+        setScene(config.scenes[0]);
     }
 
     void App::terminate() const {
-        BL_LOG_INFO("Terminating...");
         delete scene;
-        delete camera;
+        delete sceneCamera;
         delete luaEngine;
         delete renderer;
         delete meshManager;

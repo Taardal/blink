@@ -1,20 +1,24 @@
 #include "Signal.h"
 
 namespace Blink {
-    void addErrorSignalHandlers() {
+    void addErrorSignalStacktracePrinters() {
         // (Segmentation fault): Invalid memory access.
-        signal(SIGSEGV, onErrorSignal);
+        signal(SIGSEGV, printStacktrace);
+
         // (Abort): Abnormal termination initiated by the program itself.
-        signal(SIGABRT, onErrorSignal);
+        signal(SIGABRT, printStacktrace);
+
         // (Illegal instruction): Attempt to execute an illegal instruction.
-        signal(SIGILL, onErrorSignal);
+        signal(SIGILL, printStacktrace);
+
         // (Floating-point exception): Arithmetic exceptions like division by zero or floating-point overflow.
-        signal(SIGFPE, onErrorSignal);
+        signal(SIGFPE, printStacktrace);
+
         // (Bus error): Attempt to access memory that the CPU cannot physically address.
-        signal(SIGBUS, onErrorSignal);
+        signal(SIGBUS, printStacktrace);
     }
 
-    void onErrorSignal(int signal) {
+    void printStacktrace(int signal) {
         std::string signalName = getSignalName(signal);
         fprintf(stderr, "Signal [%s]:\n", signalName.c_str());
         fprintf(stderr, "Stacktrace:\n");
@@ -52,47 +56,65 @@ namespace Blink {
 #include <unistd.h>
 
     void printUnixStacktrace() {
+        // Number of stacktrace lines to be printed
         constexpr int maxStackSize = 15;
+
+        // Linux man page: backtrace, backtrace_symbols, backtrace_symbols_fd
+        // https://linux.die.net/man/3/backtrace_symbols
+
+        // backtrace() returns a backtrace for the calling program.
+        // A backtrace is the series of currently active function calls for the program.
+        // Each item is of type void*, and is the return address from the corresponding stack frame
         void* stack[maxStackSize];
         int stackSize = backtrace(stack, maxStackSize);
-        char** symbols = backtrace_symbols(stack, stackSize);
-        if (symbols == nullptr) {
+
+        // Given the set of addresses returned by backtrace() in buffer,
+        // backtrace_symbols() translates the addresses into an array of strings that describe the addresses symbolically
+        char** stacktrace = backtrace_symbols(stack, stackSize);
+        if (stacktrace == nullptr) {
             fprintf(stderr, "Could not resolve stacktrace\n");
             return;
         }
+
+        // Iterate over the backtrace and...
+        // - Convert the line to a std::string
+        // - Demangle the line (see demangleUnixSymbol)
+        // - Print the line
         for (int i = 0; i < stackSize; i++) {
-            ::std::string symbol(symbols[i]);
-            demangleUnixSymbol(&symbol);
-            fprintf(stderr, "%s\n", symbol.c_str());
+            ::std::string stacktraceLine(stacktrace[i]);
+            demangleUnixStacktraceLine(&stacktraceLine);
+            fprintf(stderr, "%s\n", stacktraceLine.c_str());
         }
-        free(symbols);
+
+        // This array is malloced by backtrace_symbols(), and must be freed by the caller
+        free(stacktrace);
     }
 
     // "Mangling" is a technique used by compilers to encode additional information into symbol names in compiled code.
     // This additional information includes things like function names, namespaces, argument types, and template parameters.
     // We want to "demangle" (i.e. decode) this information to make it human-readable.
     //
-    // Mangled symbol:
+    // Mangled stacktrace line:
     //   10  blink  0x0000000102cbfe5c  _ZN5Blink3App10initializeEv + 1960
     //
-    // Demangled symbol:
+    // Demangled stacktrace line:
     //   10  blink  0x00000001028b3e50  Blink::App::initialize() + 1960
     //
     // Segments:
     //   [stack index]  [binary name]  [return address (in hexadecimal)]  [function name] + [offset into the function (in hexadecimal)]
-    void demangleUnixSymbol(::std::string* symbol) {
+    void demangleUnixStacktraceLine(::std::string* stacktraceLine) {
 
         // Find segment before the mangled function name
-        size_t returnAddressStartIndex = symbol->find("0x");
+        size_t returnAddressStartIndex = stacktraceLine->find("0x");
         size_t returnAddressEndIndex = returnAddressStartIndex + 18; // 18 = return address length
 
         // Find function name start and end
         size_t functionNameStartIndex = returnAddressEndIndex + 1; // 1 = space
-        size_t functionNameEndIndex = symbol->find(" + ");
+        size_t functionNameEndIndex = stacktraceLine->find(" + ");
         size_t functionNameLength = functionNameEndIndex - functionNameStartIndex;
 
         // Extract the mangled function name
-        ::std::string functionName = symbol->substr(functionNameStartIndex, functionNameLength);
+        ::std::string functionName = stacktraceLine->substr(functionNameStartIndex, functionNameLength);
 
         // Demangling status:
         // [0] The demangling operation succeeded
@@ -111,11 +133,14 @@ namespace Blink {
         // https://gcc.gnu.org/onlinedocs/libstdc++/libstdc++-html-USERS-4.3/a01696.html
         char* demangledFunctionName = abi::__cxa_demangle(functionName.c_str(), outputBuffer, length, &demanglingStatus);
 
+        // Replace the mangled function name with the demangled one in the stacktrace line
         bool successfullyDemangled = demanglingStatus == 0 && demangledFunctionName != nullptr;
         if (successfullyDemangled) {
-            symbol->replace(functionNameStartIndex, functionNameLength, demangledFunctionName);
+            stacktraceLine->replace(functionNameStartIndex, functionNameLength, demangledFunctionName);
         }
 
+        // If the output buffer is NULL, the demangled name is placed in a region of memory allocated with malloc.
+        // The caller is responsible for deallocating this memory using free.
         free(demangledFunctionName);
     }
 #endif

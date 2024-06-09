@@ -27,7 +27,7 @@ namespace Blink {
     }
 
     void Renderer::onEvent(Event& event) {
-        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::F2) {
+        if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::F12) {
             reloadShaders();
             return;
         }
@@ -45,8 +45,11 @@ namespace Blink {
         return true;
     }
 
-    void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh, const ViewProjection& viewProjection) const {
+    void Renderer::setViewProjection(const ViewProjection& viewProjection) const {
         setUniformData(viewProjection);
+    }
+
+    void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh) const {
         setPushConstantData(mesh);
         bindMesh(mesh);
         drawMeshIndexed(mesh);
@@ -72,8 +75,8 @@ namespace Blink {
         //
         // This change causes the vertices to be drawn in counter-clockwise order instead of clockwise order.
         // This causes backface culling to kick in and prevents any geometry from being drawn.
-        // To fix this the graphics pipeline's rasterization state should have a counter clockwise front-facing triangle orientation to be used for culling.
         //
+        // To fix this the graphics pipeline's rasterization state should have a counter clockwise front-facing triangle orientation to be used for culling.
         // VkPipelineRasterizationStateCreateInfo rasterizationState{};
         // rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
         // rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;

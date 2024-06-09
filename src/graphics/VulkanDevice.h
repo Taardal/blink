@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AppConfig.h"
 #include "VulkanPhysicalDevice.h"
+
 #include <vulkan/vulkan.h>
 
 namespace Blink {
