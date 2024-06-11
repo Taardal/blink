@@ -12,9 +12,18 @@ namespace Blink {
         createUniformBuffers();
         createDescriptorObjects();
         createGraphicsPipeline();
+
+        SkyboxConfig skyboxConfig{};
+        skyboxConfig.fileSystem = config.fileSystem;
+        skyboxConfig.device = config.device;
+        skyboxConfig.swapChain = swapChain;
+        skyboxConfig.shaderManager = config.shaderManager;
+        BL_EXECUTE_THROW(skybox = new Skybox(skyboxConfig));
     }
 
     Renderer::~Renderer() {
+        delete skybox;
+
         destroyGraphicsPipeline();
         destroyDescriptorObjects();
         destroyUniformBuffers();

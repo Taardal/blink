@@ -2,6 +2,7 @@
 
 #include "graphics/MeshManager.h"
 #include "graphics/ShaderManager.h"
+#include "graphics/Skybox.h"
 #include "graphics/ViewProjection.h"
 #include "graphics/VulkanSwapChain.h"
 #include "graphics/VulkanShader.h"
@@ -39,6 +40,8 @@ namespace Blink {
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
         uint32_t currentFrame = 0;
         VulkanCommandBuffer currentCommandBuffer = nullptr;
+
+        Skybox* skybox = nullptr;
 
     public:
         explicit Renderer(const RendererConfig& config);
