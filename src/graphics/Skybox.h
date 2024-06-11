@@ -43,40 +43,31 @@ namespace Blink {
         VulkanIndexBuffer* indexBuffer;
 
         std::vector<glm::vec3> vertices = {
-            {-1.0f,  1.0f, -1.0f}, // 0
-            {-1.0f, -1.0f, -1.0f}, // 1
-            { 1.0f, -1.0f, -1.0f}, // 2
-            { 1.0f,  1.0f, -1.0f}, // 3
-            {-1.0f,  1.0f,  1.0f}, // 4
-            {-1.0f, -1.0f,  1.0f}, // 5
-            { 1.0f, -1.0f,  1.0f}, // 6
-            { 1.0f,  1.0f,  1.0f}, // 7
+            // Positive X (Right)
+            {1, 1, 1},
+            {1, 1, -1},
+            {1, -1, 1},
+            {1, -1, -1},
+            // Negative X (Left)
+            {-1, 1, 1},
+            {-1, 1, -1},
+            {-1, -1, 1},
+            {-1, -1, -1},
         };
 
         const std::vector<uint32_t> indices = {
-            // right face (x positive)
-            3, 2, 6,
-            6, 7, 3,
-
-            // left face (x negative)
-            4, 5, 1,
-            1, 0, 4,
-
-            // top face (y positive)
-            4, 0, 3,
-            3, 7, 4,
-
-            // bottom face (y negative)
-            1, 5, 6,
-            6, 2, 1,
-
-            // front face (z positive)
-            4, 5, 6,
-            6, 7, 4,
-
-            // back face (z negative)
-            0, 1, 2,
-            2, 3, 0
+            // Right (Positive X)
+            0, 1, 3, 0, 3, 2,
+            // Left (Negative X)
+            4, 6, 7, 4, 7, 5,
+            // Up (Positive Y)
+            0, 4, 5, 0, 5, 1,
+            // Down (Negative Y)
+            2, 3, 7, 2, 7, 6,
+            // Front (Positive Z)
+            0, 2, 6, 0, 6, 4,
+            // Back (Negative Z)
+            1, 5, 7, 1, 7, 3
         };
 
         std::vector<glm::vec3> vertices1 = {
