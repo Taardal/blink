@@ -17,12 +17,12 @@ namespace Blink {
             "models/oxar_freighter/Spaceboxes/Blue/bkg1_back.png",
         };
         images = {
-            "models/skybox/right.jpg",
-            "models/skybox/left.jpg",
-            "models/skybox/top.jpg",
-            "models/skybox/bottom.jpg",
             "models/skybox/front.jpg",
-            "models/skybox/back.jpg",
+            "models/skybox/front.jpg",
+            "models/skybox/front.jpg",
+            "models/skybox/front.jpg",
+            "models/skybox/front.jpg",
+            "models/skybox/bottom.jpg",
         };
         std::vector<std::shared_ptr<ImageFile>> faces;
         for (int i = 0; i < FACE_COUNT; ++i) {
