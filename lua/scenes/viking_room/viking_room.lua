@@ -3,7 +3,9 @@ function Scene.onConfigureCamera()
     SceneCamera:setYaw(30)
     SceneCamera:setPitch(-26)
     SceneCamera:setMoveSpeed(1)
-    SceneCamera:setRotationSpeed(0.5)
+    SceneCamera:setRotationSpeed(1)
+    SceneCamera:setFarClip(10000)
+    SceneCamera:setNearClip(0.1)
 end
 
 function Scene.onCreateEntities()

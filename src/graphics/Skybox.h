@@ -42,35 +42,35 @@ namespace Blink {
         VulkanVertexBuffer* vertexBuffer;
         VulkanIndexBuffer* indexBuffer;
 
-    private:
         std::vector<glm::vec3> vertices = {
             // positions
-            {-1.0f, 1.0f, -1.0f},
-            {-1.0f, -1.0f, -1.0f},
-            {1.0f, -1.0f, -1.0f},
-            {1.0f, 1.0f, -1.0f},
+            {-1.0f, 1.0f, -1.0f}, // 0
+            {-1.0f, -1.0f, -1.0f}, // 1
+            {1.0f, -1.0f, -1.0f}, // 2
+            {1.0f, 1.0f, -1.0f}, // 3
 
-            {-1.0f, 1.0f, 1.0f},
-            {-1.0f, -1.0f, 1.0f},
-            {1.0f, -1.0f, 1.0f},
-            {1.0f, 1.0f, 1.0f}
+            {-1.0f, 1.0f, 1.0f}, // 4
+            {-1.0f, -1.0f, 1.0f}, // 5
+            {1.0f, -1.0f, 1.0f}, // 6
+            {1.0f, 1.0f, 1.0f} // 7
         };
-        const std::vector<uint32_t> indices = {
-            // back face
-            0, 1, 2,
-            2, 3, 0,
 
-            // front face
-            4, 5, 6,
-            6, 7, 4,
+        const std::vector<uint32_t> indices = {
+            // right face
+            3, 2, 6,
+            6, 7, 3,
 
             // left face
             4, 5, 1,
             1, 0, 4,
 
-            // right face
-            3, 2, 6,
-            6, 7, 3,
+            // front face
+            4, 5, 6,
+            6, 7, 4,
+
+            // back face
+            0, 1, 2,
+            2, 3, 0,
 
             // top face
             4, 0, 3,
@@ -80,7 +80,6 @@ namespace Blink {
             1, 5, 6,
             6, 2, 1
         };
-
 
     public:
         explicit Skybox(const SkyboxConfig& config);

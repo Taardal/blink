@@ -34,8 +34,8 @@ namespace Blink {
         return *buffer;
     }
 
-    void VulkanVertexBuffer::setData(const std::vector<Vertex>& vertices) const {
-        stagingBuffer->setData((void*) vertices.data());
+    void VulkanVertexBuffer::setData(void* vertices) const {
+        stagingBuffer->setData(vertices);
         stagingBuffer->copyTo(buffer);
     }
 

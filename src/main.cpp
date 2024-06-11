@@ -14,8 +14,8 @@ int main() {
     config.windowResizable = true;
     config.windowMaximized = false;
     config.scenes = {
-        "lua/scenes/viking_room/viking_room.out",
         "lua/scenes/sandbox/sandbox.out",
+        "lua/scenes/viking_room/viking_room.out",
         "lua/scenes/rotation_test/rotation_test.out",
     };
 

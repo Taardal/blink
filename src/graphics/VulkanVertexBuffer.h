@@ -28,7 +28,7 @@ namespace Blink {
 
         operator VkBuffer() const;
 
-        void setData(const std::vector<Vertex>& vertices) const;
+        void setData(void* vertices) const;
 
         void bind(VkCommandBuffer commandBuffer) const;
     };

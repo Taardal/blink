@@ -9,40 +9,40 @@ namespace Blink {
         // Load cube map images from disk (faces)
         BL_LOG_DEBUG("Loading skybox textures");
         std::vector<std::string> images = {
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_back.png",
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_right.png",
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_left.png",
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_top.png",
             "models/oxar_freighter/Spaceboxes/Blue/bkg1_bot.png",
             "models/oxar_freighter/Spaceboxes/Blue/bkg1_front.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_left.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_right.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_top.png"
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_back.png",
+        };
+        images = {
+            "models/skybox/right.jpg",
+            "models/skybox/left.jpg",
+            "models/skybox/top.jpg",
+            "models/skybox/bottom.jpg",
+            "models/skybox/front.jpg",
+            "models/skybox/back.jpg",
         };
         std::vector<std::shared_ptr<ImageFile>> faces;
-        for (int i = 0; i < images.size(); ++i) {
+        for (int i = 0; i < FACE_COUNT; ++i) {
             faces.push_back(config.fileSystem->readImage(images[i]));
         }
         BL_ASSERT(faces.size() == images.size());
-
-        std::shared_ptr<ImageFile> face = faces[0];
-        for (int i = 0; i < faces.size(); ++i) {
-            BL_ASSERT(faces[i]->pixels != nullptr);
-            BL_ASSERT(faces[i]->width == face->width);
-            BL_ASSERT(faces[i]->height == face->height);
-        }
 
         VulkanCommandBuffer commandBuffer;
         BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffer(&commandBuffer));
         BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.begin());
 
-        const VkDeviceSize imageSize = face->size * FACE_COUNT;
-        const VkDeviceSize layerSize = face->size;
+        const VkDeviceSize layerSize = faces[0]->size;
         auto format = VK_FORMAT_R8G8B8A8_SRGB;
 
         // Create Vulkan image with 6 layers, one layer per face
         VkImageCreateInfo imageCreateInfo{};
         imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageCreateInfo.extent.width = face->width;
-        imageCreateInfo.extent.height = face->height;
+        imageCreateInfo.extent.width = faces[0]->width;
+        imageCreateInfo.extent.height = faces[0]->height;
         imageCreateInfo.extent.depth = 1;
         imageCreateInfo.arrayLayers = FACE_COUNT;
         imageCreateInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
@@ -111,7 +111,7 @@ namespace Blink {
                 commandBuffer,
                 *stagingBuffer,
                 image,
-                newLayout,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 1,
                 &bufferCopyRegion
             );
@@ -134,6 +134,13 @@ namespace Blink {
         for (auto sb : stagingBuffers) {
             delete sb;
         }
+
+        VkImageSubresourceRange imageSubresourceRange{};
+        imageSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageSubresourceRange.baseMipLevel = 0;
+        imageSubresourceRange.levelCount = 1;
+        imageSubresourceRange.baseArrayLayer = 0;
+        imageSubresourceRange.layerCount = 1;
 
         // Create Vulkan image view with cube type
         VkImageViewCreateInfo imageViewCreateInfo{};
@@ -282,12 +289,14 @@ namespace Blink {
         vertexBufferConfig.commandPool = commandPool;
         vertexBufferConfig.size = sizeof(vertices[0]) * vertices.size();
         vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
+        vertexBuffer->setData((void*) vertices.data());
 
         VulkanIndexBufferConfig indexBufferConfig{};
         indexBufferConfig.device = config.device;
         indexBufferConfig.commandPool = commandPool;
         indexBufferConfig.size = sizeof(indices[0]) * indices.size();
         indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
+        indexBuffer->setData((void*) indices.data());
     }
 
     Skybox::~Skybox() {
@@ -355,7 +364,7 @@ namespace Blink {
         UniformBufferData uniformBufferData{};
         uniformBufferData.view = viewProjection.view;
         uniformBufferData.projection = viewProjection.projection;
-        //uniformBufferData.projection[1][1] *= -1;
+        uniformBufferData.projection[1][1] *= -1;
 
         uniformBuffer->setData(&uniformBufferData);
     }

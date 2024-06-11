@@ -79,7 +79,7 @@ namespace Blink {
         vertexBufferConfig.size = sizeof(mesh->vertices[0]) * mesh->vertices.size();
 
         auto vertexBuffer = std::make_shared<VulkanVertexBuffer>(vertexBufferConfig);
-        vertexBuffer->setData(mesh->vertices);
+        vertexBuffer->setData((void*) mesh->vertices.data());
         mesh->vertexBuffer = vertexBuffer;
 
         VulkanIndexBufferConfig indexBufferConfig{};
@@ -88,7 +88,7 @@ namespace Blink {
         indexBufferConfig.size = sizeof(mesh->indices[0]) * mesh->indices.size();
 
         auto indexBuffer = std::make_shared<VulkanIndexBuffer>(indexBufferConfig);
-        indexBuffer->setData(mesh->indices);
+        indexBuffer->setData((void*) mesh->indices.data());
         mesh->indexBuffer = indexBuffer;
 
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
