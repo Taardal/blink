@@ -1,5 +1,8 @@
 #pragma once
 
+#include "ViewProjection.h"
+#include "VulkanIndexBuffer.h"
+#include "VulkanVertexBuffer.h"
 #include "system/FileSystem.h"
 #include "graphics/VulkanDevice.h"
 #include "graphics/VulkanSwapChain.h"
@@ -36,11 +39,57 @@ namespace Blink {
         VkDeviceMemory deviceMemory = nullptr;
         VkPipelineLayout pipelineLayout;
         VkPipeline pipeline;
+        VulkanVertexBuffer* vertexBuffer;
+        VulkanIndexBuffer* indexBuffer;
+
+    private:
+        std::vector<glm::vec3> vertices = {
+            // positions
+            {-1.0f, 1.0f, -1.0f},
+            {-1.0f, -1.0f, -1.0f},
+            {1.0f, -1.0f, -1.0f},
+            {1.0f, 1.0f, -1.0f},
+
+            {-1.0f, 1.0f, 1.0f},
+            {-1.0f, -1.0f, 1.0f},
+            {1.0f, -1.0f, 1.0f},
+            {1.0f, 1.0f, 1.0f}
+        };
+        const std::vector<uint32_t> indices = {
+            // back face
+            0, 1, 2,
+            2, 3, 0,
+
+            // front face
+            4, 5, 6,
+            6, 7, 4,
+
+            // left face
+            4, 5, 1,
+            1, 0, 4,
+
+            // right face
+            3, 2, 6,
+            6, 7, 3,
+
+            // top face
+            4, 0, 3,
+            3, 7, 4,
+
+            // bottom face
+            1, 5, 6,
+            6, 2, 1
+        };
+
 
     public:
-        Skybox(const SkyboxConfig& config);
+        explicit Skybox(const SkyboxConfig& config);
 
         ~Skybox();
+
+        void render(const VulkanCommandBuffer& commandBuffer, uint32_t currentFrame);
+
+        void setUniformData(const ViewProjection& viewProjection, uint32_t currentFrame) const;
 
     private:
         void createGraphicsPipeline(std::shared_ptr<VulkanShader> vertexShader, std::shared_ptr<VulkanShader> fragmentShader);

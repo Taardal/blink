@@ -50,12 +50,16 @@ namespace Blink {
         currentCommandBuffer = commandBuffers[currentFrame];
         BL_ASSERT_THROW_VK_SUCCESS(currentCommandBuffer.begin());
         swapChain->beginRenderPass(currentCommandBuffer);
-        graphicsPipeline->bind(currentCommandBuffer);
         return true;
     }
 
     void Renderer::setViewProjection(const ViewProjection& viewProjection) const {
         setUniformData(viewProjection);
+
+        skybox->setUniformData(viewProjection, currentFrame);
+        skybox->render(currentCommandBuffer, currentFrame);
+
+        graphicsPipeline->bind(currentCommandBuffer);
     }
 
     void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh) const {

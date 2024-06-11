@@ -24,6 +24,7 @@ namespace Blink {
 
         std::shared_ptr<ImageFile> face = faces[0];
         for (int i = 0; i < faces.size(); ++i) {
+            BL_ASSERT(faces[i]->pixels != nullptr);
             BL_ASSERT(faces[i]->width == face->width);
             BL_ASSERT(faces[i]->height == face->height);
         }
@@ -82,14 +83,20 @@ namespace Blink {
         VulkanBufferConfig stagingBufferConfig{};
         stagingBufferConfig.device = config.device;
         stagingBufferConfig.commandPool = commandPool;
-        stagingBufferConfig.size = imageSize;
+        stagingBufferConfig.size = layerSize;
         stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-        VulkanBuffer stagingBuffer(stagingBufferConfig);
+        std::vector<VulkanBuffer*> stagingBuffers;
 
         std::vector<VkBufferImageCopy> bufferCopyRegions;
         for (uint32_t i = 0; i < FACE_COUNT; i++) {
+            auto face = faces[i];
+
+            auto stagingBuffer = new VulkanBuffer(stagingBufferConfig);
+            stagingBuffer->setData(face->pixels);
+            stagingBuffers.push_back(stagingBuffer);
+
             VkBufferImageCopy bufferCopyRegion = {};
             bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             bufferCopyRegion.imageSubresource.baseArrayLayer = i;
@@ -97,18 +104,18 @@ namespace Blink {
             bufferCopyRegion.imageExtent.width = faces[i]->width;
             bufferCopyRegion.imageExtent.height = faces[i]->height;
             bufferCopyRegion.imageExtent.depth = 1;
-            bufferCopyRegion.bufferOffset = layerSize * i;
+            bufferCopyRegion.bufferOffset = 0;
             bufferCopyRegions.push_back(bufferCopyRegion);
-        }
 
-        vkCmdCopyBufferToImage(
-            commandBuffer,
-            stagingBuffer,
-            image,
-            newLayout,
-            bufferCopyRegions.size(),
-            bufferCopyRegions.data()
-        );
+            vkCmdCopyBufferToImage(
+                commandBuffer,
+                *stagingBuffer,
+                image,
+                newLayout,
+                1,
+                &bufferCopyRegion
+            );
+        }
 
         transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image, format, commandBuffer, subresourceRange);
 
@@ -123,6 +130,10 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilGraphicsQueueIsIdle());
 
         commandPool->freeCommandBuffer(commandBuffer.vk_ptr());
+
+        for (auto sb : stagingBuffers) {
+            delete sb;
+        }
 
         // Create Vulkan image view with cube type
         VkImageViewCreateInfo imageViewCreateInfo{};
@@ -238,10 +249,10 @@ namespace Blink {
             uniformBufferDescriptorWrite.descriptorCount = 1;
             uniformBufferDescriptorWrite.pBufferInfo = &uniformBufferDescriptorBufferInfo;
 
-            VkDescriptorBufferInfo textureSamplerDescriptorBufferInfo{};
-            textureSamplerDescriptorBufferInfo.buffer = *uniformBuffers[i];
-            textureSamplerDescriptorBufferInfo.offset = 0;
-            textureSamplerDescriptorBufferInfo.range = sizeof(UniformBufferData);
+            VkDescriptorImageInfo descriptorImageInfo{};
+            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            descriptorImageInfo.imageView = imageView;
+            descriptorImageInfo.sampler = textureSampler;
 
             VkWriteDescriptorSet textureSamplerDescriptorWrite{};
             textureSamplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -250,23 +261,39 @@ namespace Blink {
             textureSamplerDescriptorWrite.dstArrayElement = 0;
             textureSamplerDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             textureSamplerDescriptorWrite.descriptorCount = 1;
-            textureSamplerDescriptorWrite.pBufferInfo = &textureSamplerDescriptorBufferInfo;
+            textureSamplerDescriptorWrite.pImageInfo = &descriptorImageInfo;
 
             std::array<VkWriteDescriptorSet, 2> descriptorWrites = {
                 uniformBufferDescriptorWrite,
                 textureSamplerDescriptorWrite,
             };
 
-            config.device->updateDescriptorSets(1, descriptorWrites.data());
+            config.device->updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data());
         }
 
         // Create graphics pipeline with skybox shaders
         std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/skybox.vert.spv");
         std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/skybox.frag.spv");
         createGraphicsPipeline(vertexShader, fragmentShader);
+
+        // Vertex and index buffers
+        VulkanVertexBufferConfig vertexBufferConfig{};
+        vertexBufferConfig.device = config.device;
+        vertexBufferConfig.commandPool = commandPool;
+        vertexBufferConfig.size = sizeof(vertices[0]) * vertices.size();
+        vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
+
+        VulkanIndexBufferConfig indexBufferConfig{};
+        indexBufferConfig.device = config.device;
+        indexBufferConfig.commandPool = commandPool;
+        indexBufferConfig.size = sizeof(indices[0]) * indices.size();
+        indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
     }
 
     Skybox::~Skybox() {
+        delete indexBuffer;
+        delete vertexBuffer;
+
         config.device->destroyGraphicsPipeline(pipeline);
         config.device->destroyPipelineLayout(pipelineLayout);
 
@@ -281,7 +308,56 @@ namespace Blink {
         config.device->destroyImageView(imageView);
         config.device->freeMemory(deviceMemory);
         config.device->destroyImage(image);
+
         destroyCommandPool();
+    }
+
+    void Skybox::render(const VulkanCommandBuffer& commandBuffer, uint32_t currentFrame) {
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+        vertexBuffer->bind(commandBuffer);
+        indexBuffer->bind(commandBuffer);
+
+        VkDescriptorSet descriptorSet = descriptorSets[currentFrame];
+
+        constexpr uint32_t firstSet = 0;
+        constexpr uint32_t descriptorSetCount = 1;
+        constexpr uint32_t dynamicOffsetCount = 0;
+        constexpr uint32_t* dynamicOffsets = nullptr;
+        vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout,
+            firstSet,
+            descriptorSetCount,
+            &descriptorSet,
+            dynamicOffsetCount,
+            dynamicOffsets
+        );
+
+        constexpr uint32_t instanceCount = 1;
+        constexpr uint32_t firstIndex = 0;
+        constexpr uint32_t vertexOffset = 0;
+        constexpr uint32_t firstInstance = 0;
+        vkCmdDrawIndexed(
+            commandBuffer,
+            (uint32_t) indices.size(),
+            instanceCount,
+            firstIndex,
+            vertexOffset,
+            firstInstance
+        );
+    }
+
+    void Skybox::setUniformData(const ViewProjection& viewProjection, uint32_t currentFrame) const {
+        VulkanUniformBuffer* uniformBuffer = uniformBuffers[currentFrame];
+
+        UniformBufferData uniformBufferData{};
+        uniformBufferData.view = viewProjection.view;
+        uniformBufferData.projection = viewProjection.projection;
+        //uniformBufferData.projection[1][1] *= -1;
+
+        uniformBuffer->setData(&uniformBufferData);
     }
 
     void Skybox::createGraphicsPipeline(std::shared_ptr<VulkanShader> vertexShader, std::shared_ptr<VulkanShader> fragmentShader) {

@@ -39,7 +39,7 @@ namespace Blink {
         std::vector<VkDescriptorSet> descriptorSets;
         VulkanGraphicsPipeline* graphicsPipeline = nullptr;
         uint32_t currentFrame = 0;
-        VulkanCommandBuffer currentCommandBuffer = nullptr;
+        VulkanCommandBuffer currentCommandBuffer;
 
         Skybox* skybox = nullptr;
 
