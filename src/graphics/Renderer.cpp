@@ -268,8 +268,8 @@ namespace Blink {
     }
 
     void Renderer::createGraphicsPipeline() {
-        std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/shader.vert.spv");
-        std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/shader.frag.spv");
+        std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/mesh.vert.spv");
+        std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/mesh.frag.spv");
 
         VkVertexInputBindingDescription vertexBindingDescription = Vertex::getBindingDescription();
         std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions = Vertex::getAttributeDescriptions();

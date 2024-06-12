@@ -128,7 +128,7 @@ namespace Blink {
 
     void ErrorSignal::printUnixStacktrace() {
         // Number of stacktrace lines to be printed
-        constexpr int maxStackSize = 15;
+        constexpr int maxStackSize = 30;
 
         // Linux man page: backtrace, backtrace_symbols, backtrace_symbols_fd
         // https://linux.die.net/man/3/backtrace_symbols

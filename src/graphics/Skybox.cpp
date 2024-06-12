@@ -3,12 +3,39 @@
 #include "UniformBufferData.h"
 
 namespace Blink {
+    const std::vector<glm::vec3> Skybox::VERTICES = {
+        // Positive X (Right)
+        {1, 1, 1},
+        {1, 1, -1},
+        {1, -1, 1},
+        {1, -1, -1},
+        // Negative X (Left)
+        {-1, 1, 1},
+        {-1, 1, -1},
+        {-1, -1, 1},
+        {-1, -1, -1},
+    };
+    const std::vector<uint32_t> Skybox::INDICES = {
+        // Right (Positive X)
+        0, 1, 3, 0, 3, 2,
+        // Left (Negative X)
+        4, 6, 7, 4, 7, 5,
+        // Up (Positive Y)
+        0, 4, 5, 0, 5, 1,
+        // Down (Negative Y)
+        2, 3, 7, 2, 7, 6,
+        // Front (Positive Z)
+        0, 2, 6, 0, 6, 4,
+        // Back (Negative Z)
+        1, 5, 7, 1, 7, 3
+    };
+
     Skybox::Skybox(const SkyboxConfig& config) : config(config) {
         createCommandPool();
 
         // Load cube map images from disk (faces)
         BL_LOG_DEBUG("Loading skybox textures");
-        std::vector<std::string> images = {
+        std::vector<std::string> spaceBlue = {
             "models/oxar_freighter/Spaceboxes/Blue/bkg1_right.png",
             "models/oxar_freighter/Spaceboxes/Blue/bkg1_left.png",
             "models/oxar_freighter/Spaceboxes/Blue/bkg1_top.png",
@@ -16,7 +43,39 @@ namespace Blink {
             "models/oxar_freighter/Spaceboxes/Blue/bkg1_front.png",
             "models/oxar_freighter/Spaceboxes/Blue/bkg1_back.png",
         };
-        images = {
+        std::vector<std::string> spaceRed1 = {
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_right1.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_left2.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_top3.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_bottom4.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_front5.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_back6.png",
+        };
+        std::vector<std::string> spaceRed2 = {
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_right1.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_left2.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_top3.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_bottom4.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_front5.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_back6.png",
+        };
+        std::vector<std::string> spaceRed3 = {
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_right1.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_left2.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_top3.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_bottom4.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_front5.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_back6.png",
+        };
+        std::vector<std::string> spaceTeal = {
+            "models/oxar_freighter/Spaceboxes/Teal/right.png",
+            "models/oxar_freighter/Spaceboxes/Teal/left.png",
+            "models/oxar_freighter/Spaceboxes/Teal/top.png",
+            "models/oxar_freighter/Spaceboxes/Teal/bot.png",
+            "models/oxar_freighter/Spaceboxes/Teal/front.png",
+            "models/oxar_freighter/Spaceboxes/Teal/back.png",
+        };
+        std::vector<std::string> sky = {
             "models/skybox/right.jpg",
             "models/skybox/left.jpg",
             "models/skybox/top.jpg",
@@ -24,222 +83,27 @@ namespace Blink {
             "models/skybox/front.jpg",
             "models/skybox/back.jpg",
         };
+
+        std::vector<std::string>& images = sky;
         std::vector<std::shared_ptr<ImageFile>> faces;
         for (int i = 0; i < FACE_COUNT; ++i) {
             faces.push_back(config.fileSystem->readImage(images[i]));
         }
-        BL_ASSERT(faces.size() == images.size());
 
-        VulkanCommandBuffer commandBuffer;
-        BL_ASSERT_THROW_VK_SUCCESS(commandPool->allocateCommandBuffer(&commandBuffer));
-        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.begin());
-
-        const VkDeviceSize layerSize = faces[0]->size;
-        auto format = VK_FORMAT_R8G8B8A8_SRGB;
-
-        // Create Vulkan image with 6 layers, one layer per face
-        VkImageCreateInfo imageCreateInfo{};
-        imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageCreateInfo.extent.width = faces[0]->width;
-        imageCreateInfo.extent.height = faces[0]->height;
-        imageCreateInfo.extent.depth = 1;
-        imageCreateInfo.arrayLayers = FACE_COUNT;
-        imageCreateInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-        imageCreateInfo.format = format;
-        imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        imageCreateInfo.mipLevels = 1;
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->createImage(&imageCreateInfo, &image));
-
-        VkMemoryRequirements memoryRequirements = config.device->getImageMemoryRequirements(image);
-
-        VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
-        uint32_t memoryTypeIndex = physicalDevice->getMemoryTypeIndex(memoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-        VkMemoryAllocateInfo memoryAllocateInfo{};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memoryAllocateInfo.allocationSize = memoryRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateMemory(&memoryAllocateInfo, &deviceMemory));
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->bindImageMemory(image, deviceMemory));
-
-        VkImageSubresourceRange subresourceRange = {};
-        subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        subresourceRange.baseMipLevel = 0;
-        subresourceRange.levelCount = 1;
-        subresourceRange.layerCount = FACE_COUNT;
-
-        VkImageLayout oldLayout = imageCreateInfo.initialLayout;
-        VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-
-        transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, image, format, commandBuffer, subresourceRange);
-
-        VulkanBufferConfig stagingBufferConfig{};
-        stagingBufferConfig.device = config.device;
-        stagingBufferConfig.commandPool = commandPool;
-        stagingBufferConfig.size = layerSize;
-        stagingBufferConfig.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        stagingBufferConfig.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-        std::vector<VulkanBuffer*> stagingBuffers;
-
-        std::vector<VkBufferImageCopy> bufferCopyRegions;
-        for (uint32_t i = 0; i < FACE_COUNT; i++) {
-            auto face = faces[i];
-
-            auto stagingBuffer = new VulkanBuffer(stagingBufferConfig);
-            stagingBuffer->setData(face->pixels);
-            stagingBuffers.push_back(stagingBuffer);
-
-            VkBufferImageCopy bufferCopyRegion = {};
-            bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            bufferCopyRegion.imageSubresource.baseArrayLayer = i;
-            bufferCopyRegion.imageSubresource.layerCount = 1;
-            bufferCopyRegion.imageExtent.width = faces[i]->width;
-            bufferCopyRegion.imageExtent.height = faces[i]->height;
-            bufferCopyRegion.imageExtent.depth = 1;
-            bufferCopyRegion.bufferOffset = 0;
-            bufferCopyRegions.push_back(bufferCopyRegion);
-
-            constexpr uint32_t copyRegionCount = 1;
-            vkCmdCopyBufferToImage(
-                commandBuffer,
-                *stagingBuffer,
-                image,
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                copyRegionCount,
-                &bufferCopyRegion
-            );
-        }
-
-        transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, image, format, commandBuffer, subresourceRange);
-
-        BL_ASSERT_THROW_VK_SUCCESS(commandBuffer.end());
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = commandBuffer.vk_ptr();
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->submitToGraphicsQueue(&submitInfo));
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->waitUntilGraphicsQueueIsIdle());
-
-        commandPool->freeCommandBuffer(commandBuffer.vk_ptr());
-
-        for (auto sb : stagingBuffers) {
-            delete sb;
-        }
-
-        // VkImageSubresourceRange imageSubresourceRange{};
-        // imageSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        // imageSubresourceRange.baseMipLevel = 0;
-        // imageSubresourceRange.levelCount = 1;
-        // imageSubresourceRange.baseArrayLayer = 0;
-        // imageSubresourceRange.layerCount = 1;
-
-        VkImageViewCreateInfo imageViewCreateInfo{};
-        imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
-        imageViewCreateInfo.format = format;
-        imageViewCreateInfo.subresourceRange = subresourceRange;
-        imageViewCreateInfo.subresourceRange.layerCount = FACE_COUNT;
-        imageViewCreateInfo.subresourceRange.levelCount = 1;
-        imageViewCreateInfo.image = image;
-
-        config.device->createImageView(&imageViewCreateInfo, &imageView);
-
-        // Sampler
-        createTextureSampler();
-
-        // Buffers
+        createImage(faces);
+        createSampler();
         createUniformBuffers();
         createVertexBuffer();
         createIndexBuffer();
-
-        // Descriptors
         createDescriptorPool();
         createDescriptorSetLayout();
         createDescriptorSets();
 
-        // Pipeline
+        // GRAPHICS PIPELINE
+
         std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/skybox.vert.spv");
         std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/skybox.frag.spv");
-        createGraphicsPipeline(vertexShader, fragmentShader);
-    }
 
-    Skybox::~Skybox() {
-        config.device->destroyGraphicsPipeline(pipeline);
-        config.device->destroyPipelineLayout(pipelineLayout);
-
-        delete indexBuffer;
-        delete vertexBuffer;
-        destroyUniformBuffers();
-
-        config.device->destroyDescriptorSetLayout(descriptorSetLayout);
-        config.device->destroyDescriptorPool(descriptorPool);
-        config.device->destroySampler(textureSampler);
-        config.device->destroyImageView(imageView);
-        config.device->freeMemory(deviceMemory);
-        config.device->destroyImage(image);
-
-        destroyCommandPool();
-    }
-
-    void Skybox::render(const VulkanCommandBuffer& commandBuffer, uint32_t currentFrame) {
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-        vertexBuffer->bind(commandBuffer);
-        indexBuffer->bind(commandBuffer);
-
-        VkDescriptorSet descriptorSet = descriptorSets[currentFrame];
-
-        constexpr uint32_t firstSet = 0;
-        constexpr uint32_t descriptorSetCount = 1;
-        constexpr uint32_t dynamicOffsetCount = 0;
-        constexpr uint32_t* dynamicOffsets = nullptr;
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
-            firstSet,
-            descriptorSetCount,
-            &descriptorSet,
-            dynamicOffsetCount,
-            dynamicOffsets
-        );
-
-        constexpr uint32_t instanceCount = 1;
-        constexpr uint32_t firstIndex = 0;
-        constexpr uint32_t vertexOffset = 0;
-        constexpr uint32_t firstInstance = 0;
-        vkCmdDrawIndexed(
-            commandBuffer,
-            (uint32_t) indices.size(),
-            instanceCount,
-            firstIndex,
-            vertexOffset,
-            firstInstance
-        );
-    }
-
-    void Skybox::setUniformData(const ViewProjection& viewProjection, uint32_t currentFrame) const {
-        VulkanUniformBuffer* uniformBuffer = uniformBuffers[currentFrame];
-
-        UniformBufferData uniformBufferData{};
-        uniformBufferData.view = viewProjection.view;
-        uniformBufferData.projection = viewProjection.projection;
-        uniformBufferData.projection[1][1] *= -1;
-
-        uniformBuffer->setData(&uniformBufferData);
-    }
-
-    void Skybox::createGraphicsPipeline(std::shared_ptr<VulkanShader> vertexShader, std::shared_ptr<VulkanShader> fragmentShader) {
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
         vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -357,66 +221,96 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createGraphicsPipeline(&pipelineCreateInfo, &pipeline));
     }
 
-    void Skybox::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkImage image, VkFormat format, VkCommandBuffer commandBuffer, VkImageSubresourceRange subresourceRange) const {
-        VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = oldLayout;
-        barrier.newLayout = newLayout;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = image;
-        barrier.subresourceRange = subresourceRange;
+    Skybox::~Skybox() {
+        config.device->destroyGraphicsPipeline(pipeline);
+        config.device->destroyPipelineLayout(pipelineLayout);
 
-        VkPipelineStageFlags sourceStage;
-        VkPipelineStageFlags destinationStage;
+        config.device->destroyDescriptorSetLayout(descriptorSetLayout);
+        config.device->destroyDescriptorPool(descriptorPool);
 
-        if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-            barrier.srcAccessMask = 0;
-            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-            sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-            barrier.srcAccessMask = 0;
-            barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        } else {
-            BL_THROW("Unsupported layout transition");
+        delete indexBuffer;
+        delete vertexBuffer;
+
+        for (int i = 0; i < uniformBuffers.size(); ++i) {
+            delete uniformBuffers[i];
         }
+        uniformBuffers.clear();
 
-        constexpr VkDependencyFlags dependencyFlags = 0;
-        constexpr uint32_t memoryBarrierCount = 0;
-        constexpr VkMemoryBarrier* memoryBarriers = nullptr;
-        constexpr uint32_t bufferMemoryBarrierCount = 0;
-        constexpr VkBufferMemoryBarrier* bufferMemoryBarriers = nullptr;
-        constexpr uint32_t imageMemoryBarrierCount = 1;
-        vkCmdPipelineBarrier(
-                commandBuffer,
-                sourceStage,
-                destinationStage,
-                dependencyFlags,
-                memoryBarrierCount,
-                memoryBarriers,
-                bufferMemoryBarrierCount,
-                bufferMemoryBarriers,
-                imageMemoryBarrierCount,
-                &barrier
+        config.device->destroySampler(sampler);
+        delete image;
+        delete commandPool;
+    }
+
+    void Skybox::render(const VulkanCommandBuffer& commandBuffer, uint32_t currentFrame) {
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+        vertexBuffer->bind(commandBuffer);
+        indexBuffer->bind(commandBuffer);
+
+        VkDescriptorSet descriptorSet = descriptorSets[currentFrame];
+
+        constexpr uint32_t firstSet = 0;
+        constexpr uint32_t descriptorSetCount = 1;
+        constexpr uint32_t dynamicOffsetCount = 0;
+        constexpr uint32_t* dynamicOffsets = nullptr;
+        vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout,
+            firstSet,
+            descriptorSetCount,
+            &descriptorSet,
+            dynamicOffsetCount,
+            dynamicOffsets
         );
+
+        constexpr uint32_t instanceCount = 1;
+        constexpr uint32_t firstIndex = 0;
+        constexpr uint32_t vertexOffset = 0;
+        constexpr uint32_t firstInstance = 0;
+        vkCmdDrawIndexed(
+            commandBuffer,
+            (uint32_t) INDICES.size(),
+            instanceCount,
+            firstIndex,
+            vertexOffset,
+            firstInstance
+        );
+    }
+
+    void Skybox::setUniformData(const ViewProjection& viewProjection, uint32_t currentFrame) const {
+        VulkanUniformBuffer* uniformBuffer = uniformBuffers[currentFrame];
+
+        UniformBufferData uniformBufferData{};
+        uniformBufferData.view = viewProjection.view;
+        uniformBufferData.projection = viewProjection.projection;
+        uniformBufferData.projection[1][1] *= -1;
+
+        uniformBuffer->setData(&uniformBufferData);
+    }
+
+    void Skybox::createImage(const std::vector<std::shared_ptr<ImageFile>>& imageFiles) {
+        VulkanImageConfig imageConfig{};
+        imageConfig.device = config.device;
+        imageConfig.commandPool = commandPool;
+        imageConfig.width = imageFiles[0]->width;
+        imageConfig.height = imageFiles[0]->height;
+        imageConfig.layerCount = imageFiles.size();
+        imageConfig.imageViewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        imageConfig.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+        imageConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
+        imageConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+        image = new VulkanImage(imageConfig);
+        image->setLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        image->setData(imageFiles);
+        image->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
 
     void Skybox::createCommandPool() {
         VulkanCommandPoolConfig commandPoolConfig{};
         commandPoolConfig.device = config.device;
         commandPool = new VulkanCommandPool(commandPoolConfig);
-    }
-
-    void Skybox::destroyCommandPool() const {
-        delete commandPool;
     }
 
     void Skybox::createDescriptorPool() {
@@ -440,10 +334,6 @@ namespace Blink {
         descriptorPoolCreateInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorPool(&descriptorPoolCreateInfo, &descriptorPool));
-    }
-
-    void Skybox::destroyDescriptorPool() const {
-        config.device->destroyDescriptorPool(descriptorPool);
     }
 
     void Skybox::createDescriptorSetLayout() {
@@ -471,10 +361,6 @@ namespace Blink {
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, &descriptorSetLayout));
 
-    }
-
-    void Skybox::destroyDescriptorSetLayout() const {
-        config.device->destroyDescriptorSetLayout(descriptorSetLayout);
     }
 
     void Skybox::createDescriptorSets() {
@@ -506,8 +392,8 @@ namespace Blink {
 
             VkDescriptorImageInfo descriptorImageInfo{};
             descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            descriptorImageInfo.imageView = imageView;
-            descriptorImageInfo.sampler = textureSampler;
+            descriptorImageInfo.imageView = image->getImageView();
+            descriptorImageInfo.sampler = sampler;
 
             VkWriteDescriptorSet textureSamplerDescriptorWrite{};
             textureSamplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -527,10 +413,6 @@ namespace Blink {
         }
     }
 
-    void Skybox::destroyDescriptorSets() const {
-        // Destroyed when pool is destroyed
-    }
-
     void Skybox::createUniformBuffers() {
         uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
         for (uint32_t i = 0; i < uniformBuffers.size(); i++) {
@@ -542,40 +424,25 @@ namespace Blink {
         }
     }
 
-    void Skybox::destroyUniformBuffers() {
-        for (int i = 0; i < uniformBuffers.size(); ++i) {
-            delete uniformBuffers[i];
-        }
-        uniformBuffers.clear();
-    }
-
     void Skybox::createVertexBuffer() {
         VulkanVertexBufferConfig vertexBufferConfig{};
         vertexBufferConfig.device = config.device;
         vertexBufferConfig.commandPool = commandPool;
-        vertexBufferConfig.size = sizeof(vertices[0]) * vertices.size();
+        vertexBufferConfig.size = sizeof(VERTICES[0]) * VERTICES.size();
         vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
-        vertexBuffer->setData((void*) vertices.data());
-    }
-
-    void Skybox::destroyVertexBuffer() {
-        delete vertexBuffer;
+        vertexBuffer->setData((void*) VERTICES.data());
     }
 
     void Skybox::createIndexBuffer() {
         VulkanIndexBufferConfig indexBufferConfig{};
         indexBufferConfig.device = config.device;
         indexBufferConfig.commandPool = commandPool;
-        indexBufferConfig.size = sizeof(indices[0]) * indices.size();
+        indexBufferConfig.size = sizeof(INDICES[0]) * INDICES.size();
         indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
-        indexBuffer->setData((void*) indices.data());
+        indexBuffer->setData((void*) INDICES.data());
     }
 
-    void Skybox::destroyIndexBuffer() {
-        delete indexBuffer;
-    }
-
-    void Skybox::createTextureSampler() {
+    void Skybox::createSampler() {
         VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
 
         VkSamplerCreateInfo samplerCreateInfo{};
@@ -594,46 +461,6 @@ namespace Blink {
         samplerCreateInfo.maxAnisotropy = physicalDevice->getProperties().limits.maxSamplerAnisotropy;
         samplerCreateInfo.anisotropyEnable = VK_TRUE;
 
-        config.device->createSampler(&samplerCreateInfo, &textureSampler);
-    }
-
-    void Skybox::destroyTextureSampler() const {
-        config.device->destroySampler(textureSampler);
-    }
-
-    void Skybox::createTextures() {
-        BL_LOG_DEBUG("Loading skybox textures");
-        std::array<std::string, FACE_COUNT> images = {
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_back.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_bot.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_front.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_left.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_right.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_top.png"
-        };
-        for (int i = 0; i < images.size(); ++i) {
-            std::shared_ptr<ImageFile> imageFile = config.fileSystem->readImage(images[i]);
-
-            VulkanImageConfig textureConfig{};
-            textureConfig.device = config.device;
-            textureConfig.commandPool = commandPool;
-            textureConfig.width = imageFile->width;
-            textureConfig.height = imageFile->height;
-            textureConfig.format = VK_FORMAT_R8G8B8A8_SRGB;
-            textureConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-            textureConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-            textureConfig.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-            textures[i] = std::make_shared<VulkanImage>(textureConfig);
-        }
-        BL_LOG_INFO("Loaded [{}] skybox textures", textures.size());
-        BL_ASSERT(textures.size() == images.size());
-        BL_ASSERT(textures.size() == FACE_COUNT);
-    }
-
-    void Skybox::destroyTextures() {
-        for (int i = 0; i < textures.size(); ++i) {
-            textures[i] = nullptr;
-        }
+        config.device->createSampler(&samplerCreateInfo, &sampler);
     }
 }
