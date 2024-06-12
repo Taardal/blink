@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Log.h"
+#include "Signal.h"
+
 #include <iostream>
 
 #define BL_THROW(message) throw Error(message, BL_TAG())
@@ -43,6 +45,8 @@ namespace Blink {
         void printStacktrace() const;
 
         static void printStacktrace(const Error& error);
+
+        static void onFatalSignal(const ::std::function<void(const Signal&)>& handler);
     };
 
     std::ostream& operator<<(std::ostream& os, const Error& error);

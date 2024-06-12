@@ -37,7 +37,9 @@ namespace Blink {
     class App {
     private:
         AppConfig config;
-        AppState state = AppState::None;
+        bool initialized = false;
+        bool running = false;
+        bool paused = false;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;

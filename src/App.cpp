@@ -5,21 +5,25 @@
 
 namespace Blink {
     App::App(const AppConfig& config) : config(config) {
-        SignalHandler::setErrorSignalHandler([](const Signal& signal) {
+        // Handle fatal errors, that are not caught by exception-handling, with graceful termination
+        Error::onFatalSignal([this](const Signal& signal) {
             signal.printStacktrace();
-            exit(signal.code);
+            terminate();
+            exit(0);
         });
+        // Handle exceptions with graceful termination
+        // If an exception occurs, catch it, log it and let the app continue to be terminated by it's destructor when it goes out of scope
         try {
             BL_LOG_INFO("Initializing...");
             initialize();
-            state = AppState::Initialized;
+            initialized = true;
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Initialization error");
             e.printStacktrace();
-            state = AppState::None;
+            initialized = false;
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Initialization error: {}", e.what());
-            state = AppState::None;
+            initialized = false;
         }
     }
 
@@ -29,21 +33,22 @@ namespace Blink {
     }
 
     void App::run() {
-        if (state != AppState::Initialized) {
+        if (!initialized) {
             return;
         }
+        // Handle exceptions with graceful termination
+        // If an exception occurs, catch it, log it and let the app continue to be terminated by it's destructor when it goes out of scope
         try {
             BL_LOG_INFO("Running...");
-            state = AppState::Running;
+            running = true;
             gameLoop();
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Runtime error");
             e.printStacktrace();
-            state = AppState::None;
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Runtime error: {}", e.what());
-            state = AppState::None;
         }
+        running = false;
         renderer->waitUntilIdle();
     }
 
@@ -58,7 +63,7 @@ namespace Blink {
             double timestep = std::min(time - lastTime, oneSecond);
             lastTime = time;
 
-            if (state != AppState::Paused) {
+            if (!paused) {
                 scene->update(timestep);
                 ups++;
             }
@@ -87,15 +92,15 @@ namespace Blink {
     void App::onEvent(Event& event) {
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Escape) {
             window->setShouldClose(true);
-            state = AppState::None;
+            running = false;
             return;
         }
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::P) {
-            state = AppState::Paused;
+            paused = true;
             return;
         }
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
-            state = AppState::Running;
+            paused = false;
             return;
         }
         if (event.type == EventType::KeyPressed) {

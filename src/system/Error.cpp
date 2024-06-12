@@ -88,4 +88,8 @@ namespace Blink {
         os << "\n";
         return os;
     }
+
+    void Error::onFatalSignal(const std::function<void(const Signal&)>& handler) {
+        ErrorSignal::setHandler(handler);
+    }
 }
