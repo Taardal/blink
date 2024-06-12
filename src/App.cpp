@@ -5,6 +5,10 @@
 
 namespace Blink {
     App::App(const AppConfig& config) : config(config) {
+        SignalHandler::setErrorSignalHandler([](const Signal& signal) {
+            signal.printStacktrace();
+            exit(signal.code);
+        });
         try {
             BL_LOG_INFO("Initializing...");
             initialize();
@@ -12,8 +16,10 @@ namespace Blink {
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Initialization error");
             e.printStacktrace();
+            state = AppState::None;
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Initialization error: {}", e.what());
+            state = AppState::None;
         }
     }
 
@@ -33,8 +39,10 @@ namespace Blink {
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Runtime error");
             e.printStacktrace();
+            state = AppState::None;
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Runtime error: {}", e.what());
+            state = AppState::None;
         }
         renderer->waitUntilIdle();
     }
@@ -42,17 +50,15 @@ namespace Blink {
     void App::gameLoop() const {
         constexpr double oneSecond = 1.0;
         double lastTime = window->getTime();
-        double deltaTime = 0.0;
+        double statisticsUpdateLag = 0.0;
         uint32_t ups = 0;
         uint32_t fps = 0;
         while (!window->shouldClose()) {
             double time = window->update();
             double timestep = std::min(time - lastTime, oneSecond);
             lastTime = time;
-            deltaTime += timestep;
 
-            bool paused = state == AppState::Paused;
-            if (!paused) {
+            if (state != AppState::Paused) {
                 scene->update(timestep);
                 ups++;
             }
@@ -63,18 +69,25 @@ namespace Blink {
                 fps++;
             }
 
-            if (deltaTime >= oneSecond) {
-                BL_LOG_INFO("UPS [{}], FPS [{}]", ups, fps);
+#ifdef BL_DEBUG
+            statisticsUpdateLag += timestep;
+            if (statisticsUpdateLag >= oneSecond) {
+                std::stringstream ss;
+                ss << "FPS: " << fps << ", UPS: " << ups;
+                std::string title = ss.str();
+                window->setTitle(title.c_str());
                 ups = 0;
                 fps = 0;
-                deltaTime = 0;
+                statisticsUpdateLag = 0;
             }
+#endif
         }
     }
 
     void App::onEvent(Event& event) {
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Escape) {
             window->setShouldClose(true);
+            state = AppState::None;
             return;
         }
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::P) {

@@ -49,6 +49,14 @@ namespace Blink {
         BL_LOG_INFO("Terminated GLFW");
     }
 
+    void Window::setTitle(const char* title) const {
+        glfwSetWindowTitle(glfwWindow, title);
+    }
+
+    void Window::setTitle(const std::string& title) const {
+        setTitle(title.c_str());
+    }
+
     double Window::update() const {
         glfwPollEvents();
         return glfwGetTime();
