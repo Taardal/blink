@@ -1,4 +1,4 @@
-#include "Signal.h"
+#include "ErrorSignal.h"
 
 namespace Blink {
     ErrorSignal::ErrorSignal(int signal) : code(signal) {

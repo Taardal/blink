@@ -101,6 +101,8 @@ add_executable(
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/Error.cpp
         ${SRC_DIR}/system/Error.h
+        ${SRC_DIR}/system/ErrorSignal.cpp
+        ${SRC_DIR}/system/ErrorSignal.h
         ${SRC_DIR}/system/FileSystem.cpp
         ${SRC_DIR}/system/FileSystem.h
         ${SRC_DIR}/system/ImageFile.cpp
@@ -110,8 +112,6 @@ add_executable(
         ${SRC_DIR}/system/ObjFile.h
         ${SRC_DIR}/system/Random.cpp
         ${SRC_DIR}/system/Random.h
-        ${SRC_DIR}/system/Signal.cpp
-        ${SRC_DIR}/system/Signal.h
         ${SRC_DIR}/system/Uuid.cpp
         ${SRC_DIR}/system/Uuid.h
         ${SRC_DIR}/utils/utils.cpp

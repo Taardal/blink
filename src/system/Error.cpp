@@ -89,7 +89,8 @@ namespace Blink {
         return os;
     }
 
-    void Error::onFatalSignal(const std::function<void(const Signal&)>& handler) {
+    // Trade indirection for nicer interface for the caller
+    void Error::onSignal(const std::function<void(const ErrorSignal&)>& handler) {
         ErrorSignal::setHandler(handler);
     }
 }

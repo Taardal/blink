@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Log.h"
-#include "Signal.h"
+#include "ErrorSignal.h"
 
 #include <iostream>
 
@@ -46,7 +46,7 @@ namespace Blink {
 
         static void printStacktrace(const Error& error);
 
-        static void onFatalSignal(const ::std::function<void(const Signal&)>& handler);
+        static void onSignal(const ::std::function<void(const ErrorSignal&)>& handler);
     };
 
     std::ostream& operator<<(std::ostream& os, const Error& error);

@@ -4,11 +4,9 @@
 using namespace Blink;
 
 int main() {
-    Log::initialize(LogLevel::Debug);
-
     AppConfig config{};
     config.name = "Blink";
-    config.fps = 120;
+    config.logLevel = LogLevel::Debug;
     config.windowWidth = 1366;
     config.windowHeight = 768;
     config.windowResizable = true;
@@ -18,7 +16,6 @@ int main() {
         "lua/scenes/viking_room/viking_room.out",
         "lua/scenes/rotation_test/rotation_test.out",
     };
-
     App app(config);
     app.run();
 }
