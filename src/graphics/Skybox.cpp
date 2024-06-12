@@ -107,12 +107,13 @@ namespace Blink {
             bufferCopyRegion.bufferOffset = 0;
             bufferCopyRegions.push_back(bufferCopyRegion);
 
+            constexpr uint32_t copyRegionCount = 1;
             vkCmdCopyBufferToImage(
                 commandBuffer,
                 *stagingBuffer,
                 image,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                1,
+                copyRegionCount,
                 &bufferCopyRegion
             );
         }
@@ -135,181 +136,50 @@ namespace Blink {
             delete sb;
         }
 
-        VkImageSubresourceRange imageSubresourceRange{};
-        imageSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageSubresourceRange.baseMipLevel = 0;
-        imageSubresourceRange.levelCount = 1;
-        imageSubresourceRange.baseArrayLayer = 0;
-        imageSubresourceRange.layerCount = 1;
+        // VkImageSubresourceRange imageSubresourceRange{};
+        // imageSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        // imageSubresourceRange.baseMipLevel = 0;
+        // imageSubresourceRange.levelCount = 1;
+        // imageSubresourceRange.baseArrayLayer = 0;
+        // imageSubresourceRange.layerCount = 1;
 
-        // Create Vulkan image view with cube type
         VkImageViewCreateInfo imageViewCreateInfo{};
         imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        // Cube map view type
         imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
         imageViewCreateInfo.format = format;
-        imageViewCreateInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-        // 6 array layers (faces)
+        imageViewCreateInfo.subresourceRange = subresourceRange;
         imageViewCreateInfo.subresourceRange.layerCount = FACE_COUNT;
-        // Set number of mip levels
         imageViewCreateInfo.subresourceRange.levelCount = 1;
         imageViewCreateInfo.image = image;
 
         config.device->createImageView(&imageViewCreateInfo, &imageView);
 
-        // Create descriptors --> uniform buffer + sampler (cube)
-        VkSamplerCreateInfo samplerCreateInfo{};
-        samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-        samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-        samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerCreateInfo.addressModeV = samplerCreateInfo.addressModeU;
-        samplerCreateInfo.addressModeW = samplerCreateInfo.addressModeU;
-        samplerCreateInfo.mipLodBias = 0.0f;
-        samplerCreateInfo.compareOp = VK_COMPARE_OP_NEVER;
-        samplerCreateInfo.minLod = 0.0f;
-        samplerCreateInfo.maxLod = 1.0f;
-        samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-        samplerCreateInfo.maxAnisotropy = config.device->getPhysicalDevice()->getProperties().limits.maxSamplerAnisotropy;
-        samplerCreateInfo.anisotropyEnable = VK_TRUE;
+        // Sampler
+        createTextureSampler();
 
-        config.device->createSampler(&samplerCreateInfo, &textureSampler);
+        // Buffers
+        createUniformBuffers();
+        createVertexBuffer();
+        createIndexBuffer();
 
-        uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        for (uint32_t i = 0; i < uniformBuffers.size(); i++) {
-            VulkanUniformBufferConfig uniformBufferConfig{};
-            uniformBufferConfig.device = config.device;
-            uniformBufferConfig.commandPool = commandPool;
-            uniformBufferConfig.size = sizeof(UniformBufferData);
-            uniformBuffers[i] = new VulkanUniformBuffer(uniformBufferConfig);
-        }
+        // Descriptors
+        createDescriptorPool();
+        createDescriptorSetLayout();
+        createDescriptorSets();
 
-        VkDescriptorPoolSize uniformBufferPoolSize{};
-        uniformBufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBufferPoolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
-
-        VkDescriptorPoolSize textureSamplerPoolSize{};
-        textureSamplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        textureSamplerPoolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
-
-        std::array<VkDescriptorPoolSize, 2> poolSizes = {
-            uniformBufferPoolSize,
-            textureSamplerPoolSize,
-        };
-
-        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
-        descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptorPoolCreateInfo.poolSizeCount = poolSizes.size();
-        descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
-        descriptorPoolCreateInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorPool(&descriptorPoolCreateInfo, &descriptorPool));
-
-        VkDescriptorSetLayoutBinding uniformBufferLayoutBinding{};
-        uniformBufferLayoutBinding.binding = 0;
-        uniformBufferLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBufferLayoutBinding.descriptorCount = 1;
-        uniformBufferLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding textureSamplerLayoutBinding{};
-        textureSamplerLayoutBinding.binding = 1;
-        textureSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        textureSamplerLayoutBinding.descriptorCount = 1;
-        textureSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::array<VkDescriptorSetLayoutBinding, 2> descriptorSetLayoutBindings = {
-            uniformBufferLayoutBinding,
-            textureSamplerLayoutBinding,
-        };
-
-        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
-        descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptorSetLayoutCreateInfo.bindingCount = descriptorSetLayoutBindings.size();
-        descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, &descriptorSetLayout));
-
-        descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(descriptorSets.size(), descriptorSetLayout);
-
-        VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
-        descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        descriptorSetAllocateInfo.descriptorPool = descriptorPool;
-        descriptorSetAllocateInfo.descriptorSetCount = descriptorSets.size();
-        descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateDescriptorSets(&descriptorSetAllocateInfo, descriptorSets.data()));
-
-        for (uint32_t i = 0; i < descriptorSets.size(); i++) {
-            VkDescriptorBufferInfo uniformBufferDescriptorBufferInfo{};
-            uniformBufferDescriptorBufferInfo.buffer = *uniformBuffers[i];
-            uniformBufferDescriptorBufferInfo.offset = 0;
-            uniformBufferDescriptorBufferInfo.range = sizeof(UniformBufferData);
-
-            VkWriteDescriptorSet uniformBufferDescriptorWrite{};
-            uniformBufferDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            uniformBufferDescriptorWrite.dstSet = descriptorSets[i];
-            uniformBufferDescriptorWrite.dstBinding = 0;
-            uniformBufferDescriptorWrite.dstArrayElement = 0;
-            uniformBufferDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            uniformBufferDescriptorWrite.descriptorCount = 1;
-            uniformBufferDescriptorWrite.pBufferInfo = &uniformBufferDescriptorBufferInfo;
-
-            VkDescriptorImageInfo descriptorImageInfo{};
-            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            descriptorImageInfo.imageView = imageView;
-            descriptorImageInfo.sampler = textureSampler;
-
-            VkWriteDescriptorSet textureSamplerDescriptorWrite{};
-            textureSamplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            textureSamplerDescriptorWrite.dstSet = descriptorSets[i];
-            textureSamplerDescriptorWrite.dstBinding = 1;
-            textureSamplerDescriptorWrite.dstArrayElement = 0;
-            textureSamplerDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            textureSamplerDescriptorWrite.descriptorCount = 1;
-            textureSamplerDescriptorWrite.pImageInfo = &descriptorImageInfo;
-
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites = {
-                uniformBufferDescriptorWrite,
-                textureSamplerDescriptorWrite,
-            };
-
-            config.device->updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data());
-        }
-
-        // Create graphics pipeline with skybox shaders
+        // Pipeline
         std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/skybox.vert.spv");
         std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/skybox.frag.spv");
         createGraphicsPipeline(vertexShader, fragmentShader);
-
-        // Vertex and index buffers
-        VulkanVertexBufferConfig vertexBufferConfig{};
-        vertexBufferConfig.device = config.device;
-        vertexBufferConfig.commandPool = commandPool;
-        vertexBufferConfig.size = sizeof(vertices[0]) * vertices.size();
-        vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
-        vertexBuffer->setData((void*) vertices.data());
-
-        VulkanIndexBufferConfig indexBufferConfig{};
-        indexBufferConfig.device = config.device;
-        indexBufferConfig.commandPool = commandPool;
-        indexBufferConfig.size = sizeof(indices[0]) * indices.size();
-        indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
-        indexBuffer->setData((void*) indices.data());
     }
 
     Skybox::~Skybox() {
-        delete indexBuffer;
-        delete vertexBuffer;
-
         config.device->destroyGraphicsPipeline(pipeline);
         config.device->destroyPipelineLayout(pipelineLayout);
 
-        for (int i = 0; i < uniformBuffers.size(); ++i) {
-            delete uniformBuffers[i];
-        }
-        uniformBuffers.clear();
+        delete indexBuffer;
+        delete vertexBuffer;
+        destroyUniformBuffers();
 
         config.device->destroyDescriptorSetLayout(descriptorSetLayout);
         config.device->destroyDescriptorPool(descriptorPool);
@@ -600,6 +470,7 @@ namespace Blink {
         descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, &descriptorSetLayout));
+
     }
 
     void Skybox::destroyDescriptorSetLayout() const {
@@ -619,58 +490,40 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateDescriptorSets(&descriptorSetAllocateInfo, descriptorSets.data()));
 
         for (uint32_t i = 0; i < descriptorSets.size(); i++) {
-            VkDescriptorSet descriptorSet = descriptorSets[i];
+            VkDescriptorBufferInfo uniformBufferDescriptorBufferInfo{};
+            uniformBufferDescriptorBufferInfo.buffer = *uniformBuffers[i];
+            uniformBufferDescriptorBufferInfo.offset = 0;
+            uniformBufferDescriptorBufferInfo.range = sizeof(UniformBufferData);
 
-            VkDescriptorBufferInfo descriptorBufferInfo{};
-            descriptorBufferInfo.buffer = *uniformBuffers[i];
-            descriptorBufferInfo.offset = 0;
-            descriptorBufferInfo.range = sizeof(UniformBufferData);
+            VkWriteDescriptorSet uniformBufferDescriptorWrite{};
+            uniformBufferDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            uniformBufferDescriptorWrite.dstSet = descriptorSets[i];
+            uniformBufferDescriptorWrite.dstBinding = 0;
+            uniformBufferDescriptorWrite.dstArrayElement = 0;
+            uniformBufferDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            uniformBufferDescriptorWrite.descriptorCount = 1;
+            uniformBufferDescriptorWrite.pBufferInfo = &uniformBufferDescriptorBufferInfo;
 
-            VkWriteDescriptorSet descriptorWrite{};
-            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrite.dstSet = descriptorSet;
-            descriptorWrite.dstBinding = 0;
-            descriptorWrite.dstArrayElement = 0;
-            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorWrite.descriptorCount = 1;
-            descriptorWrite.pBufferInfo = &descriptorBufferInfo;
+            VkDescriptorImageInfo descriptorImageInfo{};
+            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            descriptorImageInfo.imageView = imageView;
+            descriptorImageInfo.sampler = textureSampler;
 
-            config.device->updateDescriptorSets(1, &descriptorWrite);
+            VkWriteDescriptorSet textureSamplerDescriptorWrite{};
+            textureSamplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            textureSamplerDescriptorWrite.dstSet = descriptorSets[i];
+            textureSamplerDescriptorWrite.dstBinding = 1;
+            textureSamplerDescriptorWrite.dstArrayElement = 0;
+            textureSamplerDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            textureSamplerDescriptorWrite.descriptorCount = 1;
+            textureSamplerDescriptorWrite.pImageInfo = &descriptorImageInfo;
 
-            // VkDescriptorBufferInfo uniformBufferDescriptorBufferInfo{};
-            // uniformBufferDescriptorBufferInfo.buffer = *uniformBuffers[i];
-            // uniformBufferDescriptorBufferInfo.offset = 0;
-            // uniformBufferDescriptorBufferInfo.range = sizeof(UniformBufferData);
-            //
-            // VkWriteDescriptorSet uniformBufferDescriptorWrite{};
-            // uniformBufferDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            // uniformBufferDescriptorWrite.dstSet = descriptorSet;
-            // uniformBufferDescriptorWrite.dstBinding = 0;
-            // uniformBufferDescriptorWrite.dstArrayElement = 0;
-            // uniformBufferDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            // uniformBufferDescriptorWrite.descriptorCount = 1;
-            // uniformBufferDescriptorWrite.pBufferInfo = &uniformBufferDescriptorBufferInfo;
-            //
-            // VkDescriptorImageInfo textureDescriptorImageInfo{};
-            // textureDescriptorImageInfo.imageLayout = texture->getImageLayout();
-            // textureDescriptorImageInfo.imageView = texture->getImageView();
-            // textureDescriptorImageInfo.sampler = textureSampler;
-            //
-            // VkWriteDescriptorSet textureDescriptorWrite{};
-            // textureDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            // textureDescriptorWrite.dstSet = descriptorSet;
-            // textureDescriptorWrite.dstBinding = 1;
-            // textureDescriptorWrite.dstArrayElement = 0;
-            // textureDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            // textureDescriptorWrite.descriptorCount = 1;
-            // textureDescriptorWrite.pImageInfo = &textureDescriptorImageInfo;
-            //
-            // std::array<VkWriteDescriptorSet, 2> descriptorWrites = {
-            //     uniformBufferDescriptorWrite,
-            //     textureDescriptorWrite,
-            // };
-            //
-            // config.device->updateDescriptorSets(1, descriptorWrites.data());
+            std::array<VkWriteDescriptorSet, 2> descriptorWrites = {
+                uniformBufferDescriptorWrite,
+                textureSamplerDescriptorWrite,
+            };
+
+            config.device->updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data());
         }
     }
 
@@ -692,33 +545,56 @@ namespace Blink {
     void Skybox::destroyUniformBuffers() {
         for (int i = 0; i < uniformBuffers.size(); ++i) {
             delete uniformBuffers[i];
-            uniformBuffers[i] = nullptr;
         }
+        uniformBuffers.clear();
+    }
+
+    void Skybox::createVertexBuffer() {
+        VulkanVertexBufferConfig vertexBufferConfig{};
+        vertexBufferConfig.device = config.device;
+        vertexBufferConfig.commandPool = commandPool;
+        vertexBufferConfig.size = sizeof(vertices[0]) * vertices.size();
+        vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
+        vertexBuffer->setData((void*) vertices.data());
+    }
+
+    void Skybox::destroyVertexBuffer() {
+        delete vertexBuffer;
+    }
+
+    void Skybox::createIndexBuffer() {
+        VulkanIndexBufferConfig indexBufferConfig{};
+        indexBufferConfig.device = config.device;
+        indexBufferConfig.commandPool = commandPool;
+        indexBufferConfig.size = sizeof(indices[0]) * indices.size();
+        indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
+        indexBuffer->setData((void*) indices.data());
+    }
+
+    void Skybox::destroyIndexBuffer() {
+        delete indexBuffer;
     }
 
     void Skybox::createTextureSampler() {
         VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
-        const VkPhysicalDeviceProperties& physicalDeviceProperties = physicalDevice->getProperties();
 
-        VkSamplerCreateInfo textureSamplerCreateInfo{};
-        textureSamplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        textureSamplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-        textureSamplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-        textureSamplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        textureSamplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        textureSamplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        textureSamplerCreateInfo.anisotropyEnable = VK_TRUE;
-        textureSamplerCreateInfo.maxAnisotropy = physicalDeviceProperties.limits.maxSamplerAnisotropy;
-        textureSamplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-        textureSamplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
-        textureSamplerCreateInfo.compareEnable = VK_FALSE;
-        textureSamplerCreateInfo.compareOp = VK_COMPARE_OP_NEVER;
-        textureSamplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        textureSamplerCreateInfo.mipLodBias = 0.0f;
-        textureSamplerCreateInfo.minLod = 0.0f;
-        textureSamplerCreateInfo.maxLod = 0.0f;
+        VkSamplerCreateInfo samplerCreateInfo{};
+        samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+        samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
+        samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerCreateInfo.addressModeV = samplerCreateInfo.addressModeU;
+        samplerCreateInfo.addressModeW = samplerCreateInfo.addressModeU;
+        samplerCreateInfo.mipLodBias = 0.0f;
+        samplerCreateInfo.compareOp = VK_COMPARE_OP_NEVER;
+        samplerCreateInfo.minLod = 0.0f;
+        samplerCreateInfo.maxLod = 1.0f;
+        samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        samplerCreateInfo.maxAnisotropy = physicalDevice->getProperties().limits.maxSamplerAnisotropy;
+        samplerCreateInfo.anisotropyEnable = VK_TRUE;
 
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->createSampler(&textureSamplerCreateInfo, &textureSampler));
+        config.device->createSampler(&samplerCreateInfo, &textureSampler);
     }
 
     void Skybox::destroyTextureSampler() const {

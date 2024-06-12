@@ -3,7 +3,6 @@
 #include "system/Error.h"
 #include "window/KeyEvent.h"
 
-//
 // A note on "graceful termination":
 // ---
 // This app tries to handle both exceptions and signals that cause crashes (f.ex. SIGSEGV and SIGTERM) and clean up
@@ -12,9 +11,9 @@
 // This is not strictly necessary because the OS will reclaim all the memory that the program was using,
 // including both stack and heap memory.
 //
-// Regardless, because this is purely a prototype/training-exercise I think it's simply good practice/learning to
+// Regardless, because this is purely a prototype/training-exercise I think it's simply good practice and learning to
 // "fiddle around" with these mechanics.
-//
+
 namespace Blink {
     App::App(const AppConfig& config) : config(config) {
         Log::initialize(config.logLevel);

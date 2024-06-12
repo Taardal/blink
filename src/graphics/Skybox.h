@@ -149,6 +149,14 @@ namespace Blink {
 
         void destroyUniformBuffers();
 
+        void createVertexBuffer();
+
+        void destroyVertexBuffer();
+
+        void createIndexBuffer();
+
+        void destroyIndexBuffer();
+
         void createTextureSampler();
 
         void destroyTextureSampler() const;

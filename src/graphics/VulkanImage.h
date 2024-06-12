@@ -20,6 +20,7 @@ namespace Blink {
         VkImageAspectFlags aspect = 0;
         uint32_t width = 0;
         uint32_t height = 0;
+        uint32_t depth = 1;
         std::string debugName = "";
     };
 
