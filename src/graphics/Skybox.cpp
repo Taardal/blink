@@ -31,8 +31,6 @@ namespace Blink {
     };
 
     Skybox::Skybox(const SkyboxConfig& config) : config(config) {
-        createCommandPool();
-
         // Load cube map images from disk (faces)
         BL_LOG_DEBUG("Loading skybox textures");
         std::vector<std::string> spaceBlue = {
@@ -90,160 +88,39 @@ namespace Blink {
             faces.push_back(config.fileSystem->readImage(images[i]));
         }
 
+        createCommandPool();
         createImage(faces);
         createSampler();
-        createUniformBuffers();
         createVertexBuffer();
         createIndexBuffer();
+        createUniformBuffers();
         createDescriptorPool();
         createDescriptorSetLayout();
         createDescriptorSets();
-
-        // GRAPHICS PIPELINE
-
-        std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/skybox.vert.spv");
-        std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/skybox.frag.spv");
-
-        VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
-        vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertexShaderStageCreateInfo.module = *vertexShader;
-        vertexShaderStageCreateInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo fragmentShaderStageCreateInfo{};
-        fragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragmentShaderStageCreateInfo.module = *fragmentShader;
-        fragmentShaderStageCreateInfo.pName = "main";
-
-        std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = {
-                vertexShaderStageCreateInfo,
-                fragmentShaderStageCreateInfo
-        };
-
-        std::vector<VkDynamicState> dynamicStates = {
-            VK_DYNAMIC_STATE_VIEWPORT, // Indicates that the viewport is set dynamically with vkCmdSetViewport elsewhere
-            VK_DYNAMIC_STATE_SCISSOR // Indicates that the scissor is set dynamically with vkCmdSetScissor elsewhere
-        };
-
-        VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
-        dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        dynamicStateCreateInfo.dynamicStateCount = (uint32_t) dynamicStates.size();
-        dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
-
-        VkPipelineViewportStateCreateInfo viewportStateCreateInfo{};
-        viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        viewportStateCreateInfo.viewportCount = 1;
-        viewportStateCreateInfo.scissorCount = 1;
-
-        VkVertexInputBindingDescription vertexInputBindingDescription{};
-        vertexInputBindingDescription.binding = 0;
-        vertexInputBindingDescription.stride = sizeof(glm::vec3);
-        vertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescription{
-            {
-                .binding = 0,
-                .location = 0,
-                .format = VK_FORMAT_R32G32B32_SFLOAT,
-                .offset = 0,
-            }
-        };
-
-        VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
-        vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-        vertexInputStateCreateInfo.pVertexBindingDescriptions = &vertexInputBindingDescription;
-        vertexInputStateCreateInfo.vertexAttributeDescriptionCount = vertexInputAttributeDescription.size();
-        vertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexInputAttributeDescription.data();
-
-        VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
-        inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
-
-        VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{};
-        rasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
-        rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
-        rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-        rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
-        rasterizationStateCreateInfo.lineWidth = 1.0f;
-        rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-
-        VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
-        multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-        multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-
-        VkPipelineDepthStencilStateCreateInfo depthStencil{};
-        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-        depthStencil.depthTestEnable = VK_FALSE;
-        depthStencil.depthWriteEnable = VK_FALSE;
-        depthStencil.depthBoundsTestEnable = VK_FALSE;
-        depthStencil.stencilTestEnable = VK_FALSE;
-
-        VkPipelineColorBlendAttachmentState colorBlendAttachmentState{};
-        colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachmentState.blendEnable = VK_FALSE;
-
-        VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
-        colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
-        colorBlendStateCreateInfo.attachmentCount = 1;
-        colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
-
-        VkPipelineLayoutCreateInfo layoutCreateInfo{};
-        layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        layoutCreateInfo.setLayoutCount = 1;
-        layoutCreateInfo.pSetLayouts = &descriptorSetLayout;
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->createPipelineLayout(&layoutCreateInfo, &pipelineLayout));
-
-        VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
-        pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineCreateInfo.stageCount = shaderStages.size();
-        pipelineCreateInfo.pStages = shaderStages.data();
-        pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-        pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-        pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-        pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
-        pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-        pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-        pipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
-        pipelineCreateInfo.layout = pipelineLayout;
-        pipelineCreateInfo.renderPass = config.swapChain->getRenderPass();
-        pipelineCreateInfo.subpass = 0;
-        pipelineCreateInfo.pDepthStencilState = &depthStencil;
-
-        BL_ASSERT_THROW_VK_SUCCESS(config.device->createGraphicsPipeline(&pipelineCreateInfo, &pipeline));
+        createGraphicsPipeline();
     }
 
     Skybox::~Skybox() {
-        config.device->destroyGraphicsPipeline(pipeline);
-        config.device->destroyPipelineLayout(pipelineLayout);
+        delete graphicsPipeline;
 
         config.device->destroyDescriptorSetLayout(descriptorSetLayout);
         config.device->destroyDescriptorPool(descriptorPool);
-
-        delete indexBuffer;
-        delete vertexBuffer;
 
         for (int i = 0; i < uniformBuffers.size(); ++i) {
             delete uniformBuffers[i];
         }
         uniformBuffers.clear();
 
+        delete indexBuffer;
+        delete vertexBuffer;
+
         config.device->destroySampler(sampler);
         delete image;
         delete commandPool;
     }
 
-    void Skybox::render(const VulkanCommandBuffer& commandBuffer, uint32_t currentFrame) {
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
+    void Skybox::render(const VulkanCommandBuffer& commandBuffer, uint32_t currentFrame) const {
+        graphicsPipeline->bind(commandBuffer);
         vertexBuffer->bind(commandBuffer);
         indexBuffer->bind(commandBuffer);
 
@@ -256,7 +133,7 @@ namespace Blink {
         vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
+            graphicsPipeline->getLayout(),
             firstSet,
             descriptorSetCount,
             &descriptorSet,
@@ -289,6 +166,12 @@ namespace Blink {
         uniformBuffer->setData(&uniformBufferData);
     }
 
+    void Skybox::createCommandPool() {
+        VulkanCommandPoolConfig commandPoolConfig{};
+        commandPoolConfig.device = config.device;
+        commandPool = new VulkanCommandPool(commandPoolConfig);
+    }
+
     void Skybox::createImage(const std::vector<std::shared_ptr<ImageFile>>& imageFiles) {
         VulkanImageConfig imageConfig{};
         imageConfig.device = config.device;
@@ -307,10 +190,55 @@ namespace Blink {
         image->setLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
 
-    void Skybox::createCommandPool() {
-        VulkanCommandPoolConfig commandPoolConfig{};
-        commandPoolConfig.device = config.device;
-        commandPool = new VulkanCommandPool(commandPoolConfig);
+    void Skybox::createSampler() {
+        VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
+
+        VkSamplerCreateInfo samplerCreateInfo{};
+        samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+        samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
+        samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerCreateInfo.addressModeV = samplerCreateInfo.addressModeU;
+        samplerCreateInfo.addressModeW = samplerCreateInfo.addressModeU;
+        samplerCreateInfo.mipLodBias = 0.0f;
+        samplerCreateInfo.compareOp = VK_COMPARE_OP_NEVER;
+        samplerCreateInfo.minLod = 0.0f;
+        samplerCreateInfo.maxLod = 1.0f;
+        samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        samplerCreateInfo.maxAnisotropy = physicalDevice->getProperties().limits.maxSamplerAnisotropy;
+        samplerCreateInfo.anisotropyEnable = VK_TRUE;
+
+        config.device->createSampler(&samplerCreateInfo, &sampler);
+    }
+
+    void Skybox::createVertexBuffer() {
+        VulkanVertexBufferConfig vertexBufferConfig{};
+        vertexBufferConfig.device = config.device;
+        vertexBufferConfig.commandPool = commandPool;
+        vertexBufferConfig.size = sizeof(VERTICES[0]) * VERTICES.size();
+        vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
+        vertexBuffer->setData((void*) VERTICES.data());
+    }
+
+    void Skybox::createIndexBuffer() {
+        VulkanIndexBufferConfig indexBufferConfig{};
+        indexBufferConfig.device = config.device;
+        indexBufferConfig.commandPool = commandPool;
+        indexBufferConfig.size = sizeof(INDICES[0]) * INDICES.size();
+        indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
+        indexBuffer->setData((void*) INDICES.data());
+    }
+
+    void Skybox::createUniformBuffers() {
+        uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        for (uint32_t i = 0; i < uniformBuffers.size(); i++) {
+            VulkanUniformBufferConfig uniformBufferConfig{};
+            uniformBufferConfig.device = config.device;
+            uniformBufferConfig.commandPool = commandPool;
+            uniformBufferConfig.size = sizeof(UniformBufferData);
+            uniformBuffers[i] = new VulkanUniformBuffer(uniformBufferConfig);
+        }
     }
 
     void Skybox::createDescriptorPool() {
@@ -413,54 +341,39 @@ namespace Blink {
         }
     }
 
-    void Skybox::createUniformBuffers() {
-        uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        for (uint32_t i = 0; i < uniformBuffers.size(); i++) {
-            VulkanUniformBufferConfig uniformBufferConfig{};
-            uniformBufferConfig.device = config.device;
-            uniformBufferConfig.commandPool = commandPool;
-            uniformBufferConfig.size = sizeof(UniformBufferData);
-            uniformBuffers[i] = new VulkanUniformBuffer(uniformBufferConfig);
-        }
-    }
+    void Skybox::createGraphicsPipeline() {
+        std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/skybox.vert.spv");
+        std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/skybox.frag.spv");
 
-    void Skybox::createVertexBuffer() {
-        VulkanVertexBufferConfig vertexBufferConfig{};
-        vertexBufferConfig.device = config.device;
-        vertexBufferConfig.commandPool = commandPool;
-        vertexBufferConfig.size = sizeof(VERTICES[0]) * VERTICES.size();
-        vertexBuffer = new VulkanVertexBuffer(vertexBufferConfig);
-        vertexBuffer->setData((void*) VERTICES.data());
-    }
+        VkVertexInputBindingDescription vertexInputBindingDescription{};
+        vertexInputBindingDescription.binding = 0;
+        vertexInputBindingDescription.stride = sizeof(glm::vec3);
+        vertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-    void Skybox::createIndexBuffer() {
-        VulkanIndexBufferConfig indexBufferConfig{};
-        indexBufferConfig.device = config.device;
-        indexBufferConfig.commandPool = commandPool;
-        indexBufferConfig.size = sizeof(INDICES[0]) * INDICES.size();
-        indexBuffer = new VulkanIndexBuffer(indexBufferConfig);
-        indexBuffer->setData((void*) INDICES.data());
-    }
+        VkVertexInputAttributeDescription vertexInputAttributeDescription{};
+        vertexInputAttributeDescription.binding = 0;
+        vertexInputAttributeDescription.location = 0;
+        vertexInputAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+        vertexInputAttributeDescription.offset = 0;
 
-    void Skybox::createSampler() {
-        VulkanPhysicalDevice* physicalDevice = config.device->getPhysicalDevice();
+        std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions{
+            vertexInputAttributeDescription,
+        };
 
-        VkSamplerCreateInfo samplerCreateInfo{};
-        samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-        samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-        samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerCreateInfo.addressModeV = samplerCreateInfo.addressModeU;
-        samplerCreateInfo.addressModeW = samplerCreateInfo.addressModeU;
-        samplerCreateInfo.mipLodBias = 0.0f;
-        samplerCreateInfo.compareOp = VK_COMPARE_OP_NEVER;
-        samplerCreateInfo.minLod = 0.0f;
-        samplerCreateInfo.maxLod = 1.0f;
-        samplerCreateInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-        samplerCreateInfo.maxAnisotropy = physicalDevice->getProperties().limits.maxSamplerAnisotropy;
-        samplerCreateInfo.anisotropyEnable = VK_TRUE;
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
+            descriptorSetLayout,
+        };
 
-        config.device->createSampler(&samplerCreateInfo, &sampler);
+        VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
+        graphicsPipelineConfig.device = config.device;
+        graphicsPipelineConfig.renderPass = config.swapChain->getRenderPass();
+        graphicsPipelineConfig.vertexShader = vertexShader;
+        graphicsPipelineConfig.fragmentShader = fragmentShader;
+        graphicsPipelineConfig.vertexBindingDescription = &vertexInputBindingDescription;
+        graphicsPipelineConfig.vertexAttributeDescriptions = &vertexInputAttributeDescriptions;
+        graphicsPipelineConfig.descriptorSetLayouts = &descriptorSetLayouts;
+        graphicsPipelineConfig.depthTestEnabled = false;
+
+        graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig);
     }
 }

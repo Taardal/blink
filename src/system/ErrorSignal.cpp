@@ -127,7 +127,7 @@ namespace Blink {
 
     void printUnixStacktrace() {
         // Number of stacktrace lines to be printed
-        constexpr int maxStackSize = 15;
+        constexpr int maxStackSize = 20;
 
         // Linux man page: backtrace, backtrace_symbols, backtrace_symbols_fd
         // https://linux.die.net/man/3/backtrace_symbols
@@ -147,13 +147,29 @@ namespace Blink {
         }
 
         // Iterate over the backtrace and...
-        // - Convert the line to a std::string
-        // - Demangle the line (see demangleUnixSymbol)
-        // - Print the line
+        // 1. Convert the line to a std::string
+        // 2. Demangle the line
+        // 3. Print the line
+        //
+        // At this point, the top of the stack will look something like this
+        // 0 [...] printUnixStacktrace()
+        // 1 [...] printStacktrace(int)
+        // 2 [...] handleErrorSignal(int)
+        // 3 [...] _sigtramp
+        // 4 [...] functionThatCausedTheSignal()
+        //
+        // The "_sigtramp" line means that the application has received a Unix signal. We are only interested in what
+        // happened _before_ the signal occurred, so we want to ignore that line and any lines above it on the stack.
+        //
+        bool sigtrampLineFound = false;
         for (int i = 0; i < stackSize; i++) {
             ::std::string stacktraceLine(stacktrace[i]);
             demangleUnixStacktraceLine(&stacktraceLine);
-            fprintf(stderr, "%s\n", stacktraceLine.c_str());
+            if (sigtrampLineFound) {
+                fprintf(stderr, "%s\n", stacktraceLine.c_str());
+            } else if (stacktraceLine.find("_sigtramp") != ::std::string::npos) {
+                sigtrampLineFound = true;
+            }
         }
 
         // This array is malloced by backtrace_symbols(), and must be freed by the caller

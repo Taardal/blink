@@ -284,6 +284,10 @@ namespace Blink {
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(PushConstantData);
 
+        std::vector<VkPushConstantRange> pushConstantRanges = {
+            pushConstantRange,
+        };
+
         VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
         graphicsPipelineConfig.device = config.device;
         graphicsPipelineConfig.renderPass = swapChain->getRenderPass();
@@ -292,7 +296,8 @@ namespace Blink {
         graphicsPipelineConfig.vertexBindingDescription = &vertexBindingDescription;
         graphicsPipelineConfig.vertexAttributeDescriptions = &vertexAttributeDescriptions;
         graphicsPipelineConfig.descriptorSetLayouts = &descriptorSetLayouts;
-        graphicsPipelineConfig.pushConstantRange = &pushConstantRange;
+        graphicsPipelineConfig.pushConstantRanges = &pushConstantRanges;
+        graphicsPipelineConfig.depthTestEnabled = true;
 
         graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig);
     }
