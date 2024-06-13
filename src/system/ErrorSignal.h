@@ -10,31 +10,19 @@
 #endif
 
 namespace Blink {
-    struct ErrorSignal {
-        int code;
-        std::string name;
-        std::string description;
+    void initializeErrorSignalHandlers();
 
-        ErrorSignal(int signal);
+    void handleErrorSignal(int signal);
 
-        void printStacktrace() const;
+    void printStacktrace(int signal);
 
-    // STATIC
-    private:
-        static std::function<void(const ErrorSignal&)> handlerFn;
+    std::string getSignalName(int signal);
 
-    public:
-        static void setHandler(const std::function<void(const ErrorSignal&)>& handler);
-
-    private:
-        static void handleErrorSignal(int signal);
-
-        static void printStacktrace(const ErrorSignal& signal);
+    std::string getSignalDescription(int signal);
 
 #ifdef BL_PRINT_UNIX_STACKTRACE
-        static void printUnixStacktrace();
+    void printUnixStacktrace();
 
-        static void demangleUnixStacktraceLine(std::string* stacktraceLine);
+    void demangleUnixStacktraceLine(std::string* stacktraceLine);
 #endif
-    };
 }

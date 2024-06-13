@@ -88,9 +88,4 @@ namespace Blink {
         os << "\n";
         return os;
     }
-
-    // Trade indirection for nicer interface for the caller
-    void Error::onSignal(const std::function<void(const ErrorSignal&)>& handler) {
-        ErrorSignal::setHandler(handler);
-    }
 }
