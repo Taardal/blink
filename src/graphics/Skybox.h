@@ -22,33 +22,27 @@ namespace Blink {
     };
 
     class Skybox {
-    private:
+    public:
         static constexpr uint32_t FACE_COUNT = 6;
         static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
         static const std::vector<glm::vec3> VERTICES;
         static const std::vector<uint32_t> INDICES;
 
-    private:
+    public:
         SkyboxConfig config;
         VulkanCommandPool* commandPool = nullptr;
         VulkanImage* image = nullptr;
         VkSampler sampler = nullptr;
         VulkanVertexBuffer* vertexBuffer = nullptr;
         VulkanIndexBuffer* indexBuffer = nullptr;
-        std::vector<VulkanUniformBuffer*> uniformBuffers;
         VkDescriptorPool descriptorPool = nullptr;
         VkDescriptorSetLayout descriptorSetLayout = nullptr;
         std::vector<VkDescriptorSet> descriptorSets;
-        VulkanGraphicsPipeline* graphicsPipeline = nullptr;
 
     public:
         explicit Skybox(const SkyboxConfig& config);
 
         ~Skybox();
-
-        void render(const VulkanCommandBuffer& commandBuffer, uint32_t currentFrame) const;
-
-        void setUniformData(const ViewProjection& viewProjection, uint32_t currentFrame) const;
 
     private:
         void createCommandPool();
@@ -57,18 +51,14 @@ namespace Blink {
 
         void createSampler();
 
-        void createVertexBuffer();
-
-        void createIndexBuffer();
-
-        void createUniformBuffers();
-
         void createDescriptorPool();
 
         void createDescriptorSetLayout();
 
         void createDescriptorSets();
 
-        void createGraphicsPipeline();
+        void createVertexBuffer();
+
+        void createIndexBuffer();
     };
 }

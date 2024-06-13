@@ -160,6 +160,9 @@ namespace Blink {
         }
         config.renderer->setViewProjection(viewProjection);
 
+        // Render skybox
+        config.renderer->renderSkybox(config.skybox);
+
         // Render all meshes in the scene
         for (const entt::entity entity : entityRegistry.view<MeshComponent>()) {
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);

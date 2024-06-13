@@ -14,6 +14,7 @@ namespace Blink {
         std::string scene;
         Keyboard* keyboard = nullptr;
         MeshManager* meshManager = nullptr;
+        Skybox* skybox = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
         SceneCamera* sceneCamera = nullptr;

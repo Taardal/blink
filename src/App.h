@@ -40,6 +40,7 @@ namespace Blink {
         VulkanDevice* vulkanDevice = nullptr;
         MeshManager* meshManager = nullptr;
         ShaderManager* shaderManager = nullptr;
+        Skybox* skybox = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
         SceneCamera* sceneCamera = nullptr;

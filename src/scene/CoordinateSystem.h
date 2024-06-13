@@ -2,6 +2,30 @@
 
 #include <glm/glm.hpp>
 
+// This app uses a right-handed coordinate system in world space:
+//
+// World space (right-handed)
+// - Right:   Positive X
+// - Up:      Positive Y
+// - Forward: Negative Z
+//
+// This app uses GLM's glm::perspective function to create a projection matrix. This function flips the Z-axis,
+// changing the coordinate system to be left-handed in clip space:
+//
+// Clip space (left-handed)
+// - Right:   Positive X
+// - Up:      Positive Y
+// - Forward: Positive Z
+//
+// This is OK because we still have to flip the Y-axis to align with Vulkan, which uses negative Y for its up-direction,
+// changing the coordinate system to be right-handed in clip space:
+//
+// Vulkan clip space (right-handed)
+// - Right:   Positive X
+// - Up:      Negative Y <-- Opposite from OpenGL
+// - Forward: Positive Z
+//
+
 namespace Blink {
     constexpr glm::vec3 POSITIVE_X_AXIS = {1.0f, 0.0f, 0.0f};
     constexpr glm::vec3 POSITIVE_Y_AXIS = {0.0f, 1.0f, 0.0f};

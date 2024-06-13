@@ -1,7 +1,5 @@
 #include "Skybox.h"
 
-#include "UniformBufferData.h"
-
 namespace Blink {
     const std::vector<glm::vec3> Skybox::VERTICES = {
         // Positive X (Right)
@@ -91,79 +89,21 @@ namespace Blink {
         createCommandPool();
         createImage(faces);
         createSampler();
-        createVertexBuffer();
-        createIndexBuffer();
-        createUniformBuffers();
         createDescriptorPool();
         createDescriptorSetLayout();
         createDescriptorSets();
-        createGraphicsPipeline();
+        createVertexBuffer();
+        createIndexBuffer();
     }
 
     Skybox::~Skybox() {
-        delete graphicsPipeline;
-
-        config.device->destroyDescriptorSetLayout(descriptorSetLayout);
-        config.device->destroyDescriptorPool(descriptorPool);
-
-        for (int i = 0; i < uniformBuffers.size(); ++i) {
-            delete uniformBuffers[i];
-        }
-        uniformBuffers.clear();
-
         delete indexBuffer;
         delete vertexBuffer;
-
+        config.device->destroyDescriptorSetLayout(descriptorSetLayout);
+        config.device->destroyDescriptorPool(descriptorPool);
         config.device->destroySampler(sampler);
         delete image;
         delete commandPool;
-    }
-
-    void Skybox::render(const VulkanCommandBuffer& commandBuffer, uint32_t currentFrame) const {
-        graphicsPipeline->bind(commandBuffer);
-        vertexBuffer->bind(commandBuffer);
-        indexBuffer->bind(commandBuffer);
-
-        VkDescriptorSet descriptorSet = descriptorSets[currentFrame];
-
-        constexpr uint32_t firstSet = 0;
-        constexpr uint32_t descriptorSetCount = 1;
-        constexpr uint32_t dynamicOffsetCount = 0;
-        constexpr uint32_t* dynamicOffsets = nullptr;
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            graphicsPipeline->getLayout(),
-            firstSet,
-            descriptorSetCount,
-            &descriptorSet,
-            dynamicOffsetCount,
-            dynamicOffsets
-        );
-
-        constexpr uint32_t instanceCount = 1;
-        constexpr uint32_t firstIndex = 0;
-        constexpr uint32_t vertexOffset = 0;
-        constexpr uint32_t firstInstance = 0;
-        vkCmdDrawIndexed(
-            commandBuffer,
-            (uint32_t) INDICES.size(),
-            instanceCount,
-            firstIndex,
-            vertexOffset,
-            firstInstance
-        );
-    }
-
-    void Skybox::setUniformData(const ViewProjection& viewProjection, uint32_t currentFrame) const {
-        VulkanUniformBuffer* uniformBuffer = uniformBuffers[currentFrame];
-
-        UniformBufferData uniformBufferData{};
-        uniformBufferData.view = viewProjection.view;
-        uniformBufferData.projection = viewProjection.projection;
-        uniformBufferData.projection[1][1] *= -1;
-
-        uniformBuffer->setData(&uniformBufferData);
     }
 
     void Skybox::createCommandPool() {
@@ -230,65 +170,33 @@ namespace Blink {
         indexBuffer->setData((void*) INDICES.data());
     }
 
-    void Skybox::createUniformBuffers() {
-        uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        for (uint32_t i = 0; i < uniformBuffers.size(); i++) {
-            VulkanUniformBufferConfig uniformBufferConfig{};
-            uniformBufferConfig.device = config.device;
-            uniformBufferConfig.commandPool = commandPool;
-            uniformBufferConfig.size = sizeof(UniformBufferData);
-            uniformBuffers[i] = new VulkanUniformBuffer(uniformBufferConfig);
-        }
-    }
-
     void Skybox::createDescriptorPool() {
-        VkDescriptorPoolSize uniformBufferPoolSize{};
-        uniformBufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBufferPoolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
-
-        VkDescriptorPoolSize textureSamplerPoolSize{};
-        textureSamplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        textureSamplerPoolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
-
-        std::array<VkDescriptorPoolSize, 2> poolSizes = {
-            uniformBufferPoolSize,
-            textureSamplerPoolSize,
-        };
+        VkDescriptorPoolSize samplerPoolSize{};
+        samplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerPoolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
 
         VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
         descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptorPoolCreateInfo.poolSizeCount = poolSizes.size();
-        descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
+        descriptorPoolCreateInfo.poolSizeCount = 1;
+        descriptorPoolCreateInfo.pPoolSizes = &samplerPoolSize;
         descriptorPoolCreateInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorPool(&descriptorPoolCreateInfo, &descriptorPool));
     }
 
     void Skybox::createDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uniformBufferLayoutBinding{};
-        uniformBufferLayoutBinding.binding = 0;
-        uniformBufferLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformBufferLayoutBinding.descriptorCount = 1;
-        uniformBufferLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding textureSamplerLayoutBinding{};
-        textureSamplerLayoutBinding.binding = 1;
-        textureSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        textureSamplerLayoutBinding.descriptorCount = 1;
-        textureSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::array<VkDescriptorSetLayoutBinding, 2> descriptorSetLayoutBindings = {
-            uniformBufferLayoutBinding,
-            textureSamplerLayoutBinding,
-        };
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 0;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
         descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptorSetLayoutCreateInfo.bindingCount = descriptorSetLayoutBindings.size();
-        descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
+        descriptorSetLayoutCreateInfo.bindingCount = 1;
+        descriptorSetLayoutCreateInfo.pBindings = &samplerLayoutBinding;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createDescriptorSetLayout(&descriptorSetLayoutCreateInfo, &descriptorSetLayout));
-
     }
 
     void Skybox::createDescriptorSets() {
@@ -304,76 +212,21 @@ namespace Blink {
         BL_ASSERT_THROW_VK_SUCCESS(config.device->allocateDescriptorSets(&descriptorSetAllocateInfo, descriptorSets.data()));
 
         for (uint32_t i = 0; i < descriptorSets.size(); i++) {
-            VkDescriptorBufferInfo uniformBufferDescriptorBufferInfo{};
-            uniformBufferDescriptorBufferInfo.buffer = *uniformBuffers[i];
-            uniformBufferDescriptorBufferInfo.offset = 0;
-            uniformBufferDescriptorBufferInfo.range = sizeof(UniformBufferData);
-
-            VkWriteDescriptorSet uniformBufferDescriptorWrite{};
-            uniformBufferDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            uniformBufferDescriptorWrite.dstSet = descriptorSets[i];
-            uniformBufferDescriptorWrite.dstBinding = 0;
-            uniformBufferDescriptorWrite.dstArrayElement = 0;
-            uniformBufferDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            uniformBufferDescriptorWrite.descriptorCount = 1;
-            uniformBufferDescriptorWrite.pBufferInfo = &uniformBufferDescriptorBufferInfo;
-
             VkDescriptorImageInfo descriptorImageInfo{};
             descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             descriptorImageInfo.imageView = image->getImageView();
             descriptorImageInfo.sampler = sampler;
 
-            VkWriteDescriptorSet textureSamplerDescriptorWrite{};
-            textureSamplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            textureSamplerDescriptorWrite.dstSet = descriptorSets[i];
-            textureSamplerDescriptorWrite.dstBinding = 1;
-            textureSamplerDescriptorWrite.dstArrayElement = 0;
-            textureSamplerDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            textureSamplerDescriptorWrite.descriptorCount = 1;
-            textureSamplerDescriptorWrite.pImageInfo = &descriptorImageInfo;
+            VkWriteDescriptorSet samplerDescriptorWrite{};
+            samplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            samplerDescriptorWrite.dstSet = descriptorSets[i];
+            samplerDescriptorWrite.dstBinding = 0;
+            samplerDescriptorWrite.dstArrayElement = 0;
+            samplerDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            samplerDescriptorWrite.descriptorCount = 1;
+            samplerDescriptorWrite.pImageInfo = &descriptorImageInfo;
 
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites = {
-                uniformBufferDescriptorWrite,
-                textureSamplerDescriptorWrite,
-            };
-
-            config.device->updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data());
+            config.device->updateDescriptorSets(1, &samplerDescriptorWrite);
         }
-    }
-
-    void Skybox::createGraphicsPipeline() {
-        std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/skybox.vert.spv");
-        std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/skybox.frag.spv");
-
-        VkVertexInputBindingDescription vertexInputBindingDescription{};
-        vertexInputBindingDescription.binding = 0;
-        vertexInputBindingDescription.stride = sizeof(glm::vec3);
-        vertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        VkVertexInputAttributeDescription vertexInputAttributeDescription{};
-        vertexInputAttributeDescription.binding = 0;
-        vertexInputAttributeDescription.location = 0;
-        vertexInputAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-        vertexInputAttributeDescription.offset = 0;
-
-        std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions{
-            vertexInputAttributeDescription,
-        };
-
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
-            descriptorSetLayout,
-        };
-
-        VulkanGraphicsPipelineConfig graphicsPipelineConfig{};
-        graphicsPipelineConfig.device = config.device;
-        graphicsPipelineConfig.renderPass = config.swapChain->getRenderPass();
-        graphicsPipelineConfig.vertexShader = vertexShader;
-        graphicsPipelineConfig.fragmentShader = fragmentShader;
-        graphicsPipelineConfig.vertexBindingDescription = &vertexInputBindingDescription;
-        graphicsPipelineConfig.vertexAttributeDescriptions = &vertexInputAttributeDescriptions;
-        graphicsPipelineConfig.descriptorSetLayouts = &descriptorSetLayouts;
-        graphicsPipelineConfig.depthTestEnabled = false;
-
-        graphicsPipeline = new VulkanGraphicsPipeline(graphicsPipelineConfig);
     }
 }

@@ -119,6 +119,7 @@ namespace Blink {
         sceneConfig.renderer = renderer;
         sceneConfig.luaEngine = luaEngine;
         sceneConfig.sceneCamera = sceneCamera;
+        sceneConfig.skybox = skybox;
 
         BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
     }
