@@ -1,12 +1,19 @@
 #version 450
 
-// Skybox descriptor set
-layout(set = 1, binding = 0) uniform samplerCube samplerCubeMap;
+// DescriptorSet 0: Per-frame
+// DescriptorSet 1: Per-mesh
 
-layout(location = 0) in vec3 inUVW;
+// Per-mesh sampler
+layout(set = 1, binding = 0) uniform samplerCube textureSampler;
 
-layout(location = 0) out vec4 outFragColor;
+// Vertex data forwarded from vertex shader
+layout(location = 0) in VertexData {
+    vec3 textureCoordinate;
+} vertexData;
+
+// Final fragment color
+layout(location = 0) out vec4 fragmentColor;
 
 void main() {
-    outFragColor = texture(samplerCubeMap, inUVW);
+    fragmentColor = texture(textureSampler, vertexData.textureCoordinate);
 }

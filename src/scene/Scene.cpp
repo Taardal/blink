@@ -133,7 +133,7 @@ namespace Blink {
         for (const entt::entity entity : entityRegistry.view<TransformComponent, MeshComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
-            meshComponent.mesh->pushConstantData.model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
+            meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
 
         // Calculate camera view-projection

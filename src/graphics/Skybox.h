@@ -7,6 +7,16 @@
 #include <vulkan/vulkan.h>
 
 namespace Blink {
+    struct SkyboxVertex {
+        glm::vec3 position;
+
+        static VkVertexInputBindingDescription getBindingDescription();
+
+        static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
+    };
+}
+
+namespace Blink {
     struct Skybox {
     public:
         static constexpr uint32_t FACE_COUNT = 6;
@@ -16,7 +26,7 @@ namespace Blink {
         VkDescriptorSet descriptorSet = nullptr;
         std::shared_ptr<VulkanVertexBuffer> vertexBuffer = nullptr;
         std::shared_ptr<VulkanIndexBuffer> indexBuffer = nullptr;
-        std::vector<glm::vec3> vertices;
+        std::vector<SkyboxVertex> vertices;
         std::vector<uint32_t> indices;
     };
 }

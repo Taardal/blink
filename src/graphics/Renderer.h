@@ -41,8 +41,8 @@ namespace Blink {
         std::vector<VkDescriptorSet> viewProjectionDescriptorSets;
         VulkanGraphicsPipeline* meshGraphicsPipeline = nullptr;
         VulkanGraphicsPipeline* skyboxGraphicsPipeline = nullptr;
-        uint32_t currentFrame = 0;
         VulkanCommandBuffer currentCommandBuffer;
+        uint32_t currentFrame = 0;
 
     public:
         explicit Renderer(const RendererConfig& config);

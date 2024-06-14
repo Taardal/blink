@@ -28,7 +28,7 @@ namespace Blink {
         std::shared_ptr<ObjFile> objFile = getObjFile(meshInfo.modelPath);
 
         // Ensure that duplicate vertices are not added to the mesh for optimization purposes
-        std::unordered_map<Vertex, uint32_t> indicesByUniqueVertices{};
+        std::unordered_map<MeshVertex, uint32_t> indicesByUniqueVertices{};
 
         // Shapes of the model
         for (uint32_t s = 0; s < objFile->shapes.size(); s++) {
@@ -44,7 +44,7 @@ namespace Blink {
                 for (uint32_t v = 0; v < vertexCountPerFace; v++) {
                     tinyobj::index_t index = shape.mesh.indices[indexOffset + v];
 
-                    Vertex vertex{};
+                    MeshVertex vertex{};
                     vertex.color = {1.0f, 1.0f, 1.0f};
                     if (materialId != -1) {
                         vertex.textureIndex = materialId;
@@ -59,14 +59,26 @@ namespace Blink {
                         1.0f - objFile->attrib.texcoords[2 * index.texcoord_index + 1]
                     };
 
-                    // Check if the current vertex has already been added
+                    //
+                    // When loading a mesh from a file, there is a lot of duplicated vertex data because many vertices
+                    // are included in multiple triangles.
+                    //
+                    // As a performance improvement, we want to only use the unique vertices and use the index buffer
+                    // to reuse them whenever they come up.
+                    //
+                    // To achieve this, we keep track of the unique vertices and respective indices in a map
+                    // as [vertex: index]
+                    //
+                    // For every vertex in the file, we check if we've already seen a vertex with the exact same
+                    // position and texture coordinates before. If we haven't, we add the vertex and index to the map
+                    //
+                    // This approach makes the vertices vector of each mesh significantly shorter while still keeping
+                    // enough vertices and indices to correctly draw the mesh
+                    //
                     if (indicesByUniqueVertices.count(vertex) == 0) {
-                        // Add the new vertex and use its index in the vertices vector as the rendering index
                         indicesByUniqueVertices[vertex] = (uint32_t) mesh->vertices.size();
                         mesh->vertices.push_back(vertex);
                     }
-                    // Add the rendering index of the vertex, regardless if the vertex has already been added or not,
-                    // to ensure that the index used to reference vertices in the mesh remains consistent even if some vertices are repeated.
                     mesh->indices.push_back(indicesByUniqueVertices[vertex]);
                 }
                 indexOffset += vertexCountPerFace;

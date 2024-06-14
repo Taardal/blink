@@ -3,7 +3,6 @@
 #include "VulkanCommandPool.h"
 #include "VulkanDevice.h"
 #include "VulkanBuffer.h"
-#include "Vertex.h"
 
 #include <vulkan/vulkan.h>
 

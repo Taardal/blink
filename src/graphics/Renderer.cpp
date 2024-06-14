@@ -7,20 +7,12 @@ namespace Blink {
     Renderer::Renderer(const RendererConfig& config) : config(config) {
         createCommandObjects();
         createSwapChain();
-
-        // SkyboxManagerConfig skyboxConfig{};
-        // skyboxConfig.fileSystem = config.fileSystem;
-        // skyboxConfig.device = config.device;
-        // BL_EXECUTE_THROW(skybox = new SkyboxManager(skyboxConfig));
-
         createUniformBuffers();
         createDescriptorObjects();
         createGraphicsPipelines();
     }
 
     Renderer::~Renderer() {
-        // delete skybox;
-
         destroyGraphicsPipelines();
         destroyDescriptorObjects();
         destroyUniformBuffers();
@@ -54,8 +46,8 @@ namespace Blink {
         VulkanUniformBuffer* uniformBuffer = viewProjectionUniformBuffers[currentFrame];
 
         ViewProjectionUniformBufferData uniformBufferData{};
-        uniformBufferData.view = viewProjection.view;
-        uniformBufferData.projection = viewProjection.projection;
+        uniformBufferData.view = std::move(viewProjection.view);
+        uniformBufferData.projection = std::move(viewProjection.projection);
 
         // Flip the Y-axis to align with Vulkan's coordinate system to avoid the image being rendered upside down.
         //
@@ -139,7 +131,7 @@ namespace Blink {
             VK_SHADER_STAGE_VERTEX_BIT,
             offset,
             sizeof(MeshPushConstantData),
-            &mesh->pushConstantData
+            &mesh->model
         );
 
         std::array<VkDescriptorSet, 2> descriptorSets = {
@@ -304,8 +296,8 @@ namespace Blink {
             std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/mesh.vert.spv");
             std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/mesh.frag.spv");
 
-            VkVertexInputBindingDescription vertexBindingDescription = Vertex::getBindingDescription();
-            std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions = Vertex::getAttributeDescriptions();
+            VkVertexInputBindingDescription vertexBindingDescription = MeshVertex::getBindingDescription();
+            std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions = MeshVertex::getAttributeDescriptions();
 
             std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
                 viewProjectionDescriptorSetLayout, // Per frame descriptor set layout
@@ -339,20 +331,8 @@ namespace Blink {
             std::shared_ptr<VulkanShader> vertexShader = config.shaderManager->getShader("shaders/skybox.vert.spv");
             std::shared_ptr<VulkanShader> fragmentShader = config.shaderManager->getShader("shaders/skybox.frag.spv");
 
-            VkVertexInputBindingDescription vertexInputBindingDescription{};
-            vertexInputBindingDescription.binding = 0;
-            vertexInputBindingDescription.stride = sizeof(glm::vec3);
-            vertexInputBindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-            VkVertexInputAttributeDescription vertexInputAttributeDescription{};
-            vertexInputAttributeDescription.binding = 0;
-            vertexInputAttributeDescription.location = 0;
-            vertexInputAttributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-            vertexInputAttributeDescription.offset = 0;
-
-            std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions{
-                vertexInputAttributeDescription,
-            };
+            VkVertexInputBindingDescription vertexBindingDescription = SkyboxVertex::getBindingDescription();
+            std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions = SkyboxVertex::getAttributeDescriptions();
 
             std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
                 viewProjectionDescriptorSetLayout, // Per frame descriptor set layout
@@ -364,8 +344,8 @@ namespace Blink {
             graphicsPipelineConfig.renderPass = swapChain->getRenderPass();
             graphicsPipelineConfig.vertexShader = vertexShader;
             graphicsPipelineConfig.fragmentShader = fragmentShader;
-            graphicsPipelineConfig.vertexBindingDescription = &vertexInputBindingDescription;
-            graphicsPipelineConfig.vertexAttributeDescriptions = &vertexInputAttributeDescriptions;
+            graphicsPipelineConfig.vertexBindingDescription = &vertexBindingDescription;
+            graphicsPipelineConfig.vertexAttributeDescriptions = &vertexAttributeDescriptions;
             graphicsPipelineConfig.descriptorSetLayouts = &descriptorSetLayouts;
             graphicsPipelineConfig.depthTestEnabled = false;
 

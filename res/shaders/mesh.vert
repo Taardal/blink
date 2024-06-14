@@ -1,12 +1,15 @@
 #version 450
 
-// Per frame descriptor set
+// DescriptorSet 0: Per-frame
+// DescriptorSet 1: Per-mesh
+
+// Per-frame view and projection matrices
 layout(set = 0, binding = 0) uniform UniformBufferData {
     mat4 view;
     mat4 projection;
 } uniformBufferData;
 
-// Per mesh model matrix
+// Per-mesh model matrix
 layout(push_constant) uniform PushConstantData {
     mat4 model;
 } pushConstantData;
@@ -25,7 +28,6 @@ layout(location = 0) out VertexData {
 } vertexData;
 
 void main() {
-    // Vertex position
     gl_Position = uniformBufferData.projection * uniformBufferData.view * pushConstantData.model * vec4(position, 1.0);
 
     // Forward data to fragment shader

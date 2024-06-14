@@ -1,17 +1,17 @@
 #include "SkyboxManager.h"
 
 namespace Blink {
-    const std::vector<glm::vec3> SkyboxManager::SKYBOX_VERTICES = {
+    const std::vector<SkyboxVertex> SkyboxManager::SKYBOX_VERTICES = {
         // Positive X (Right)
-        {1, 1, 1},
-        {1, 1, -1},
-        {1, -1, 1},
-        {1, -1, -1},
+        {{1, 1, 1}},
+        {{1, 1, -1}},
+        {{1, -1, 1}},
+        {{1, -1, -1}},
         // Negative X (Left)
-        {-1, 1, 1},
-        {-1, 1, -1},
-        {-1, -1, 1},
-        {-1, -1, -1},
+        {{-1, 1, 1}},
+        {{-1, 1, -1}},
+        {{-1, -1, 1}},
+        {{-1, -1, -1}},
     };
     const std::vector<uint32_t> SkyboxManager::SKYBOX_INDICES = {
         // Right (Positive X)

@@ -23,7 +23,7 @@ namespace Blink {
     class SkyboxManager {
     private:
         static constexpr uint32_t MAX_SKYBOXES = 10;
-        static const std::vector<glm::vec3> SKYBOX_VERTICES;
+        static const std::vector<SkyboxVertex> SKYBOX_VERTICES;
         static const std::vector<uint32_t> SKYBOX_INDICES;
 
     private:
