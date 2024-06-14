@@ -168,7 +168,15 @@ set(MODELS_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/models)
 add_custom_target(
         CopyModels
         COMMAND ${CMAKE_COMMAND} -D MODELS_SOURCE_DIR=${MODELS_SOURCE_DIR} -D MODELS_OUTPUT_DIR=${MODELS_OUTPUT_DIR} -P ${CMAKE_DIR}/copy_models.cmake
-        COMMENT "Copying textures"
+        COMMENT "Copying models"
+)
+
+set(SKYBOXES_SOURCE_DIR ${PROJECT_SOURCE_DIR}/res/skyboxes)
+set(SKYBOXES_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/skyboxes)
+add_custom_target(
+        CopySkyboxes
+        COMMAND ${CMAKE_COMMAND} -D SKYBOXES_SOURCE_DIR=${SKYBOXES_SOURCE_DIR} -D SKYBOXES_OUTPUT_DIR=${SKYBOXES_OUTPUT_DIR} -P ${CMAKE_DIR}/copy_skyboxes.cmake
+        COMMENT "Copying skyboxes"
 )
 
 add_dependencies(
@@ -176,6 +184,7 @@ add_dependencies(
         CompileLua
         CompileShaders
         CopyModels
+        CopySkyboxes
 )
 
 #########################################

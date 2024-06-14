@@ -294,15 +294,16 @@ namespace Blink {
             "models/oxar_freighter/Spaceboxes/Teal/back.png",
         };
         std::vector<std::string> sky = {
-            "models/skybox/right.jpg",
-            "models/skybox/left.jpg",
-            "models/skybox/top.jpg",
-            "models/skybox/bottom.jpg",
-            "models/skybox/front.jpg",
-            "models/skybox/back.jpg",
+            "skyboxes/lake/right.jpg",
+            "skyboxes/lake/left.jpg",
+            "skyboxes/lake/top.jpg",
+            "skyboxes/lake/bottom.jpg",
+            "skyboxes/lake/front.jpg",
+            "skyboxes/lake/back.jpg",
         };
 
-        std::vector<std::string>& images = sky;
+        //std::vector<std::string>& images = sky;
+        std::vector<std::string> images = config.luaEngine->getSkybox(config.scene);
         skybox = config.skyboxManager->getSkybox(images);
     }
 

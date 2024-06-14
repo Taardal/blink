@@ -1,3 +1,16 @@
+function Scene.onGetSkybox()
+    local directoryPath = "skyboxes/lake/"
+    local imageFileType = ".jpg"
+	return {
+	    directoryPath .. "right" .. imageFileType,
+        directoryPath .. "left" .. imageFileType,
+        directoryPath .. "top" .. imageFileType,
+        directoryPath .. "bottom" .. imageFileType,
+        directoryPath .. "front" .. imageFileType,
+        directoryPath .. "back" .. imageFileType,
+	}
+end
+
 function Scene.onConfigureCamera()
     SceneCamera:setPosition(glm.vec3(-0.6605122, 16.75713, 56.020702))
     SceneCamera:setMoveSpeed(100)

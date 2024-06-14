@@ -198,7 +198,7 @@ namespace Blink {
     }
 
     void Window::sendEvent(Event& event, GLFWwindow* glfwWindow) {
-        BL_LOG_DEBUG(event.toString());
+        BL_LOG_TRACE(event.toString());
         auto userPointer = (UserPointer*) glfwGetWindowUserPointer(glfwWindow);
         userPointer->onEvent(event);
     }

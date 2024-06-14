@@ -33,6 +33,8 @@ namespace Blink {
 
         void initializeEntityBinding(entt::entity entity, const LuaComponent& luaComponent, const TagComponent& tagComponent) const;
 
+        std::vector<std::string> getSkybox(const std::string& sceneFilePath) const;
+
         void configureSceneCamera(const std::string& sceneFilePath) const;
 
         void createEntities(const std::string& sceneFilePath) const;

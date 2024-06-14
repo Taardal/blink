@@ -62,9 +62,61 @@ namespace Blink {
         );
     }
 
+    std::vector<std::string> LuaEngine::getSkybox(const std::string& sceneFilePath) const {
+        static const char* tableName = "Scene";
+        static const char* functionName = "onGetSkybox";
+
+        lua_newtable(L);
+        lua_setglobal(L, tableName);
+
+        if (luaL_dofile(L, sceneFilePath.c_str()) != LUA_OK) {
+            const char* errorMessage = lua_tostring(L, -1);
+            BL_LOG_ERROR("Could not load Lua script [{}]: {}", sceneFilePath, errorMessage);
+            BL_THROW("Could not load Lua script");
+        }
+        BL_LOG_INFO("Loaded Lua script [{}]", sceneFilePath);
+
+        lua_pushcfunction(L, printLuaError);
+        lua_getglobal(L, tableName);
+        lua_getfield(L, -1, functionName);
+
+        constexpr int argumentCount = 0;
+        constexpr int returnValueCount = 1;
+        constexpr int errorHandlerIndex = -3;
+        if (lua_pcall(L, argumentCount, returnValueCount, errorHandlerIndex) != LUA_OK) {
+            const char* errorMessage = lua_tostring(L, -1);
+            BL_LOG_ERROR(
+                "Could not invoke [{}:{}:{}]: {}",
+                sceneFilePath,
+                tableName,
+                functionName,
+                errorMessage
+            );
+            BL_THROW("Could not configure scene camera");
+        }
+
+        printLua(L, "BEGIN");
+
+        std::vector<std::string> skyboxImagePaths;
+        for (int i = 0; i < 6; ++i) {
+            lua_geti(L, -1, i + 1);
+            printLua(L, std::to_string(i));
+            const char* path = lua_tostring(L, -1);
+            BL_LOG_WARN("NOTICE ME [{}]", path);
+            skyboxImagePaths.push_back(path);
+            lua_pop(L, 1);
+        }
+
+        printLua(L, "2");
+
+        lua_pop(L, lua_gettop(L));
+
+        return skyboxImagePaths;
+    }
+
     void LuaEngine::configureSceneCamera(const std::string& sceneFilePath) const {
-        const char* tableName = "Scene";
-        const char* functionName = "onConfigureCamera";
+        static const char* tableName = "Scene";
+        static const char* functionName = "onConfigureCamera";
 
         lua_newtable(L);
         lua_setglobal(L, tableName);
@@ -102,8 +154,8 @@ namespace Blink {
     }
 
     void LuaEngine::createEntities(const std::string& sceneFilePath) const {
-        const char* tableName = "Scene";
-        const char* functionName = "onCreateEntities";
+        static const char* tableName = "Scene";
+        static const char* functionName = "onCreateEntities";
 
         lua_newtable(L);
         lua_setglobal(L, tableName);

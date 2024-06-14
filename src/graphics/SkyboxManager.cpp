@@ -52,18 +52,21 @@ namespace Blink {
     }
 
     std::shared_ptr<Skybox> SkyboxManager::getSkybox(const std::vector<std::string>& paths) {
-        const auto iterator = cache.find(paths[0]);
+        BL_ASSERT_THROW(paths.size() == FACE_COUNT);
+
+        const std::string& key = paths[0];
+        BL_ASSERT_THROW(!key.empty());
+
+        const auto iterator = cache.find(key);
         if (iterator != cache.end()) {
             return iterator->second;
         }
         std::shared_ptr<Skybox> skybox = loadSkybox(paths);
-        cache[paths[0]] = skybox;
+        cache[key] = skybox;
         return skybox;
     }
 
     std::shared_ptr<Skybox> SkyboxManager::loadSkybox(const std::vector<std::string>& paths) const {
-        BL_ASSERT_THROW(paths.size() == FACE_COUNT);
-
         std::vector<std::shared_ptr<ImageFile>> imageFiles;
         for (int i = 0; i < FACE_COUNT; ++i) {
             imageFiles.push_back(config.fileSystem->readImage(paths[i]));
