@@ -53,10 +53,6 @@ namespace Blink {
     }
 
     std::shared_ptr<Skybox> SkyboxManager::getSkybox(const std::vector<std::string>& paths) {
-        BL_LOG_DEBUG("Paths [{}]", paths.size());
-        for (int i = 0; i < paths.size(); ++i) {
-            BL_LOG_DEBUG("Path {}: [{}]", i, paths.size());
-        }
         BL_ASSERT_THROW(paths.size() == Skybox::FACE_COUNT);
 
         const std::string& key = paths[0];
@@ -64,7 +60,7 @@ namespace Blink {
 
         const auto iterator = cache.find(key);
         if (iterator != cache.end()) {
-            //return iterator->second;
+            return iterator->second;
         }
         std::shared_ptr<Skybox> skybox = loadSkybox(paths);
         cache[key] = skybox;
