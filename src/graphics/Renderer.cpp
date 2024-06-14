@@ -8,12 +8,10 @@ namespace Blink {
         createCommandObjects();
         createSwapChain();
 
-        SkyboxConfig skyboxConfig{};
-        skyboxConfig.fileSystem = config.fileSystem;
-        skyboxConfig.device = config.device;
-        skyboxConfig.swapChain = swapChain;
-        skyboxConfig.shaderManager = config.shaderManager;
-        BL_EXECUTE_THROW(skybox = new Skybox(skyboxConfig));
+        // SkyboxManagerConfig skyboxConfig{};
+        // skyboxConfig.fileSystem = config.fileSystem;
+        // skyboxConfig.device = config.device;
+        // BL_EXECUTE_THROW(skybox = new SkyboxManager(skyboxConfig));
 
         createUniformBuffers();
         createDescriptorObjects();
@@ -21,7 +19,7 @@ namespace Blink {
     }
 
     Renderer::~Renderer() {
-        delete skybox;
+        // delete skybox;
 
         destroyGraphicsPipelines();
         destroyDescriptorObjects();
@@ -91,14 +89,14 @@ namespace Blink {
         uniformBuffer->setData(&uniformBufferData);
     }
 
-    void Renderer::renderSkybox(const Skybox* skybox) const {
+    void Renderer::renderSkybox(const std::shared_ptr<Skybox>& skybox) const {
         skyboxGraphicsPipeline->bind(currentCommandBuffer);
-        this->skybox->vertexBuffer->bind(currentCommandBuffer);
-        this->skybox->indexBuffer->bind(currentCommandBuffer);
+        skybox->vertexBuffer->bind(currentCommandBuffer);
+        skybox->indexBuffer->bind(currentCommandBuffer);
 
         std::array<VkDescriptorSet, 2> descriptorSets = {
             this->viewProjectionDescriptorSets[currentFrame], // Per frame descriptor set
-            this->skybox->descriptorSets[currentFrame] // Per mesh descriptor set
+            skybox->descriptorSet // Per mesh descriptor set
         };
 
         constexpr uint32_t firstSet = 0;
@@ -121,7 +119,7 @@ namespace Blink {
         constexpr uint32_t firstInstance = 0;
         vkCmdDrawIndexed(
             currentCommandBuffer,
-            (uint32_t) skybox->INDICES.size(),
+            (uint32_t) skybox->indices.size(),
             instanceCount,
             firstIndex,
             vertexOffset,
@@ -358,7 +356,7 @@ namespace Blink {
 
             std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
                 viewProjectionDescriptorSetLayout, // Per frame descriptor set layout
-                skybox->descriptorSetLayout,
+                config.skyboxManager->getDescriptorSetLayout(),
             };
 
             VulkanGraphicsPipelineConfig graphicsPipelineConfig{};

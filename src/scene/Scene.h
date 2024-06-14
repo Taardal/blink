@@ -2,6 +2,8 @@
 
 #include "window/Keyboard.h"
 #include "graphics/Renderer.h"
+#include "graphics/Skybox.h"
+#include "graphics/SkyboxManager.h"
 #include "lua/LuaEngine.h"
 #include "scene/SceneCamera.h"
 #include "scene/Components.h"
@@ -14,7 +16,7 @@ namespace Blink {
         std::string scene;
         Keyboard* keyboard = nullptr;
         MeshManager* meshManager = nullptr;
-        Skybox* skybox = nullptr;
+        SkyboxManager* skyboxManager = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
         SceneCamera* sceneCamera = nullptr;
@@ -28,6 +30,8 @@ namespace Blink {
         SceneConfig config;
         entt::registry entityRegistry;
         entt::entity activeCameraEntity = entt::null;
+
+        std::shared_ptr<Skybox> skybox;
 
     public:
         explicit Scene(const SceneConfig& config);

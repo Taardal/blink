@@ -7,6 +7,7 @@
 #include "graphics/MeshManager.h"
 #include "graphics/Renderer.h"
 #include "graphics/ShaderManager.h"
+#include "graphics/SkyboxManager.h"
 #include "graphics/VulkanApp.h"
 #include "graphics/VulkanPhysicalDevice.h"
 #include "graphics/VulkanDevice.h"
@@ -40,7 +41,7 @@ namespace Blink {
         VulkanDevice* vulkanDevice = nullptr;
         MeshManager* meshManager = nullptr;
         ShaderManager* shaderManager = nullptr;
-        Skybox* skybox = nullptr;
+        SkyboxManager* skyboxManager = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
         SceneCamera* sceneCamera = nullptr;

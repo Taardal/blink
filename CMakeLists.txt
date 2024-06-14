@@ -41,8 +41,9 @@ add_executable(
         ${SRC_DIR}/graphics/Renderer.h
         ${SRC_DIR}/graphics/ShaderManager.cpp
         ${SRC_DIR}/graphics/ShaderManager.h
-        ${SRC_DIR}/graphics/Skybox.cpp
         ${SRC_DIR}/graphics/Skybox.h
+        ${SRC_DIR}/graphics/SkyboxManager.cpp
+        ${SRC_DIR}/graphics/SkyboxManager.h
         ${SRC_DIR}/graphics/Vertex.h
         ${SRC_DIR}/graphics/ViewProjection.h
         ${SRC_DIR}/graphics/VulkanApp.cpp

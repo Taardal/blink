@@ -116,10 +116,10 @@ namespace Blink {
         sceneConfig.scene = scenePath;
         sceneConfig.keyboard = keyboard;
         sceneConfig.meshManager = meshManager;
+        sceneConfig.skyboxManager = skyboxManager;
         sceneConfig.renderer = renderer;
         sceneConfig.luaEngine = luaEngine;
         sceneConfig.sceneCamera = sceneCamera;
-        sceneConfig.skybox = skybox;
 
         BL_EXECUTE_THROW(scene = new Scene(sceneConfig));
     }
@@ -173,13 +173,19 @@ namespace Blink {
         meshManagerConfig.device = vulkanDevice;
         BL_EXECUTE_THROW(meshManager = new MeshManager(meshManagerConfig));
 
+        SkyboxManagerConfig skyboxManagerConfig{};
+        skyboxManagerConfig.fileSystem = fileSystem;
+        skyboxManagerConfig.device = vulkanDevice;
+        BL_EXECUTE_THROW(skyboxManager = new SkyboxManager(skyboxManagerConfig));
+
         RendererConfig rendererConfig{};
         rendererConfig.fileSystem = fileSystem;
         rendererConfig.window = window;
-        rendererConfig.meshManager = meshManager;
-        rendererConfig.shaderManager = shaderManager;
         rendererConfig.vulkanApp = vulkanApp;
         rendererConfig.device = vulkanDevice;
+        rendererConfig.meshManager = meshManager;
+        rendererConfig.shaderManager = shaderManager;
+        rendererConfig.skyboxManager = skyboxManager;
         BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
 
         SceneCameraConfig cameraConfig{};
@@ -203,6 +209,7 @@ namespace Blink {
         delete sceneCamera;
         delete luaEngine;
         delete renderer;
+        delete skyboxManager;
         delete meshManager;
         delete shaderManager;
         delete vulkanDevice;

@@ -133,7 +133,7 @@ namespace Blink {
         for (const entt::entity entity : entityRegistry.view<TransformComponent, MeshComponent>()) {
             auto& transformComponent = entityRegistry.get<TransformComponent>(entity);
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
-            meshComponent.mesh->model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
+            meshComponent.mesh->pushConstantData.model = transformComponent.translation * transformComponent.rotation * transformComponent.scale;
         }
 
         // Calculate camera view-projection
@@ -161,7 +161,7 @@ namespace Blink {
         config.renderer->setViewProjection(viewProjection);
 
         // Render skybox
-        config.renderer->renderSkybox(config.skybox);
+        config.renderer->renderSkybox(skybox);
 
         // Render all meshes in the scene
         for (const entt::entity entity : entityRegistry.view<MeshComponent>()) {
@@ -250,10 +250,64 @@ namespace Blink {
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
             meshComponent.mesh = config.meshManager->getMesh(meshComponent.meshInfo);
         }
+
+        // Load cube map images from disk (faces)
+        BL_LOG_DEBUG("Loading skybox textures");
+        std::vector<std::string> spaceBlue = {
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_right.png",
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_left.png",
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_top.png",
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_bot.png",
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_front.png",
+            "models/oxar_freighter/Spaceboxes/Blue/bkg1_back.png",
+        };
+        std::vector<std::string> spaceRed1 = {
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_right1.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_left2.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_top3.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_bottom4.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_front5.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg1_back6.png",
+        };
+        std::vector<std::string> spaceRed2 = {
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_right1.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_left2.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_top3.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_bottom4.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_front5.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg2_back6.png",
+        };
+        std::vector<std::string> spaceRed3 = {
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_right1.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_left2.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_top3.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_bottom4.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_front5.png",
+            "models/oxar_freighter/Spaceboxes/Red/bkg3_back6.png",
+        };
+        std::vector<std::string> spaceTeal = {
+            "models/oxar_freighter/Spaceboxes/Teal/right.png",
+            "models/oxar_freighter/Spaceboxes/Teal/left.png",
+            "models/oxar_freighter/Spaceboxes/Teal/top.png",
+            "models/oxar_freighter/Spaceboxes/Teal/bot.png",
+            "models/oxar_freighter/Spaceboxes/Teal/front.png",
+            "models/oxar_freighter/Spaceboxes/Teal/back.png",
+        };
+        std::vector<std::string> sky = {
+            "models/skybox/right.jpg",
+            "models/skybox/left.jpg",
+            "models/skybox/top.jpg",
+            "models/skybox/bottom.jpg",
+            "models/skybox/front.jpg",
+            "models/skybox/back.jpg",
+        };
+
+        std::vector<std::string>& images = sky;
+        skybox = config.skyboxManager->getSkybox(images);
     }
 
     void Scene::terminateScene() {
-        // Wait until it's safe to destroy the resources (descriptors) used by the meshes in the current scene
+        // Wait until it's safe to destroy the resources (descriptors) used in the current scene
         config.renderer->waitUntilIdle();
 
         // Unload scene
@@ -261,6 +315,7 @@ namespace Blink {
         entityRegistry.clear();
         config.luaEngine->resetState();
         config.meshManager->resetDescriptors();
+        config.skyboxManager->resetDescriptors();
     }
 
     void Scene::configureSceneCameraWithDefaultSettings() const {
