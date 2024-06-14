@@ -981,3 +981,17 @@ function Scene.onConfigureCamera()
     SceneCamera:setPitch(-36)
     SceneCamera:setYaw(-132)
 end
+
+function Scene.onConfigureSkybox()
+    local name = "space-blue"
+    local directoryPath = "skyboxes/" .. name
+    local fileType = "png"
+	Skybox:setSkybox({
+        directoryPath .. "/" .. "right" .. "." .. fileType,
+        directoryPath .. "/" .. "left" .. "." .. fileType,
+        directoryPath .. "/" .. "top" .. "." .. fileType,
+        directoryPath .. "/" .. "bottom" .. "." .. fileType,
+        directoryPath .. "/" .. "front" .. "." .. fileType,
+        directoryPath .. "/" .. "back" .. "." .. fileType,
+    })
+end

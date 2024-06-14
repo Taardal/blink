@@ -30,8 +30,7 @@ namespace Blink {
         SceneConfig config;
         entt::registry entityRegistry;
         entt::entity activeCameraEntity = entt::null;
-
-        std::shared_ptr<Skybox> skybox;
+        std::shared_ptr<Skybox> skybox = nullptr;
 
     public:
         explicit Scene(const SceneConfig& config);
@@ -44,7 +43,9 @@ namespace Blink {
 
         void render();
 
-        entt::entity createEntityWithDefaultComponents();
+        entt::entity createEntity();
+
+        void setSkybox(const std::vector<std::string>& imageFilePaths);
 
     private:
         void initializeScene();
@@ -52,6 +53,8 @@ namespace Blink {
         void terminateScene();
 
         void configureSceneCameraWithDefaultSettings() const;
+
+        entt::entity createEntityWithDefaultComponents();
 
         void calculateTranslation(TransformComponent* transformComponent) const;
 

@@ -138,7 +138,7 @@ namespace Blink {
         return mesh;
     }
 
-    void MeshManager::resetDescriptors() {
+    void MeshManager::clear() {
         destroyDescriptorPool();
         createDescriptorPool();
     }

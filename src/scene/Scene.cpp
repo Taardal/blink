@@ -161,7 +161,9 @@ namespace Blink {
         config.renderer->setViewProjection(viewProjection);
 
         // Render skybox
-        config.renderer->renderSkybox(skybox);
+        if (skybox != nullptr) {
+            config.renderer->renderSkybox(skybox);
+        }
 
         // Render all meshes in the scene
         for (const entt::entity entity : entityRegistry.view<MeshComponent>()) {
@@ -174,37 +176,21 @@ namespace Blink {
         }
     }
 
-    entt::entity Scene::createEntityWithDefaultComponents() {
-        entt::entity entity = entityRegistry.create();
+    entt::entity Scene::createEntity() {
+        return createEntityWithDefaultComponents();
+    }
 
-        // All entities must have a tag for easier identification and debugging
-        TagComponent tagComponent{};
-        tagComponent.tag = "Entity " + std::to_string((uint32_t) entity);
-        entityRegistry.emplace<TagComponent>(entity, tagComponent);
-
-        // All entities must have a transform to be able to exist in the world
-        TransformComponent transformComponent{};
-        transformComponent.translation = glm::mat4(1.0f);
-        transformComponent.rotation = glm::mat4(1.0f);
-        transformComponent.scale = glm::mat4(1.0f);
-        transformComponent.position = glm::vec3(0.0f, 0.0f, 0.0f);
-        transformComponent.size = glm::vec3(1.0f, 1.0f, 1.0f);
-        transformComponent.forwardDirection = WORLD_FORWARD_DIRECTION;
-        transformComponent.rightDirection = WORLD_RIGHT_DIRECTION;
-        transformComponent.upDirection = WORLD_UP_DIRECTION;
-        transformComponent.worldUpDirection = WORLD_UP_DIRECTION;
-        transformComponent.orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-        transformComponent.yaw = 0.0f;
-        transformComponent.pitch = 0.0f;
-        transformComponent.roll = 0.0f;
-        entityRegistry.emplace<TransformComponent>(entity, transformComponent);
-
-        return entity;
+    void Scene::setSkybox(const std::vector<std::string>& imageFilePaths) {
+        skybox = config.skyboxManager->getSkybox(imageFilePaths);
     }
 
     void Scene::initializeScene() {
         // Core bindings used by Lua scripts
         config.luaEngine->initializeCoreBindings(this);
+
+        // Run Lua-script to configure skybox
+        // REQUIRES core bindings
+        config.luaEngine->configureSkybox(config.scene);
 
         // Run Lua-script to configure scene camera with scene-specific settings
         // REQUIRES core bindings
@@ -250,61 +236,6 @@ namespace Blink {
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
             meshComponent.mesh = config.meshManager->getMesh(meshComponent.meshInfo);
         }
-
-        // Load cube map images from disk (faces)
-        BL_LOG_DEBUG("Loading skybox textures");
-        std::vector<std::string> spaceBlue = {
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_right.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_left.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_top.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_bot.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_front.png",
-            "models/oxar_freighter/Spaceboxes/Blue/bkg1_back.png",
-        };
-        std::vector<std::string> spaceRed1 = {
-            "models/oxar_freighter/Spaceboxes/Red/bkg1_right1.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg1_left2.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg1_top3.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg1_bottom4.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg1_front5.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg1_back6.png",
-        };
-        std::vector<std::string> spaceRed2 = {
-            "models/oxar_freighter/Spaceboxes/Red/bkg2_right1.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg2_left2.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg2_top3.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg2_bottom4.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg2_front5.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg2_back6.png",
-        };
-        std::vector<std::string> spaceRed3 = {
-            "models/oxar_freighter/Spaceboxes/Red/bkg3_right1.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg3_left2.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg3_top3.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg3_bottom4.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg3_front5.png",
-            "models/oxar_freighter/Spaceboxes/Red/bkg3_back6.png",
-        };
-        std::vector<std::string> spaceTeal = {
-            "models/oxar_freighter/Spaceboxes/Teal/right.png",
-            "models/oxar_freighter/Spaceboxes/Teal/left.png",
-            "models/oxar_freighter/Spaceboxes/Teal/top.png",
-            "models/oxar_freighter/Spaceboxes/Teal/bot.png",
-            "models/oxar_freighter/Spaceboxes/Teal/front.png",
-            "models/oxar_freighter/Spaceboxes/Teal/back.png",
-        };
-        std::vector<std::string> sky = {
-            "skyboxes/lake/right.jpg",
-            "skyboxes/lake/left.jpg",
-            "skyboxes/lake/top.jpg",
-            "skyboxes/lake/bottom.jpg",
-            "skyboxes/lake/front.jpg",
-            "skyboxes/lake/back.jpg",
-        };
-
-        //std::vector<std::string>& images = sky;
-        std::vector<std::string> images = config.luaEngine->getSkybox(config.scene);
-        skybox = config.skyboxManager->getSkybox(images);
     }
 
     void Scene::terminateScene() {
@@ -315,8 +246,8 @@ namespace Blink {
         activeCameraEntity = entt::null;
         entityRegistry.clear();
         config.luaEngine->resetState();
-        config.meshManager->resetDescriptors();
-        config.skyboxManager->resetDescriptors();
+        config.meshManager->clear();
+        config.skyboxManager->clear();
     }
 
     void Scene::configureSceneCameraWithDefaultSettings() const {
@@ -334,6 +265,34 @@ namespace Blink {
         config.sceneCamera->rightDirection = WORLD_RIGHT_DIRECTION;
         config.sceneCamera->upDirection = WORLD_UP_DIRECTION;
         config.sceneCamera->worldUpDirection = WORLD_UP_DIRECTION;
+    }
+
+    entt::entity Scene::createEntityWithDefaultComponents() {
+        entt::entity entity = entityRegistry.create();
+
+        // All entities must have a tag for easier identification and debugging
+        TagComponent tagComponent{};
+        tagComponent.tag = "Entity " + std::to_string((uint32_t) entity);
+        entityRegistry.emplace<TagComponent>(entity, tagComponent);
+
+        // All entities must have a transform to be able to exist in the world
+        TransformComponent transformComponent{};
+        transformComponent.translation = glm::mat4(1.0f);
+        transformComponent.rotation = glm::mat4(1.0f);
+        transformComponent.scale = glm::mat4(1.0f);
+        transformComponent.position = glm::vec3(0.0f, 0.0f, 0.0f);
+        transformComponent.size = glm::vec3(1.0f, 1.0f, 1.0f);
+        transformComponent.forwardDirection = WORLD_FORWARD_DIRECTION;
+        transformComponent.rightDirection = WORLD_RIGHT_DIRECTION;
+        transformComponent.upDirection = WORLD_UP_DIRECTION;
+        transformComponent.worldUpDirection = WORLD_UP_DIRECTION;
+        transformComponent.orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+        transformComponent.yaw = 0.0f;
+        transformComponent.pitch = 0.0f;
+        transformComponent.roll = 0.0f;
+        entityRegistry.emplace<TransformComponent>(entity, transformComponent);
+
+        return entity;
     }
 
     void Scene::calculateTranslation(TransformComponent* transformComponent) const {

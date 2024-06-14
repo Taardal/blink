@@ -88,6 +88,8 @@ add_executable(
         ${SRC_DIR}/lua/MouseLuaBinding.h
         ${SRC_DIR}/lua/SceneCameraLuaBinding.cpp
         ${SRC_DIR}/lua/SceneCameraLuaBinding.h
+        ${SRC_DIR}/lua/SkyboxLuaBinding.cpp
+        ${SRC_DIR}/lua/SkyboxLuaBinding.h
         ${SRC_DIR}/lua/WindowLuaBinding.cpp
         ${SRC_DIR}/lua/WindowLuaBinding.h
         ${SRC_DIR}/scene/Components.h

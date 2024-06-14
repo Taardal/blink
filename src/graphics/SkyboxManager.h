@@ -21,13 +21,12 @@ namespace Blink {
     };
 
     class SkyboxManager {
-    public:
-        static constexpr uint32_t FACE_COUNT = 6;
+    private:
         static constexpr uint32_t MAX_SKYBOXES = 10;
         static const std::vector<glm::vec3> SKYBOX_VERTICES;
         static const std::vector<uint32_t> SKYBOX_INDICES;
 
-    public:
+    private:
         SkyboxManagerConfig config;
         std::map<std::string, std::shared_ptr<Skybox>> cache;
         VulkanCommandPool* commandPool = nullptr;
@@ -42,7 +41,7 @@ namespace Blink {
 
         VkDescriptorSetLayout getDescriptorSetLayout() const;
 
-        void resetDescriptors();
+        void clear();
 
         std::shared_ptr<Skybox> getSkybox(const std::vector<std::string>& paths);
 

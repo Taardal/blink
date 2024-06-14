@@ -46,20 +46,25 @@ namespace Blink {
         return descriptorSetLayout;
     }
 
-    void SkyboxManager::resetDescriptors() {
+    void SkyboxManager::clear() {
+        cache.clear();
         destroyDescriptorPool();
         createDescriptorPool();
     }
 
     std::shared_ptr<Skybox> SkyboxManager::getSkybox(const std::vector<std::string>& paths) {
-        BL_ASSERT_THROW(paths.size() == FACE_COUNT);
+        BL_LOG_DEBUG("Paths [{}]", paths.size());
+        for (int i = 0; i < paths.size(); ++i) {
+            BL_LOG_DEBUG("Path {}: [{}]", i, paths.size());
+        }
+        BL_ASSERT_THROW(paths.size() == Skybox::FACE_COUNT);
 
         const std::string& key = paths[0];
         BL_ASSERT_THROW(!key.empty());
 
         const auto iterator = cache.find(key);
         if (iterator != cache.end()) {
-            return iterator->second;
+            //return iterator->second;
         }
         std::shared_ptr<Skybox> skybox = loadSkybox(paths);
         cache[key] = skybox;
@@ -68,7 +73,7 @@ namespace Blink {
 
     std::shared_ptr<Skybox> SkyboxManager::loadSkybox(const std::vector<std::string>& paths) const {
         std::vector<std::shared_ptr<ImageFile>> imageFiles;
-        for (int i = 0; i < FACE_COUNT; ++i) {
+        for (int i = 0; i < Skybox::FACE_COUNT; ++i) {
             imageFiles.push_back(config.fileSystem->readImage(paths[i]));
         }
         BL_ASSERT_THROW(imageFiles.size() == paths.size());

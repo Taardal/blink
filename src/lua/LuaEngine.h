@@ -1,11 +1,12 @@
 #pragma once
 
-#include "lua/EntityLuaBinding.h"
-#include "lua/SceneCameraLuaBinding.h"
 #include "scene/Components.h"
+#include "scene/SceneCamera.h"
 #include "window/Keyboard.h"
+#include "window/Window.h"
 
 #include <lua.hpp>
+#include <entt/entt.hpp>
 
 namespace Blink {
     // Forward declaration
@@ -33,7 +34,7 @@ namespace Blink {
 
         void initializeEntityBinding(entt::entity entity, const LuaComponent& luaComponent, const TagComponent& tagComponent) const;
 
-        std::vector<std::string> getSkybox(const std::string& sceneFilePath) const;
+        void configureSkybox(const std::string& sceneFilePath) const;
 
         void configureSceneCamera(const std::string& sceneFilePath) const;
 

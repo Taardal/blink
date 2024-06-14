@@ -48,7 +48,7 @@ namespace Blink {
 
         std::shared_ptr<Mesh> getMesh(const MeshInfo& meshInfo);
 
-        void resetDescriptors();
+        void clear();
 
     private:
         std::shared_ptr<ObjFile> getObjFile(const std::string& path);

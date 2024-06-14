@@ -15,8 +15,8 @@ int main() {
     config.windowMaximized = true;
     config.scenes = {
         "lua/scenes/sandbox/sandbox.out",
-        "lua/scenes/viking_room/viking_room.out",
         "lua/scenes/rotation_test/rotation_test.out",
+        "lua/scenes/viking_room/viking_room.out",
     };
 
     App app(config);

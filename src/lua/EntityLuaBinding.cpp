@@ -158,7 +158,6 @@ namespace Blink {
         // Only set the mesh metadata here
         // Resource loading should happen explicitly in the Scene class, after all components are created
         meshComponent.meshInfo = meshInfo;
-        //meshComponent.mesh = binding->scene->config.meshManager->getMesh(meshInfo);
 
         return 0;
     }

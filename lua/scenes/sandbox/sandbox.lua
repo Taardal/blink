@@ -1,14 +1,15 @@
-function Scene.onGetSkybox()
-    local directoryPath = "skyboxes/lake/"
-    local imageFileType = ".jpg"
-	return {
-	    directoryPath .. "right" .. imageFileType,
-        directoryPath .. "left" .. imageFileType,
-        directoryPath .. "top" .. imageFileType,
-        directoryPath .. "bottom" .. imageFileType,
-        directoryPath .. "front" .. imageFileType,
-        directoryPath .. "back" .. imageFileType,
-	}
+function Scene.onConfigureSkybox()
+    local name = "lake"
+    local directoryPath = "skyboxes/" .. name
+    local fileType = "jpg"
+	Skybox:setSkybox({
+        directoryPath .. "/" .. "right" .. "." .. fileType,
+        directoryPath .. "/" .. "left" .. "." .. fileType,
+        directoryPath .. "/" .. "top" .. "." .. fileType,
+        directoryPath .. "/" .. "bottom" .. "." .. fileType,
+        directoryPath .. "/" .. "front" .. "." .. fileType,
+        directoryPath .. "/" .. "back" .. "." .. fileType,
+    })
 end
 
 function Scene.onConfigureCamera()
