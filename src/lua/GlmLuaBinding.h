@@ -194,8 +194,6 @@ namespace Blink {
         static int vec3(lua_State* L);
 
         static int vec4(lua_State* L);
-
-        static int foo(lua_State* L);
     };
 }
 

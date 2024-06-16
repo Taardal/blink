@@ -15,6 +15,7 @@ end
 function Scene.onConfigureCamera()
     SceneCamera:setPosition(glm.vec3(-0.6605122, 16.75713, 56.020702))
     SceneCamera:setMoveSpeed(100)
+    SceneCamera:setRotationSpeed(2)
     SceneCamera:setNearClip(0.1)
     SceneCamera:setFarClip(10000)
 end
