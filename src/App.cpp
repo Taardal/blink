@@ -215,6 +215,7 @@ namespace Blink {
         delete vulkanDevice;
         delete vulkanPhysicalDevice;
         delete vulkanApp;
+        delete mouse;
         delete keyboard;
         delete window;
         delete fileSystem;
