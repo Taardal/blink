@@ -975,6 +975,7 @@ end
 
 function Scene.onConfigureCamera()
     SceneCamera:setMoveSpeed(200)
+    SceneCamera:setRotationSpeed(0.5)
     SceneCamera:setNearClip(0.1)
     SceneCamera:setFarClip(10000)
     SceneCamera:setPosition(-347.88528, 254.04382, -295.1399)
