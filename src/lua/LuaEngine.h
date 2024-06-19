@@ -28,7 +28,7 @@ namespace Blink {
 
         ~LuaEngine();
 
-        void resetState();
+        void clear();
 
         void initializeCoreBindings(Scene* scene) const;
 

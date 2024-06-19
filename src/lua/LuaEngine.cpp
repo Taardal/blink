@@ -22,7 +22,7 @@ namespace Blink {
         terminate();
     }
 
-    void LuaEngine::resetState() {
+    void LuaEngine::clear() {
         terminate();
         initialize();
     }

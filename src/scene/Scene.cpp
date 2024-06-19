@@ -245,7 +245,7 @@ namespace Blink {
         // Unload scene
         activeCameraEntity = entt::null;
         entityRegistry.clear();
-        config.luaEngine->resetState();
+        config.luaEngine->clear();
         config.meshManager->clear();
         config.skyboxManager->clear();
     }
