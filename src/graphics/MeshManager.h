@@ -56,7 +56,7 @@ namespace Blink {
 
         std::shared_ptr<ImageFile> getImageFile(const std::string& path);
 
-        void setVerticesAndIndices(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<ObjFile>& objFile) const;
+        void processVerticesAndIndices(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<ObjFile>& objFile) const;
 
         std::shared_ptr<VulkanImage> createTexture(const std::shared_ptr<ImageFile>& imageFile) const;
 

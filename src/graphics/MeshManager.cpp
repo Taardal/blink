@@ -32,7 +32,7 @@ namespace Blink {
             mesh->vertices = vertices;
             mesh->indices = indices;
         } else {
-            setVerticesAndIndices(mesh, objFile);
+            processVerticesAndIndices(mesh, objFile);
             vertexAndIndexCache[meshInfo.modelPath] = { mesh->vertices, mesh->indices };
         }
 
@@ -126,7 +126,7 @@ namespace Blink {
         return imageFile;
     }
 
-    void MeshManager::setVerticesAndIndices(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<ObjFile>& objFile) const {
+    void MeshManager::processVerticesAndIndices(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<ObjFile>& objFile) const {
         // Ensure that duplicate vertices are not added to the mesh for optimization purposes
         std::unordered_map<MeshVertex, uint32_t> indicesByUniqueVertices{};
 
