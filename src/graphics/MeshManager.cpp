@@ -27,62 +27,13 @@ namespace Blink {
 
         std::shared_ptr<ObjFile> objFile = getObjFile(meshInfo.modelPath);
 
-        // Ensure that duplicate vertices are not added to the mesh for optimization purposes
-        std::unordered_map<MeshVertex, uint32_t> indicesByUniqueVertices{};
-
-        // Shapes of the model
-        for (uint32_t s = 0; s < objFile->shapes.size(); s++) {
-            tinyobj::shape_t& shape = objFile->shapes[s];
-            uint32_t indexOffset = 0;
-
-            // Faces (polygons) of the shape
-            for (uint32_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
-                uint32_t vertexCountPerFace = shape.mesh.num_face_vertices[f];
-                uint32_t materialId = shape.mesh.material_ids[f];
-
-                // Vertices in the face
-                for (uint32_t v = 0; v < vertexCountPerFace; v++) {
-                    tinyobj::index_t index = shape.mesh.indices[indexOffset + v];
-
-                    MeshVertex vertex{};
-                    vertex.color = {1.0f, 1.0f, 1.0f};
-                    if (materialId != -1) {
-                        vertex.textureIndex = materialId;
-                    }
-                    vertex.position = {
-                        objFile->attrib.vertices[3 * index.vertex_index + 0],
-                        objFile->attrib.vertices[3 * index.vertex_index + 1],
-                        objFile->attrib.vertices[3 * index.vertex_index + 2]
-                    };
-                    vertex.textureCoordinate = {
-                        objFile->attrib.texcoords[2 * index.texcoord_index + 0],
-                        1.0f - objFile->attrib.texcoords[2 * index.texcoord_index + 1]
-                    };
-
-                    //
-                    // When loading a mesh from a file, there is a lot of duplicated vertex data because many vertices
-                    // are included in multiple triangles.
-                    //
-                    // As a performance improvement, we want to only use the unique vertices and use the index buffer
-                    // to reuse them whenever they come up.
-                    //
-                    // To achieve this, we keep track of the unique vertices and respective indices in a map
-                    // as [vertex: index]
-                    //
-                    // For every vertex in the file, we check if we've already seen a vertex with the exact same
-                    // position and texture coordinates before. If we haven't, we add the vertex and index to the map
-                    //
-                    // This approach makes the vertices vector of each mesh significantly shorter while still keeping
-                    // enough vertices and indices to correctly draw the mesh
-                    //
-                    if (indicesByUniqueVertices.count(vertex) == 0) {
-                        indicesByUniqueVertices[vertex] = (uint32_t) mesh->vertices.size();
-                        mesh->vertices.push_back(vertex);
-                    }
-                    mesh->indices.push_back(indicesByUniqueVertices[vertex]);
-                }
-                indexOffset += vertexCountPerFace;
-            }
+        if (const auto iterator = vertexAndIndexCache.find(meshInfo.modelPath); iterator != vertexAndIndexCache.end()) {
+            auto& [vertices, indices] = iterator->second;
+            mesh->vertices = vertices;
+            mesh->indices = indices;
+        } else {
+            setVerticesAndIndices(mesh, objFile);
+            vertexAndIndexCache[meshInfo.modelPath] = { mesh->vertices, mesh->indices };
         }
 
         VulkanVertexBufferConfig vertexBufferConfig{};
@@ -173,6 +124,66 @@ namespace Blink {
         std::shared_ptr<ImageFile> imageFile = config.fileSystem->readImage(path);
         imageCache[path] = imageFile;
         return imageFile;
+    }
+
+    void MeshManager::setVerticesAndIndices(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<ObjFile>& objFile) const {
+        // Ensure that duplicate vertices are not added to the mesh for optimization purposes
+        std::unordered_map<MeshVertex, uint32_t> indicesByUniqueVertices{};
+
+        // Shapes of the model
+        for (uint32_t s = 0; s < objFile->shapes.size(); s++) {
+            tinyobj::shape_t& shape = objFile->shapes[s];
+            uint32_t indexOffset = 0;
+
+            // Faces (polygons) of the shape
+            for (uint32_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
+                uint32_t vertexCountPerFace = shape.mesh.num_face_vertices[f];
+                uint32_t materialId = shape.mesh.material_ids[f];
+
+                // Vertices in the face
+                for (uint32_t v = 0; v < vertexCountPerFace; v++) {
+                    tinyobj::index_t index = shape.mesh.indices[indexOffset + v];
+
+                    MeshVertex vertex{};
+                    vertex.color = {1.0f, 1.0f, 1.0f};
+                    if (materialId != -1) {
+                        vertex.textureIndex = materialId;
+                    }
+                    vertex.position = {
+                        objFile->attrib.vertices[3 * index.vertex_index + 0],
+                        objFile->attrib.vertices[3 * index.vertex_index + 1],
+                        objFile->attrib.vertices[3 * index.vertex_index + 2]
+                    };
+                    vertex.textureCoordinate = {
+                        objFile->attrib.texcoords[2 * index.texcoord_index + 0],
+                        1.0f - objFile->attrib.texcoords[2 * index.texcoord_index + 1]
+                    };
+
+                    //
+                    // When loading a mesh from a file, there is a lot of duplicated vertex data because many vertices
+                    // are included in multiple triangles.
+                    //
+                    // As a performance improvement, we want to only use the unique vertices and use the index buffer
+                    // to reuse them whenever they come up.
+                    //
+                    // To achieve this, we keep track of the unique vertices and respective indices in a map
+                    // as [vertex: index]
+                    //
+                    // For every vertex in the file, we check if we've already seen a vertex with the exact same
+                    // position and texture coordinates before. If we haven't, we add the vertex and index to the map
+                    //
+                    // This approach makes the vertices vector of each mesh significantly shorter while still keeping
+                    // enough vertices and indices to correctly draw the mesh
+                    //
+                    if (indicesByUniqueVertices.count(vertex) == 0) {
+                        indicesByUniqueVertices[vertex] = (uint32_t) mesh->vertices.size();
+                        mesh->vertices.push_back(vertex);
+                    }
+                    mesh->indices.push_back(indicesByUniqueVertices[vertex]);
+                }
+                indexOffset += vertexCountPerFace;
+            }
+        }
     }
 
     std::shared_ptr<VulkanImage> MeshManager::createTexture(const std::shared_ptr<ImageFile>& imageFile) const {

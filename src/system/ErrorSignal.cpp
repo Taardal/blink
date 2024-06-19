@@ -3,8 +3,6 @@
 namespace Blink {
     void initializeErrorSignalHandlers() {
         signal(SIGHUP, handleErrorSignal);  // Hangup
-        signal(SIGINT, handleErrorSignal);  // Interrupt from keyboard
-        signal(SIGQUIT, handleErrorSignal); // Quit from keyboard
         signal(SIGILL, handleErrorSignal);  // Illegal instruction
         signal(SIGTRAP, handleErrorSignal); // Trace trap
         signal(SIGABRT, handleErrorSignal); // Abort
@@ -16,7 +14,6 @@ namespace Blink {
         signal(SIGSYS, handleErrorSignal);  // Bad argument to system call
         signal(SIGPIPE, handleErrorSignal); // Write on a pipe with no reader
         signal(SIGALRM, handleErrorSignal); // Alarm clock
-        signal(SIGTERM, handleErrorSignal); // Termination signal
         signal(SIGXCPU, handleErrorSignal); // Exceeded CPU time limit
         signal(SIGXFSZ, handleErrorSignal); // Exceeded file size limit
     }

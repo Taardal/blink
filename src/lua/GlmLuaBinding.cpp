@@ -525,10 +525,6 @@ namespace Blink {
             lua_pushcfunction(L, GlmLuaBinding::vec4);
             return 1;
         }
-        if (indexName == "foo") {
-            lua_pushcfunction(L, GlmLuaBinding::foo);
-            return 1;
-        }
         BL_LOG_WARN("Could not resolve index [{}]", indexName);
         return 0;
     }

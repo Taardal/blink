@@ -26,11 +26,12 @@ namespace Blink {
     class MeshManager {
     private:
         static constexpr uint32_t MAX_MESHES = 1000;
-        static constexpr uint32_t MAX_TEXTURES_PER_MESH = 16; // `uniform sampler2D textureSamplers[16];` @ fragment shader
+        static constexpr uint32_t MAX_TEXTURES_PER_MESH = 16; // Must match fragment shader --> `uniform sampler2D textureSamplers[16];`
         static constexpr uint32_t MAX_TEXTURES = MAX_MESHES * MAX_TEXTURES_PER_MESH;
 
     private:
         MeshManagerConfig config;
+        std::map<std::string, std::pair<std::vector<MeshVertex>, std::vector<uint32_t>>> vertexAndIndexCache;
         std::map<std::string, std::shared_ptr<ObjFile>> objCache;
         std::map<std::string, std::shared_ptr<ImageFile>> imageCache;
         VulkanCommandPool* commandPool = nullptr;
@@ -54,6 +55,8 @@ namespace Blink {
         std::shared_ptr<ObjFile> getObjFile(const std::string& path);
 
         std::shared_ptr<ImageFile> getImageFile(const std::string& path);
+
+        void setVerticesAndIndices(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<ObjFile>& objFile) const;
 
         std::shared_ptr<VulkanImage> createTexture(const std::shared_ptr<ImageFile>& imageFile) const;
 

@@ -114,6 +114,8 @@ add_executable(
         ${SRC_DIR}/system/ObjFile.h
         ${SRC_DIR}/system/Random.cpp
         ${SRC_DIR}/system/Random.h
+        ${SRC_DIR}/system/Timer.cpp
+        ${SRC_DIR}/system/Timer.h
         ${SRC_DIR}/system/Uuid.cpp
         ${SRC_DIR}/system/Uuid.h
         ${SRC_DIR}/utils/utils.cpp
