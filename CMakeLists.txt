@@ -34,16 +34,18 @@ add_executable(
         ${SRC_DIR}/pch.h
         ${SRC_DIR}/App.cpp
         ${SRC_DIR}/App.h
+        ${SRC_DIR}/graphics/Mesh.cpp
         ${SRC_DIR}/graphics/Mesh.h
         ${SRC_DIR}/graphics/MeshManager.cpp
         ${SRC_DIR}/graphics/MeshManager.h
-        ${SRC_DIR}/graphics/PushConstantData.h
         ${SRC_DIR}/graphics/Renderer.cpp
         ${SRC_DIR}/graphics/Renderer.h
         ${SRC_DIR}/graphics/ShaderManager.cpp
         ${SRC_DIR}/graphics/ShaderManager.h
-        ${SRC_DIR}/graphics/UniformBufferData.h
-        ${SRC_DIR}/graphics/Vertex.h
+        ${SRC_DIR}/graphics/Skybox.cpp
+        ${SRC_DIR}/graphics/Skybox.h
+        ${SRC_DIR}/graphics/SkyboxManager.cpp
+        ${SRC_DIR}/graphics/SkyboxManager.h
         ${SRC_DIR}/graphics/ViewProjection.h
         ${SRC_DIR}/graphics/VulkanApp.cpp
         ${SRC_DIR}/graphics/VulkanApp.h
@@ -87,6 +89,8 @@ add_executable(
         ${SRC_DIR}/lua/MouseLuaBinding.h
         ${SRC_DIR}/lua/SceneCameraLuaBinding.cpp
         ${SRC_DIR}/lua/SceneCameraLuaBinding.h
+        ${SRC_DIR}/lua/SkyboxLuaBinding.cpp
+        ${SRC_DIR}/lua/SkyboxLuaBinding.h
         ${SRC_DIR}/lua/WindowLuaBinding.cpp
         ${SRC_DIR}/lua/WindowLuaBinding.h
         ${SRC_DIR}/scene/Components.h
@@ -99,6 +103,8 @@ add_executable(
         ${SRC_DIR}/system/Environment.h
         ${SRC_DIR}/system/Error.cpp
         ${SRC_DIR}/system/Error.h
+        ${SRC_DIR}/system/ErrorSignal.cpp
+        ${SRC_DIR}/system/ErrorSignal.h
         ${SRC_DIR}/system/FileSystem.cpp
         ${SRC_DIR}/system/FileSystem.h
         ${SRC_DIR}/system/ImageFile.cpp
@@ -108,8 +114,8 @@ add_executable(
         ${SRC_DIR}/system/ObjFile.h
         ${SRC_DIR}/system/Random.cpp
         ${SRC_DIR}/system/Random.h
-        ${SRC_DIR}/system/Signal.cpp
-        ${SRC_DIR}/system/Signal.h
+        ${SRC_DIR}/system/Timer.cpp
+        ${SRC_DIR}/system/Timer.h
         ${SRC_DIR}/system/Uuid.cpp
         ${SRC_DIR}/system/Uuid.h
         ${SRC_DIR}/utils/utils.cpp
@@ -167,7 +173,15 @@ set(MODELS_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/models)
 add_custom_target(
         CopyModels
         COMMAND ${CMAKE_COMMAND} -D MODELS_SOURCE_DIR=${MODELS_SOURCE_DIR} -D MODELS_OUTPUT_DIR=${MODELS_OUTPUT_DIR} -P ${CMAKE_DIR}/copy_models.cmake
-        COMMENT "Copying textures"
+        COMMENT "Copying models"
+)
+
+set(SKYBOXES_SOURCE_DIR ${PROJECT_SOURCE_DIR}/res/skyboxes)
+set(SKYBOXES_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/bin/${BUILD_TYPE_DIR_NAME}/skyboxes)
+add_custom_target(
+        CopySkyboxes
+        COMMAND ${CMAKE_COMMAND} -D SKYBOXES_SOURCE_DIR=${SKYBOXES_SOURCE_DIR} -D SKYBOXES_OUTPUT_DIR=${SKYBOXES_OUTPUT_DIR} -P ${CMAKE_DIR}/copy_skyboxes.cmake
+        COMMENT "Copying skyboxes"
 )
 
 add_dependencies(
@@ -175,6 +189,7 @@ add_dependencies(
         CompileLua
         CompileShaders
         CopyModels
+        CopySkyboxes
 )
 
 #########################################

@@ -1,26 +1,29 @@
 #pragma once
 
-#include "graphics/MeshManager.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/ViewProjection.h"
+#include "system/FileSystem.h"
+#include "window/Window.h"
 #include "graphics/VulkanSwapChain.h"
 #include "graphics/VulkanShader.h"
 #include "graphics/VulkanGraphicsPipeline.h"
 #include "graphics/VulkanUniformBuffer.h"
-#include "system/FileSystem.h"
-#include "window/Window.h"
+#include "graphics/ViewProjection.h"
+#include "graphics/MeshManager.h"
+#include "graphics/ShaderManager.h"
+#include "graphics/SkyboxManager.h"
+#include "graphics/Skybox.h"
 
 #include <vulkan/vulkan.h>
 
 namespace Blink {
     struct RendererConfig {
+        FileSystem* fileSystem = nullptr;
+        Window* window = nullptr;
         VulkanApp* vulkanApp = nullptr;
         VulkanPhysicalDevice* physicalDevice = nullptr;
         VulkanDevice* device = nullptr;
         ShaderManager* shaderManager = nullptr;
         MeshManager* meshManager = nullptr;
-        Window* window = nullptr;
-        FileSystem* fileSystem = nullptr;
+        SkyboxManager* skyboxManager = nullptr;
     };
 
     class Renderer {
@@ -32,13 +35,14 @@ namespace Blink {
         VulkanSwapChain* swapChain = nullptr;
         VulkanCommandPool* commandPool = nullptr;
         std::vector<VulkanCommandBuffer> commandBuffers;
-        std::vector<VulkanUniformBuffer*> uniformBuffers;
-        VkDescriptorPool descriptorPool = nullptr;
-        VkDescriptorSetLayout descriptorSetLayout = nullptr;
-        std::vector<VkDescriptorSet> descriptorSets;
-        VulkanGraphicsPipeline* graphicsPipeline = nullptr;
+        std::vector<VulkanUniformBuffer*> viewProjectionUniformBuffers;
+        VkDescriptorPool viewProjectionDescriptorPool = nullptr;
+        VkDescriptorSetLayout viewProjectionDescriptorSetLayout = nullptr;
+        std::vector<VkDescriptorSet> viewProjectionDescriptorSets;
+        VulkanGraphicsPipeline* meshGraphicsPipeline = nullptr;
+        VulkanGraphicsPipeline* skyboxGraphicsPipeline = nullptr;
+        VulkanCommandBuffer currentCommandBuffer;
         uint32_t currentFrame = 0;
-        VulkanCommandBuffer currentCommandBuffer = nullptr;
 
     public:
         explicit Renderer(const RendererConfig& config);
@@ -53,19 +57,13 @@ namespace Blink {
 
         void setViewProjection(const ViewProjection& viewProjection) const;
 
+        void renderSkybox(const std::shared_ptr<Skybox>& skybox) const;
+
         void renderMesh(const std::shared_ptr<Mesh>& mesh) const;
 
         void endFrame();
 
     private:
-        void setUniformData(const ViewProjection& viewProjection) const;
-
-        void setPushConstantData(const std::shared_ptr<Mesh>& mesh) const;
-
-        void bindMesh(const std::shared_ptr<Mesh>& mesh) const;
-
-        void drawMeshIndexed(const std::shared_ptr<Mesh>& mesh) const;
-
         void reloadShaders();
 
         void createCommandObjects();
@@ -84,8 +82,8 @@ namespace Blink {
 
         void destroyDescriptorObjects() const;
 
-        void createGraphicsPipeline();
+        void createGraphicsPipelines();
 
-        void destroyGraphicsPipeline() const;
+        void destroyGraphicsPipelines() const;
     };
 }

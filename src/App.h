@@ -7,6 +7,7 @@
 #include "graphics/MeshManager.h"
 #include "graphics/Renderer.h"
 #include "graphics/ShaderManager.h"
+#include "graphics/SkyboxManager.h"
 #include "graphics/VulkanApp.h"
 #include "graphics/VulkanPhysicalDevice.h"
 #include "graphics/VulkanDevice.h"
@@ -16,28 +17,21 @@
 #include "window/Event.h"
 
 namespace Blink {
-    enum class AppState {
-        None = 0,
-        Initialized = 1,
-        Running = 2,
-        Paused = 3,
-    };
-
     struct AppConfig {
         std::string name = "App";
-        std::string scene = "lua/scenes/sandbox.out";
         std::vector<std::string> scenes;
         int32_t windowWidth = 800;
         int32_t windowHeight = 600;
         bool windowMaximized = false;
         bool windowResizable = false;
-        uint32_t fps = 60;
     };
 
     class App {
     private:
         AppConfig config;
-        AppState state = AppState::None;
+        bool initialized = false;
+        bool running = false;
+        bool paused = false;
         FileSystem* fileSystem = nullptr;
         Window* window = nullptr;
         Keyboard* keyboard = nullptr;
@@ -47,6 +41,7 @@ namespace Blink {
         VulkanDevice* vulkanDevice = nullptr;
         MeshManager* meshManager = nullptr;
         ShaderManager* shaderManager = nullptr;
+        SkyboxManager* skyboxManager = nullptr;
         Renderer* renderer = nullptr;
         LuaEngine* luaEngine = nullptr;
         SceneCamera* sceneCamera = nullptr;

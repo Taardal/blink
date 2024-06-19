@@ -14,7 +14,9 @@ namespace Blink {
         VkVertexInputBindingDescription* vertexBindingDescription;
         std::vector<VkVertexInputAttributeDescription>* vertexAttributeDescriptions;
         std::vector<VkDescriptorSetLayout>* descriptorSetLayouts;
-        VkPushConstantRange* pushConstantRange;
+        std::vector<VkPushConstantRange>* pushConstantRanges;
+        bool depthTestEnabled = false;
+        VkPipelineDepthStencilStateCreateInfo* depthStencilCreateInfo;
     };
 
     class VulkanGraphicsPipeline {

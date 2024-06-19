@@ -13,13 +13,17 @@ namespace Blink {
         VulkanCommandPool* commandPool = nullptr;
         VkImage image = nullptr;
         VkImageView imageView = nullptr;
+        VkImageViewType imageViewType = VK_IMAGE_VIEW_TYPE_2D;
         VkMemoryPropertyFlags memoryProperties{};
         VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
         VkFormat format = VK_FORMAT_UNDEFINED;
         VkImageUsageFlags usage = 0;
-        VkImageAspectFlags aspect = 0;
+        VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+        VkImageCreateFlags flags = 0;
         uint32_t width = 0;
         uint32_t height = 0;
+        uint32_t depth = 1;
+        uint32_t layerCount = 1;
         std::string debugName = "";
     };
 
@@ -50,7 +54,9 @@ namespace Blink {
 
         void setLayout(VkImageLayout layout);
 
-        void setData(std::shared_ptr<ImageFile> imageFile) const;
+        void setData(const std::shared_ptr<ImageFile>& imageFile) const;
+
+        void setData(const std::vector<std::shared_ptr<ImageFile>>& imageFiles) const;
 
     private:
         void createImage();

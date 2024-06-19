@@ -3,7 +3,6 @@
 #include "VulkanCommandPool.h"
 #include "VulkanDevice.h"
 #include "VulkanBuffer.h"
-#include "Vertex.h"
 
 #include <vulkan/vulkan.h>
 
@@ -28,7 +27,7 @@ namespace Blink {
 
         operator VkBuffer() const;
 
-        void setData(const std::vector<Vertex>& vertices) const;
+        void setData(void* vertices) const;
 
         void bind(VkCommandBuffer commandBuffer) const;
     };

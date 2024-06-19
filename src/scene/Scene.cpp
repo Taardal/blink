@@ -160,6 +160,11 @@ namespace Blink {
         }
         config.renderer->setViewProjection(viewProjection);
 
+        // Render skybox
+        if (skybox != nullptr) {
+            config.renderer->renderSkybox(skybox);
+        }
+
         // Render all meshes in the scene
         for (const entt::entity entity : entityRegistry.view<MeshComponent>()) {
             auto& meshComponent = entityRegistry.get<MeshComponent>(entity);
@@ -171,37 +176,21 @@ namespace Blink {
         }
     }
 
-    entt::entity Scene::createEntityWithDefaultComponents() {
-        entt::entity entity = entityRegistry.create();
+    entt::entity Scene::createEntity() {
+        return createEntityWithDefaultComponents();
+    }
 
-        // All entities must have a tag for easier identification and debugging
-        TagComponent tagComponent{};
-        tagComponent.tag = "Entity " + std::to_string((uint32_t) entity);
-        entityRegistry.emplace<TagComponent>(entity, tagComponent);
-
-        // All entities must have a transform to be able to exist in the world
-        TransformComponent transformComponent{};
-        transformComponent.translation = glm::mat4(1.0f);
-        transformComponent.rotation = glm::mat4(1.0f);
-        transformComponent.scale = glm::mat4(1.0f);
-        transformComponent.position = glm::vec3(0.0f, 0.0f, 0.0f);
-        transformComponent.size = glm::vec3(1.0f, 1.0f, 1.0f);
-        transformComponent.forwardDirection = WORLD_FORWARD_DIRECTION;
-        transformComponent.rightDirection = WORLD_RIGHT_DIRECTION;
-        transformComponent.upDirection = WORLD_UP_DIRECTION;
-        transformComponent.worldUpDirection = WORLD_UP_DIRECTION;
-        transformComponent.orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-        transformComponent.yaw = 0.0f;
-        transformComponent.pitch = 0.0f;
-        transformComponent.roll = 0.0f;
-        entityRegistry.emplace<TransformComponent>(entity, transformComponent);
-
-        return entity;
+    void Scene::setSkybox(const std::vector<std::string>& imageFilePaths) {
+        skybox = config.skyboxManager->getSkybox(imageFilePaths);
     }
 
     void Scene::initializeScene() {
         // Core bindings used by Lua scripts
         config.luaEngine->initializeCoreBindings(this);
+
+        // Run Lua-script to configure skybox
+        // REQUIRES core bindings
+        config.luaEngine->configureSkybox(config.scene);
 
         // Run Lua-script to configure scene camera with scene-specific settings
         // REQUIRES core bindings
@@ -250,14 +239,15 @@ namespace Blink {
     }
 
     void Scene::terminateScene() {
-        // Wait until it's safe to destroy the resources (descriptors) used by the meshes in the current scene
+        // Wait until it's safe to destroy the resources (descriptors) used in the current scene
         config.renderer->waitUntilIdle();
 
         // Unload scene
         activeCameraEntity = entt::null;
         entityRegistry.clear();
-        config.luaEngine->resetState();
-        config.meshManager->resetDescriptors();
+        config.luaEngine->clear();
+        config.meshManager->clear();
+        config.skyboxManager->clear();
     }
 
     void Scene::configureSceneCameraWithDefaultSettings() const {
@@ -275,6 +265,34 @@ namespace Blink {
         config.sceneCamera->rightDirection = WORLD_RIGHT_DIRECTION;
         config.sceneCamera->upDirection = WORLD_UP_DIRECTION;
         config.sceneCamera->worldUpDirection = WORLD_UP_DIRECTION;
+    }
+
+    entt::entity Scene::createEntityWithDefaultComponents() {
+        entt::entity entity = entityRegistry.create();
+
+        // All entities must have a tag for easier identification and debugging
+        TagComponent tagComponent{};
+        tagComponent.tag = "Entity " + std::to_string((uint32_t) entity);
+        entityRegistry.emplace<TagComponent>(entity, tagComponent);
+
+        // All entities must have a transform to be able to exist in the world
+        TransformComponent transformComponent{};
+        transformComponent.translation = glm::mat4(1.0f);
+        transformComponent.rotation = glm::mat4(1.0f);
+        transformComponent.scale = glm::mat4(1.0f);
+        transformComponent.position = glm::vec3(0.0f, 0.0f, 0.0f);
+        transformComponent.size = glm::vec3(1.0f, 1.0f, 1.0f);
+        transformComponent.forwardDirection = WORLD_FORWARD_DIRECTION;
+        transformComponent.rightDirection = WORLD_RIGHT_DIRECTION;
+        transformComponent.upDirection = WORLD_UP_DIRECTION;
+        transformComponent.worldUpDirection = WORLD_UP_DIRECTION;
+        transformComponent.orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+        transformComponent.yaw = 0.0f;
+        transformComponent.pitch = 0.0f;
+        transformComponent.roll = 0.0f;
+        entityRegistry.emplace<TransformComponent>(entity, transformComponent);
+
+        return entity;
     }
 
     void Scene::calculateTranslation(TransformComponent* transformComponent) const {

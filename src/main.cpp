@@ -4,19 +4,19 @@
 using namespace Blink;
 
 int main() {
+    initializeErrorSignalHandlers();
     Log::initialize(LogLevel::Debug);
 
     AppConfig config{};
     config.name = "Blink";
-    config.fps = 120;
     config.windowWidth = 1366;
     config.windowHeight = 768;
     config.windowResizable = true;
-    config.windowMaximized = false;
+    config.windowMaximized = true;
     config.scenes = {
+        "lua/scenes/viking_room/viking_room.out",
         "lua/scenes/sandbox/sandbox.out",
         "lua/scenes/rotation_test/rotation_test.out",
-        "lua/scenes/viking_room/viking_room.out",
     };
 
     App app(config);

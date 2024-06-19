@@ -36,6 +36,10 @@ namespace Blink {
 
         ~Window();
 
+        void setTitle(const char* title) const;
+
+        void setTitle(const std::string& title) const;
+
         double update() const;
 
         double getTime() const;

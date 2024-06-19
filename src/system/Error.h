@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Log.h"
+
 #include <iostream>
 
 #define BL_THROW(message) throw Error(message, BL_TAG())

@@ -975,9 +975,24 @@ end
 
 function Scene.onConfigureCamera()
     SceneCamera:setMoveSpeed(200)
+    SceneCamera:setRotationSpeed(0.5)
     SceneCamera:setNearClip(0.1)
     SceneCamera:setFarClip(10000)
     SceneCamera:setPosition(-347.88528, 254.04382, -295.1399)
     SceneCamera:setPitch(-36)
     SceneCamera:setYaw(-132)
+end
+
+function Scene.onConfigureSkybox()
+    local name = "space-blue"
+    local directoryPath = "skyboxes/" .. name
+    local fileType = "png"
+	Skybox:setSkybox({
+        directoryPath .. "/" .. "right" .. "." .. fileType,
+        directoryPath .. "/" .. "left" .. "." .. fileType,
+        directoryPath .. "/" .. "top" .. "." .. fileType,
+        directoryPath .. "/" .. "bottom" .. "." .. fileType,
+        directoryPath .. "/" .. "front" .. "." .. fileType,
+        directoryPath .. "/" .. "back" .. "." .. fileType,
+    })
 end

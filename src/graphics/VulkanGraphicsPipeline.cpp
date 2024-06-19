@@ -61,13 +61,13 @@ namespace Blink {
         multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
         multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-        VkPipelineDepthStencilStateCreateInfo depthStencil{};
-        depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = VK_TRUE;
-        depthStencil.depthWriteEnable = VK_TRUE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-        depthStencil.depthBoundsTestEnable = VK_FALSE;
-        depthStencil.stencilTestEnable = VK_FALSE;
+        VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{};
+        depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencilStateCreateInfo.depthTestEnable = config.depthTestEnabled;
+        depthStencilStateCreateInfo.depthWriteEnable = config.depthTestEnabled;
+        depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+        depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
 
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState{};
         colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -83,8 +83,10 @@ namespace Blink {
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         layoutCreateInfo.setLayoutCount = config.descriptorSetLayouts->size();
         layoutCreateInfo.pSetLayouts = config.descriptorSetLayouts->data();
-        layoutCreateInfo.pushConstantRangeCount = 1;
-        layoutCreateInfo.pPushConstantRanges = config.pushConstantRange;
+        if (config.pushConstantRanges != nullptr) {
+            layoutCreateInfo.pushConstantRangeCount = config.pushConstantRanges->size();
+            layoutCreateInfo.pPushConstantRanges = config.pushConstantRanges->data();
+        }
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createPipelineLayout(&layoutCreateInfo, &layout));
 
@@ -102,7 +104,7 @@ namespace Blink {
         pipelineCreateInfo.layout = layout;
         pipelineCreateInfo.renderPass = config.renderPass;
         pipelineCreateInfo.subpass = 0;
-        pipelineCreateInfo.pDepthStencilState = &depthStencil;
+        pipelineCreateInfo.pDepthStencilState = &depthStencilStateCreateInfo;
 
         BL_ASSERT_THROW_VK_SUCCESS(config.device->createGraphicsPipeline(&pipelineCreateInfo, &pipeline));
     }

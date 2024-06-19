@@ -1,6 +1,6 @@
 #include "App.h"
-
 #include "graphics/MeshManager.h"
+#include "system/Error.h"
 #include "window/KeyEvent.h"
 
 namespace Blink {
@@ -8,12 +8,14 @@ namespace Blink {
         try {
             BL_LOG_INFO("Initializing...");
             initialize();
-            state = AppState::Initialized;
+            initialized = true;
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Initialization error");
             e.printStacktrace();
+            initialized = false;
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Initialization error: {}", e.what());
+            initialized = false;
         }
     }
 
@@ -23,12 +25,12 @@ namespace Blink {
     }
 
     void App::run() {
-        if (state != AppState::Initialized) {
+        if (!initialized) {
             return;
         }
         try {
             BL_LOG_INFO("Running...");
-            state = AppState::Running;
+            running = true;
             gameLoop();
         } catch (const Error& e) {
             BL_LOG_CRITICAL("Runtime error");
@@ -36,53 +38,55 @@ namespace Blink {
         } catch (const std::exception& e) {
             BL_LOG_CRITICAL("Runtime error: {}", e.what());
         }
+        running = false;
         renderer->waitUntilIdle();
     }
 
     void App::gameLoop() const {
         constexpr double oneSecond = 1.0;
         double lastTime = window->getTime();
-        double deltaTime = 0.0;
+        double statisticsUpdateLag = 0.0;
         uint32_t ups = 0;
         uint32_t fps = 0;
-        while (!window->shouldClose()) {
+        while (running) {
             double time = window->update();
             double timestep = std::min(time - lastTime, oneSecond);
             lastTime = time;
-            deltaTime += timestep;
-
-            bool paused = state == AppState::Paused;
             if (!paused) {
                 scene->update(timestep);
                 ups++;
             }
-
             if (renderer->beginFrame()) {
                 scene->render();
                 renderer->endFrame();
                 fps++;
             }
-
-            if (deltaTime >= oneSecond) {
-                BL_LOG_INFO("UPS [{}], FPS [{}]", ups, fps);
+#ifdef BL_DEBUG
+            statisticsUpdateLag += timestep;
+            if (statisticsUpdateLag >= oneSecond) {
+                std::stringstream ss;
+                ss << "FPS: " << fps << ", UPS: " << ups;
+                std::string title = ss.str();
+                window->setTitle(title.c_str());
                 ups = 0;
                 fps = 0;
-                deltaTime = 0;
+                statisticsUpdateLag = 0;
             }
+#endif
         }
     }
 
     void App::onEvent(Event& event) {
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::Escape) {
-            window->setShouldClose(true);
+            running = false;
             return;
         }
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::P) {
-            state = AppState::Paused;
+            paused = true;
             return;
         }
         if (event.type == EventType::KeyPressed && event.as<KeyPressedEvent>().key == Key::O) {
-            state = AppState::Running;
+            paused = false;
             return;
         }
         if (event.type == EventType::KeyPressed) {
@@ -112,6 +116,7 @@ namespace Blink {
         sceneConfig.scene = scenePath;
         sceneConfig.keyboard = keyboard;
         sceneConfig.meshManager = meshManager;
+        sceneConfig.skyboxManager = skyboxManager;
         sceneConfig.renderer = renderer;
         sceneConfig.luaEngine = luaEngine;
         sceneConfig.sceneCamera = sceneCamera;
@@ -168,13 +173,19 @@ namespace Blink {
         meshManagerConfig.device = vulkanDevice;
         BL_EXECUTE_THROW(meshManager = new MeshManager(meshManagerConfig));
 
+        SkyboxManagerConfig skyboxManagerConfig{};
+        skyboxManagerConfig.fileSystem = fileSystem;
+        skyboxManagerConfig.device = vulkanDevice;
+        BL_EXECUTE_THROW(skyboxManager = new SkyboxManager(skyboxManagerConfig));
+
         RendererConfig rendererConfig{};
         rendererConfig.fileSystem = fileSystem;
         rendererConfig.window = window;
-        rendererConfig.meshManager = meshManager;
-        rendererConfig.shaderManager = shaderManager;
         rendererConfig.vulkanApp = vulkanApp;
         rendererConfig.device = vulkanDevice;
+        rendererConfig.meshManager = meshManager;
+        rendererConfig.shaderManager = shaderManager;
+        rendererConfig.skyboxManager = skyboxManager;
         BL_EXECUTE_THROW(renderer = new Renderer(rendererConfig));
 
         SceneCameraConfig cameraConfig{};
@@ -198,11 +209,13 @@ namespace Blink {
         delete sceneCamera;
         delete luaEngine;
         delete renderer;
+        delete skyboxManager;
         delete meshManager;
         delete shaderManager;
         delete vulkanDevice;
         delete vulkanPhysicalDevice;
         delete vulkanApp;
+        delete mouse;
         delete keyboard;
         delete window;
         delete fileSystem;

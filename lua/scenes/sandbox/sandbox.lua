@@ -1,6 +1,28 @@
+function Scene.onConfigureSkybox()
+    local name = "lake"
+    local directoryPath = "skyboxes/" .. name
+    local fileType
+    if name == "lake" then
+    	fileType = "jpg"
+    else
+        fileType = "png"
+    end
+	Skybox:setSkybox({
+        directoryPath .. "/" .. "right" .. "." .. fileType,
+        directoryPath .. "/" .. "left" .. "." .. fileType,
+        directoryPath .. "/" .. "top" .. "." .. fileType,
+        directoryPath .. "/" .. "bottom" .. "." .. fileType,
+        directoryPath .. "/" .. "front" .. "." .. fileType,
+        directoryPath .. "/" .. "back" .. "." .. fileType,
+    })
+end
+
 function Scene.onConfigureCamera()
-    SceneCamera:setPosition(glm.vec3(-0.6605122, 16.75713, 56.020702))
+    SceneCamera:setPosition(glm.vec3(282.69107, 189.53714, 316.0191))
+    SceneCamera:setYaw(39.5)
+    SceneCamera:setPitch(-9)
     SceneCamera:setMoveSpeed(100)
+    SceneCamera:setRotationSpeed(0.5)
     SceneCamera:setNearClip(0.1)
     SceneCamera:setFarClip(10000)
 end
