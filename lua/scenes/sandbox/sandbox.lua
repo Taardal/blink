@@ -1,12 +1,7 @@
 function Scene.onConfigureSkybox()
     local name = "lake"
     local directoryPath = "skyboxes/" .. name
-    local fileType
-    if name == "lake" then
-    	fileType = "jpg"
-    else
-        fileType = "png"
-    end
+    local fileType = "jpg"
 	Skybox:setSkybox({
         directoryPath .. "/" .. "right" .. "." .. fileType,
         directoryPath .. "/" .. "left" .. "." .. fileType,

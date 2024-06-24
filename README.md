@@ -7,6 +7,11 @@
 # Table of contents
 
 - :information_desk_person: [Description](#information_desk_person-description)
+  - [Features](#features)
+  - [Out of scope](#out-of-scope)
+  - [Scenes](#scenes)
+  - [Controls](#controls)
+  - [Project structure](#project-structure)
 - :books: [Resources](#books-resources)
 - :vertical_traffic_light: [Prerequisites](#vertical_traffic_light-prerequisites)
 - :rocket: [Getting started](#rocket-getting-started)
@@ -15,19 +20,58 @@
   - [Custom targets](#custom-targets)
   - [Preprocessor macros](#preprocessor-macros)
   - [Dependencies](#dependencies)
-  - [Installation](#installation)
-  - [Packaging](#packaging)
 
 # :information_desk_person: Description
 
-Proof-of-concept of a game written in C++ featuring Vulkan rendering and embedded Lua
+Proof-of-concept of a game written in C++ featuring Vulkan rendering and embedded Lua.
+
+This is the latest iteration of exploration and experimentation to learn myself game programming.
+The only goals for this project was to build a Vulkan renderer without a tutorial, and to use an ECS with a manually
+implemented Lua scripting layer (i.e. without using a Lua wrapper like [Sol2][sol2]) 
 
 ### Features
 
-- Vulkan 3D rendering (very basic/primitive)
+- Mesh and skybox rendering using Vulkan
 - Entity-Component-System using [EnTT][entt]
 - Scriptable entities using Lua
 - Lua hot-reloading (recompile while app is running)
+- Shader hot-reloading (recompile while app is running)
+
+### Out of scope
+
+- HUD
+- Audio
+- Physics
+- Text rendering
+- Lights
+- Reflections / Refractions
+- Level editor / Editor UI
+
+### Scenes
+
+| Name          | Description                                                                                                                                   |
+|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| Viking Room   | Render a single mesh with a controllable scene camera. Mostly a recreation of [vulkan-tutorial.com][vulkantutorial] used as a starting point. |
+| Sandbox       | Render multiple meshes, skybox, scene camera, entity cameras, controllable player etc. The main scene used during development.                |                      |
+| Rotation test | Render the different meshes of the app with different rotations. Used for debugging 3D rotations while learning quaternions and euler angles  |
+
+### Controls
+
+| Key        | Function                          | Description                                                                                             |
+|------------|-----------------------------------|---------------------------------------------------------------------------------------------------------|
+| WASD       | Move the scene camera             | Move the scene camera forwards, backwards and sideways                                                  |
+| Arrows     | Rotate the scene camera or player | Look around using the scene camera or the player when player camera is active                           |
+| Space/Ctrl | Move the scene camera up/down     | Move the scene camera upwards/downwards                                                                 |
+| X/Z        | Increase/decrease player speed    | Move player forwards and backwards when player camera is active                                         |
+| M          | Reset player                      | Reset player position and rotation                                                                      |
+| R          | Recompile and reload Lua scripts  | Lua scripts can be hot-reloaded during runtime. Used for faster development iteration cycle.            |
+| T          | Reset scene                       | Reset all entities, reset scene camera and recompile-and-reload Lua scripts                             |
+| 1 - 8      | Select cameras                    | The camera to use can be switched during runtime. There are several cameras placed in the Sandbox scene |
+| 9          | Toggle scene camera debug logging | Print the scene camera's internal state to stdout for debugging                                         |
+| 0          | Reset scene camera                | Reset scene camera state to scene defaults                                                              |
+| F1 - F11   | Select scenes                     | Scenes can be switched during runtime. More scenes can be added.                                        |
+| F12        | Recompile and reload shaders      | Shaders can be hot-reloaded during runtime. Used for faster development iteration cycle.                |
+
 
 ### Project structure
 
@@ -39,7 +83,7 @@ blink/
 ├─ dist/            # Packaged application (assembled by CPack)
 ├─ install/         # Installed application (assembled by CMake)
 ├─ lua/             # Lua source code to be compiled and embedded in the app
-├─ res/             # Resource files like shaders, textures, audio etc.
+├─ res/             # Resource files like shaders, textures, models etc.
 ├─ src/             # C++ source code
 ├─ CMakeLists.txt   # CMake project config
 ```
@@ -135,10 +179,11 @@ The built executable is placed in the _runtime output directory_ (`./bin/:buildT
 
 ### Custom targets
 
-The project defines two custom targets: `CompileLua` and `CompileShaders`.
+The project defines custom targets to compile Lua scripts and Vulkan shaders, and copy resources like models, textures 
+and skyboxes.
 
-The main target **depends** on both custom targets to ensure that both lua and shader files are compiled every time the
-app is built, regardless if any C++ source files have changed.
+The main target **depends** on these custom targets to ensure that necessary resource files are compiled and/or copied
+every time the app is built, regardless if any C++ source files have changed.
 
 #### CompileLua
 
@@ -188,28 +233,6 @@ Any dependency also using CMake is automatically fetched and compiled using the 
 
 Dynamically linked dependencies, like Lua and Vulkan, uses the [FindPackage][cmake:find_package] module to find them on the local system. 
 
-### Installation
-
-CMake will install the main target executable and all resource files like compiled lua and shader files, along with dynamically linked libraries and other dependency CMake targets. 
-
-The installed file(s) are placed in the `install` directory.
-
-```shell
-cmake --install build/release
-```
-
-### Packaging
-
-The app is packaged using [CPack][cmake:cpack]. See also [Packaging with CMake][cmake:cpack:packaging].
-
-Packaging is done by navigating to the directory containing the build files and invoking `cpack`.
-
-The packaged file(s) are placed in the `dist` directory.
-
-```shell
-cd build/release
-cpack
-```
 
 [brendangalea]: https://www.youtube.com/@BrendanGalea
 
@@ -262,6 +285,8 @@ cpack
 [saschawillems]: https://github.com/SaschaWillems
 
 [saschawillems:vulkan]: https://github.com/SaschaWillems/Vulkan
+
+[sol2]: https://github.com/ThePhD/sol2
 
 [thecherno]: https://www.youtube.com/@TheCherno
 

@@ -12,7 +12,7 @@ int main() {
     config.windowWidth = 1366;
     config.windowHeight = 768;
     config.windowResizable = true;
-    config.windowMaximized = true;
+    config.windowMaximized = false;
     config.scenes = {
         "lua/scenes/viking_room/viking_room.out",
         "lua/scenes/sandbox/sandbox.out",
