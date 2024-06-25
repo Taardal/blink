@@ -52,7 +52,7 @@ implemented Lua scripting layer (i.e. without using a Lua wrapper like [Sol2][so
 | Name          | Description                                                                                                                                   |
 |---------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | Viking Room   | Render a single mesh with a controllable scene camera. Mostly a recreation of [vulkan-tutorial.com][vulkantutorial] used as a starting point. |
-| Sandbox       | Render multiple meshes, skybox, scene camera, entity cameras, controllable player etc. The main scene used during development.                |                      |
+| Sandbox       | Render multiple meshes, skybox, scene camera, entity cameras, controllable player etc. The main scene used during development.                |
 | Rotation test | Render the different meshes of the app with different rotations. Used for debugging 3D rotations while learning quaternions and euler angles  |
 
 ### Controls
@@ -60,8 +60,10 @@ implemented Lua scripting layer (i.e. without using a Lua wrapper like [Sol2][so
 | Key        | Function                          | Description                                                                                             |
 |------------|-----------------------------------|---------------------------------------------------------------------------------------------------------|
 | WASD       | Move the scene camera             | Move the scene camera forwards, backwards and sideways                                                  |
-| Arrows     | Rotate the scene camera or player | Look around using the scene camera or the player when player camera is active                           |
+| Arrows     | Rotate the scene camera           | Look around using the scene camera when the scene camera is active                                      |
 | Space/Ctrl | Move the scene camera up/down     | Move the scene camera upwards/downwards                                                                 |
+| IJKL       | Rotate the player                 | Look around using the player camera when the player camera is active                                    |
+| U/O        | Roll the player                   | Apply roll to the player mesh                                                                           |
 | X/Z        | Increase/decrease player speed    | Move player forwards and backwards when player camera is active                                         |
 | M          | Reset player                      | Reset player position and rotation                                                                      |
 | R          | Recompile and reload Lua scripts  | Lua scripts can be hot-reloaded during runtime. Used for faster development iteration cycle.            |
