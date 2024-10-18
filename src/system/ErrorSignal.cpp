@@ -117,11 +117,6 @@ namespace Blink {
     }
 
 #ifdef BL_PRINT_UNIX_STACKTRACE
-
-#include <cxxabi.h>
-#include <execinfo.h>
-#include <unistd.h>
-
     void printUnixStacktrace() {
         // Number of stacktrace lines to be printed
         constexpr int maxStackSize = 20;
